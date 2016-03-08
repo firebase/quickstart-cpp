@@ -14,7 +14,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        System.loadLibrary("gameEngine");
+        System.loadLibrary("firebaseSample");
         initializeGameEngine();
 
         // Configure OpenGL view and renderer

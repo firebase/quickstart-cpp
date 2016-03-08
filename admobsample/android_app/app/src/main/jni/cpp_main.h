@@ -59,8 +59,6 @@ class CPPMain {
 
   firebase::admob::BannerView* banner_view_;
   firebase::admob::InterstitialAd* interstitial_ad_;
-  bool bg_intensity_increasing_;
-  float bg_intensity_;
 
   GLuint vertex_shader_;
   GLuint fragment_shader_;

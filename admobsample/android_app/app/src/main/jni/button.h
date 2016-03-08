@@ -24,12 +24,14 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #endif
+#include "ImageData.h"
 
 class Button {
  public:
   Button();
   bool CheckClick(float x, float y);
   void Draw(GLuint shader_program);
+  void GenerateTexture(const BmpImage& image);
   void SetLocation(float x, float y, float width, float height) {
     x_ = x, y_ = y;
     width_ = width;
@@ -47,6 +49,9 @@ class Button {
   float x_, y_, height_, width_;
   float half_width_, half_height_;
   float r_, g_, b_;
+  GLuint texture_id_;
+
+  static unsigned char texture_data_[];
 };
 
 #endif  // BUTTON_H_

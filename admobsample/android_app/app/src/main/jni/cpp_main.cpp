@@ -3,6 +3,7 @@
 #include "cpp_main.h"
 #include <android/log.h>
 #include <cstddef>
+#include "ImageData.h"
 
 #include "../../../../../../admobcpp/include/admob.h"
 #include "../../../../../../admobcpp/include/banner_view.h"
@@ -10,17 +11,23 @@
 CPPMain::CPPMain() {}
 
 static const GLchar* kVertexShaderCodeString =
-    "attribute vec2 position;\n"
+    "attribute vec2 aPosition;\n"
+    "attribute vec2 aTexCoord;\n"
+    "varying vec2 vTexCoord;\n"
     "\n"
     "void main()\n"
     "{\n"
-    "    gl_Position = vec4(position, 0.0, 1.0);\n"
+    "    vTexCoord = aTexCoord;\n"
+    "    gl_Position = vec4(aPosition, 0.0, 1.0);\n"
     "}";
 
 static const GLchar* kFragmentShaderCodeString =
-    "uniform vec4 color; \n"
+    "varying mediump vec2 vTexCoord;\n"
+    "uniform vec4 color;\n"
+    "uniform sampler2D texture_unit_0;\n"
     "void main() { \n"
-    "    gl_FragColor = color; \n"
+    "  lowp vec4 texture_color = texture2D(texture_unit_0, vTexCoord);\n"
+    "  gl_FragColor = texture_color;\n"
     "}";
 
 #ifdef __APPLE__
@@ -33,9 +40,6 @@ void CPPMain::Initialize(JNIEnv* env, jobject activity) {
       activity, "ca-app-pub-3940256099942544/6300978111", adSize);
   interstitial_ad_ = new firebase::admob::InterstitialAd(
       activity, "ca-app-pub-3940256099942544/1033173712");
-
-  bg_intensity_increasing_ = true;
-  bg_intensity_ = 0.0f;
 }
 #endif
 firebase::admob::AdRequest CPPMain::createRequest() {
@@ -101,8 +105,16 @@ void CPPMain::onSurfaceCreated() {
   glAttachShader(shader_program_, vertex_shader_);
   glAttachShader(shader_program_, fragment_shader_);
 
+  glBindAttribLocation(shader_program_, 0, "aPosition");
+  glBindAttribLocation(shader_program_, 1, "aTexCoord");
+
   glLinkProgram(shader_program_);
   glUseProgram(shader_program_);
+
+  button_list_[0].GenerateTexture(ImageData::download_ad_);
+  button_list_[1].GenerateTexture(ImageData::display_ad_);
+  button_list_[2].GenerateTexture(ImageData::download_i_ad_);
+  button_list_[3].GenerateTexture(ImageData::display_i_ad_);
 }
 
 void CPPMain::onSurfaceChanged(int width, int height) {
@@ -114,18 +126,13 @@ void CPPMain::onSurfaceChanged(int width, int height) {
   GLfloat heightIncrement = 400.0f / height_;
   GLfloat currentHeight = 0.93f;
 
-  button_list_[0].SetLocation(-0.5, 0.5, 0.9, 0.9);
-  button_list_[0].SetColor(1.0, 0.0, 0.0);
-  button_list_[1].SetLocation(0.5, 0.5, 0.9, 0.9);
-  button_list_[1].SetColor(1.0, 0.0, 0.6);
-  button_list_[2].SetLocation(-0.5, -0.5, 0.9, 0.9);
-  button_list_[2].SetColor(0.0, 1.0, 0.0);
-  button_list_[3].SetLocation(0.5, -0.5, 0.9, 0.9);
-  button_list_[3].SetColor(0.0, 1.0, 0.6);
+  for (int i = 0; i < 4; i++) {
+    button_list_[i].SetLocation(0.0, 0.75 - 0.4 * i, 1.5, 0.3);
+  }
 }
 
 void CPPMain::onDrawFrame() {
-  glClearColor(0.0f, 0.0f, bg_intensity_, 1.0f);
+  glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
   firebase::admob::BoundingBox box = banner_view_->GetBoundingBox();
@@ -135,18 +142,7 @@ void CPPMain::onDrawFrame() {
   }
 }
 
-void CPPMain::onUpdate() {
-  // Increment red if increasing, decrement otherwise
-  float diff = bg_intensity_increasing_ ? 0.0025f : -0.0025f;
-
-  // Increment red up to 1.0, then back down to 0.0, repeat.
-  bg_intensity_ += diff;
-  if (bg_intensity_ >= 0.4f) {
-    bg_intensity_increasing_ = false;
-  } else if (bg_intensity_ <= 0.0f) {
-    bg_intensity_increasing_ = true;
-  }
-}
+void CPPMain::onUpdate() {}
 
 void CPPMain::onTap(float x, float y) {
   int button_number = -1;
@@ -155,7 +151,7 @@ void CPPMain::onTap(float x, float y) {
 
   for (int i = 0; i < kNumberOfButtons; i++) {
     if (button_list_[i].CheckClick(viewport_x, viewport_y)) {
-      button_list_[i].SetColor(0.0f, 0.0f, 1.0f);
+      button_list_[i].SetColor(1.0f, 0.0f, 1.0f);
       button_number = i;
     }
   }
