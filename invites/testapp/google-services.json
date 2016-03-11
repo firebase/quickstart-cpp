@@ -1,0 +1,84 @@
+{
+  "project_info": {
+    "project_id": "cpp-invites-test-5c66d",
+    "project_number": "272905636103",
+    "name": "cpp-invites-test",
+    "firebase_url": "https://cpp-invites-test-5c66d.firebaseio.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:272905636103:android:07895b07f4787d53",
+        "client_id": "android:com.google.android.invites.testapp",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.google.android.invites.testapp",
+          "certificate_hash": []
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "272905636103-4qac5is397ptb19amar5599uq03t601t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.google.android.invites.testapp",
+            "certificate_hash": "EDA6413C3E3A95492114FE07CD953AD897E40D1A"
+          }
+        },
+        {
+          "client_id": "272905636103-tf0je04008b7v5mkj9h9bpvj3gundc0v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.google.android.invites.testapp",
+            "certificate_hash": "298568C6DE615096A06B74BEA122ED525836BD53"
+          }
+        },
+        {
+          "client_id": "272905636103-n07oeane0vig9mtqt0dc9db8mugt85h0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxQ-prWVQL4yYlIDTwupKmg2HnxJk6Lbo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 2,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "272905636103-n07oeane0vig9mtqt0dc9db8mugt85h0.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "272905636103-l4h102qckiqpv1q8g9j5q4bjl6ugcjoj.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.google.ios.invites.testapp",
+                "app_store_id": "123456789"
+              }
+            }
+          ]
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 2,
+          "test_banner_ad_unit_id": "ca-app-pub-3940256099942544/6300978111",
+          "test_interstitial_ad_unit_id": "ca-app-pub-3940256099942544/1033173712"
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}

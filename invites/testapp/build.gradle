@@ -1,0 +1,55 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+  repositories {
+    mavenLocal()
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:1.5.0'
+    classpath 'com.google.gms:google-services:1.5.1-beta0'
+  }
+}
+
+allprojects {
+  repositories {
+    mavenLocal()
+    jcenter()
+  }
+}
+
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    sourceSets {
+      main {
+        jniLibs.srcDirs = ['libs']
+        manifest.srcFile 'AndroidManifest.xml'
+        java.srcDirs = ['src/android/java']
+        res.srcDirs = ['res']
+      }
+    }
+
+    defaultConfig {
+        applicationId "com.google.android.invites.testapp"
+        minSdkVersion 14
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+      release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt')
+      }
+    }
+}
+
+dependencies {
+  compile fileTree(dir: 'libs', include: ['*.jar'])
+  compile 'com.google.android.gms:firebase-invites:8.5.3'
+}
+
+apply plugin: 'com.google.gms.google-services'

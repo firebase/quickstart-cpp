@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This file is used instead of res/values/strings.xml when building the
+     application from google3.  If we continue to require the Firebase Gradle
+     plugin (the future is still uncertain) this will need to be removed and
+     replaced with a build script that uses gradle to generate strings.xml from
+     google-services.json -->
+<resources>
+  <string name="app_name">Firebase Auth Test</string>
+  <!-- Derived from google-services.json client.client_info.mobilesdk_app_id
+       See https://googleplex-android.googlesource.com/platform/tools/base/+/studio-master-dev/build-system/google-services/src/main/groovy/com/google/gms/googleservices/GoogleServicesTask.java#297
+    -->
+  <string name="google_app_id">1:258716853123:android:491693c79030db45</string>
+</resources>
