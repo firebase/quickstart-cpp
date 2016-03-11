@@ -1,0 +1,138 @@
+{
+  "project_info": {
+    "project_id": "cpp-measurement-test-14bae",
+    "project_number": "454863422810",
+    "name": "cpp-measurement-test",
+    "firebase_url": "https://cpp-measurement-test-14bae.firebaseio.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:454863422810:android:1accac1055048415",
+        "client_id": "android:com.google.android.measurement.testapp",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.google.android.measurement.testapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "454863422810-ttc3gf7i3ohfo2ojcvcu762jonobed28.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.google.android.measurement.testapp",
+            "certificate_hash": "EDA6413C3E3A95492114FE07CD953AD897E40D1A"
+          }
+        },
+        {
+          "client_id": "454863422810-q0jub2arjj6ttbo3822vee8a7ike6coi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3nhQTX8TlQYp_c1mYFaq_GNmkdYVLhUs"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 2,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "454863422810-6hd56vc3j1aar0uutl67runacofom2t9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.google.ios.measurement.testapp",
+                "app_store_id": ""
+              }
+            },
+            {
+              "client_id": "454863422810-q0jub2arjj6ttbo3822vee8a7ike6coi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 2,
+          "test_banner_ad_unit_id": "ca-app-pub-3940256099942544/6300978111",
+          "test_interstitial_ad_unit_id": "ca-app-pub-3940256099942544/1033173712"
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:454863422810:android:787686f2077bc709",
+        "client_id": "android:com.google.android.analytics.testapp",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.google.android.analytics.testapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "454863422810-uilu9o26uo6m7k13infq3kma8lfr24uk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.google.android.analytics.testapp",
+            "certificate_hash": "EDA6413C3E3A95492114FE07CD953AD897E40D1A"
+          }
+        },
+        {
+          "client_id": "454863422810-q0jub2arjj6ttbo3822vee8a7ike6coi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5Dxzzdm7yB9bhlBDIBSnt3986hdRrdhM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 2,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "454863422810-6hd56vc3j1aar0uutl67runacofom2t9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.google.ios.measurement.testapp",
+                "app_store_id": ""
+              }
+            },
+            {
+              "client_id": "454863422810-q0jub2arjj6ttbo3822vee8a7ike6coi.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "google_signin_service": {
+          "status": 2
+        },
+        "ads_service": {
+          "status": 2,
+          "test_banner_ad_unit_id": "ca-app-pub-3940256099942544/6300978111",
+          "test_interstitial_ad_unit_id": "ca-app-pub-3940256099942544/1033173712"
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}
