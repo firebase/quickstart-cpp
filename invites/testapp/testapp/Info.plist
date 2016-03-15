@@ -20,16 +20,26 @@
 	<string>????</string>
 	<key>CFBundleURLTypes</key>
 	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>google</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.272905636103-l4h102qckiqpv1q8g9j5q4bjl6ugcjoj</string>
-			</array>
-		</dict>
+	  <dict>
+	    <key>CFBundleTypeRole</key>
+	    <string>Editor</string>
+	    <key>CFBundleURLName</key>
+	    <string>google</string>
+	    <key>CFBundleURLSchemes</key>
+	    <array>
+	      <string>com.googleusercontent.apps.272905636103-l4h102qckiqpv1q8g9j5q4bjl6ugcjoj</string>
+	    </array>
+	  </dict>
+          <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Editor</string>
+            <key>CFBundleURLName</key>
+            <string>google</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+              <string>com.google.ios.invites.testapp</string>
+            </array>
+          </dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>

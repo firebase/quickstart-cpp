@@ -120,6 +120,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     g_sender->SetTitleText("Invites Test App");
     g_sender->SetMessageText("Please try my app! It's awesome.");
     g_sender->SetCallToActionText("Download it for FREE");
+    g_sender->SetDeepLinkUrl("http://google.com/abc");
 
     auto future_result = g_sender->SendInvite();
     while (future_result.Status() == firebase::kFutureStatus_Pending) {
@@ -141,6 +142,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
         } else {
           LogMessage("SendInvite: %d invites sent successfully.",
                      result.invitation_ids.size());
+          for (int i = 0; i < result.invitation_ids.size(); i++) {
+            LogMessage("SendInvite: Invite code: %s",
+                       result.invitation_ids[i].c_str());
+          }
         }
       }
     }

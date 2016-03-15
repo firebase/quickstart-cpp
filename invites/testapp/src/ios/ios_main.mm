@@ -17,10 +17,31 @@
 
 #include <stdarg.h>
 
+#include "firebase/invites/ios_startup.h"
 #include "ios/ios_main.h"
+
 #include "main.h"
 
+#import <UIKit/UIKit.h>
+
+@interface FBIViewController : UIViewController
+@property(nonatomic) NSString* appName;
+@end
+
 extern "C" int common_main(int argc, const char* argv[]);
+
+@implementation FBIViewController
+
+- (void)viewDidLoad {
+  [super viewDidLoad];
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+                 ^{
+                   const char* argv[] = {[self.appName UTF8String]};
+                   common_main(1, argv);
+                 });
+}
+
+@end
 
 static int exit_status = 0;
 
@@ -29,7 +50,7 @@ int LogMessage(const char* format, ...) {
   va_list list;
   int rc = 0;
   va_start(list, format);
-  NSLogv([NSString stringWithUTF8String:format], list);
+  NSLogv(@(format), list);
   va_end(list);
   return rc;
 }
@@ -43,13 +64,29 @@ int main(int argc, char* argv[]) {
 
 @implementation AppDelegate
 
-- (BOOL)application:(UIApplication *)application
-    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+- (BOOL)application:(UIApplication*)application
+    didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
   // Override point for customization after application launch.
-  dispatch_async(dispatch_get_main_queue(), ^{
-    const char *argv[] = {FIREBASE_TESTAPP_NAME};
-    exit_status = common_main(1, argv);
-  });
+  // Sending invites requires a visible ViewController.
+  self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+  FBIViewController* viewController = [[FBIViewController alloc] init];
+  viewController.appName =
+      [NSString stringWithUTF8String:FIREBASE_TESTAPP_NAME];
+  self.window.rootViewController = viewController;
+  [self.window makeKeyAndVisible];
+
+  const char* url =
+      [[[launchOptions objectForKey:UIApplicationLaunchOptionsURLKey]
+          absoluteString] UTF8String];
+  FirebaseInvitesSetLaunchUrl(url);
+  return YES;
+}
+
+- (BOOL)application:(UIApplication*)application
+              openURL:(NSURL*)url
+    sourceApplication:(NSString*)sourceApplication
+           annotation:(id)annotation {
+  FirebaseInvitesOpenUrl([[url absoluteString] UTF8String]);
   return YES;
 }
 

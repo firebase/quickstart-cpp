@@ -1,13 +1,14 @@
 {
   "project_info": {
-    "project_id": "auth-cpp-test-app",
-    "project_number": "258716853123",
-    "name": "Auth CPP Test App"
+    "project_id": "auth-test-app-14e43",
+    "project_number": "53101460582",
+    "name": "Auth Test App",
+    "firebase_url": "https://auth-test-app-14e43.firebaseio.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:258716853123:android:491693c79030db45",
+        "mobilesdk_app_id": "1:53101460582:android:491693c79030db45",
         "client_id": "android:com.google.android.auth.testapp",
         "client_type": 1,
         "android_client_info": {
@@ -17,7 +18,7 @@
       },
       "oauth_client": [
         {
-          "client_id": "258716853123-nn1mm61rpf71pcv6ch5a51s27m5eu2uo.apps.googleusercontent.com",
+          "client_id": "53101460582-093vcmrjd7pfe674efgb5vals0i45h4s.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.google.android.auth.testapp",
@@ -25,13 +26,13 @@
           }
         },
         {
-          "client_id": "258716853123-ovsr3qn0tvvsdpo49eo0b3o59aj2bodc.apps.googleusercontent.com",
+          "client_id": "53101460582-v4biicvu5vs2mq1uc0vnea1ia8dcidas.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAhOhc7VW2qZkwZ7efAadgccyx1PDMhCCU"
+          "current_key": "AIzaSyCK3fL0PD-yITwCCnu4vj_1cmGB7M-ujXk"
         }
       ],
       "services": {
@@ -39,18 +40,25 @@
           "status": 1
         },
         "cloud_messaging_service": {
-          "status": 1,
+          "status": 2,
           "apns_config": []
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "53101460582-v4biicvu5vs2mq1uc0vnea1ia8dcidas.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "google_signin_service": {
           "status": 2
         },
         "ads_service": {
-          "status": 1
+          "status": 2,
+          "test_banner_ad_unit_id": "ca-app-pub-3940256099942544/6300978111",
+          "test_interstitial_ad_unit_id": "ca-app-pub-3940256099942544/1033173712"
         }
       }
     }

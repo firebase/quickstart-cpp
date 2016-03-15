@@ -21,7 +21,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion '23.0.1'
 
     sourceSets {
       main {
@@ -33,11 +33,11 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.google.android.analytics.testapp"
+        applicationId 'com.google.android.analytics.testapp'
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0"
+        versionName '1.0'
     }
     buildTypes {
       release {
@@ -53,3 +53,62 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services'
+
+// Pre-experimental Gradle plug-in NDK boilerplate below.
+project.ext {
+  // Configure the Firebase C++ SDK location.
+  firebase_cpp_sdk_dir = System.getProperty('firebase_cpp_sdk_dir')
+  if (firebase_cpp_sdk_dir == null || firebase_cpp_sdk_dir.isEmpty()) {
+    firebase_cpp_sdk_dir = System.getenv('FIREBASE_CPP_SDK_DIR')
+    if (firebase_cpp_sdk_dir == null || firebase_cpp_sdk_dir.isEmpty()) {
+      if ((new File('firebase_cpp_sdk')).exists()) {
+        firebase_cpp_sdk_dir = 'firebase_cpp_sdk'
+      } else {
+        throw new StopActionException(
+          'firebase_cpp_sdk_dir property or the FIREBASE_CPP_SDK_DIR\n' +
+          'environment variable must be set to reference the Firebase C++\n' +
+          'SDK install directory.  This is used to configure static library\n' +
+          'and C/C++ include paths for the SDK.\n')
+      }
+    }
+  }
+  if (!(new File(firebase_cpp_sdk_dir)).exists()) {
+    throw new StopActionException(
+      sprintf('Firebase C++ SDK directory %s does not exist',
+              firebase_cpp_sdk_dir))
+  }
+  // Check the NDK location using the same configuration options as the
+  // experimental Gradle plug-in.
+  ndk_dir = System.getProperty('ndk.dir')
+  if (ndk_dir == null || ndk_dir.isEmpty()) {
+    ndk_dir = System.getenv('ANDROID_NDK_HOME')
+    if (ndk_dir == null || ndk_dir.isEmpty()) {
+      throw new StopActionException(
+        'Android NDK directory should be specified using the ndk.dir\n' +
+        'property or ANDROID_NDK_HOME environment variable.\n')
+    }
+  }
+}
+
+task ndkBuildCompile(type:Exec) {
+  description 'Use ndk-build to compile the C++ application.'
+  commandLine("${project.ext.ndk_dir}${File.separator}ndk-build",
+              "FIREBASE_CPP_SDK_DIR=${project.ext.firebase_cpp_sdk_dir}",
+              sprintf("APP_PLATFORM=android-%d",
+                      android.defaultConfig.minSdkVersion.mApiLevel))
+}
+
+task ndkBuildClean(type:Exec) {
+  description 'Use ndk-build to clean the C++ application.'
+  commandLine("${project.ext.ndk_dir}${File.separator}ndk-build",
+              "FIREBASE_CPP_SDK_DIR=${project.ext.firebase_cpp_sdk_dir}",
+              "clean")
+}
+
+// Once the Android Gradle plug-in has generated tasks, add dependencies for
+// the ndk-build targets.
+project.afterEvaluate {
+  preBuild.dependsOn(ndkBuildCompile)
+  clean.dependsOn(ndkBuildClean)
+}
+
