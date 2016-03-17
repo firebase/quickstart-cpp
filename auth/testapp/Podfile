@@ -1,7 +1,7 @@
 source 'https://cpdc-eap.googlesource.com/spec.git'
 source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '7.0'
-# Analytics test application.
+# Auth test application.
 target 'testapp' do
   pod 'Firebase/Core'
 end

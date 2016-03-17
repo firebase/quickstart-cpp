@@ -55,9 +55,11 @@ dependencies {
 apply plugin: 'com.google.gms.google-services'
 
 // Pre-experimental Gradle plug-in NDK boilerplate below.
+// Right now the Firebase plug-in does not work with the experimental
+// Gradle plug-in so we're using ndk-build for the moment.
 project.ext {
   // Configure the Firebase C++ SDK location.
-  firebase_cpp_sdk_dir = System.getProperty('firebase_cpp_sdk_dir')
+  firebase_cpp_sdk_dir = System.getProperty('firebase_cpp_sdk.dir')
   if (firebase_cpp_sdk_dir == null || firebase_cpp_sdk_dir.isEmpty()) {
     firebase_cpp_sdk_dir = System.getenv('FIREBASE_CPP_SDK_DIR')
     if (firebase_cpp_sdk_dir == null || firebase_cpp_sdk_dir.isEmpty()) {
@@ -65,10 +67,10 @@ project.ext {
         firebase_cpp_sdk_dir = 'firebase_cpp_sdk'
       } else {
         throw new StopActionException(
-          'firebase_cpp_sdk_dir property or the FIREBASE_CPP_SDK_DIR\n' +
-          'environment variable must be set to reference the Firebase C++\n' +
-          'SDK install directory.  This is used to configure static library\n' +
-          'and C/C++ include paths for the SDK.\n')
+          'firebase_cpp_sdk.dir property or the FIREBASE_CPP_SDK_DIR ' +
+          'environment variable must be set to reference the Firebase C++ ' +
+          'SDK install directory.  This is used to configure static library ' +
+          'and C/C++ include paths for the SDK.')
       }
     }
   }
@@ -79,13 +81,13 @@ project.ext {
   }
   // Check the NDK location using the same configuration options as the
   // experimental Gradle plug-in.
-  ndk_dir = System.getProperty('ndk.dir')
-  if (ndk_dir == null || ndk_dir.isEmpty()) {
+  ndk_dir = project.android.ndkDirectory
+  if (ndk_dir == null || !ndk_dir.exists()) {
     ndk_dir = System.getenv('ANDROID_NDK_HOME')
     if (ndk_dir == null || ndk_dir.isEmpty()) {
       throw new StopActionException(
-        'Android NDK directory should be specified using the ndk.dir\n' +
-        'property or ANDROID_NDK_HOME environment variable.\n')
+        'Android NDK directory should be specified using the ndk.dir ' +
+        'property or ANDROID_NDK_HOME environment variable.')
     }
   }
 }
