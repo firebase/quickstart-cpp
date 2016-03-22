@@ -6,7 +6,7 @@ buildscript {
   }
   dependencies {
     classpath 'com.android.tools.build:gradle:1.5.0'
-    classpath 'com.google.gms:google-services:1.5.1-beta0'
+    classpath 'com.google.gms:google-services:1.5.1-beta2'
   }
 }
 
@@ -41,15 +41,17 @@ android {
     }
     buildTypes {
       release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt')
+            // Proguard temporarily disabled until we have a template for
+            // classes referenced from JNI that shouldn't be stripped.
+            //minifyEnabled true
+            //proguardFiles getDefaultProguardFile('proguard-android.txt')
       }
     }
 }
 
 dependencies {
   compile fileTree(dir: 'libs', include: ['*.jar'])
-  compile 'com.google.android.gms:firebase-measurement:8.5.3'
+  compile 'com.google.android.gms:firebase-measurement:8.5.4'
 }
 
 apply plugin: 'com.google.gms.google-services'

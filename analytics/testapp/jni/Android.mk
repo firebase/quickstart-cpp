@@ -41,8 +41,8 @@ LOCAL_SRC_FILES:=\
 	$(LOCAL_PATH)/src/common_main.cc \
 	$(LOCAL_PATH)/src/android/android_main.cc
 LOCAL_STATIC_LIBRARIES:=\
-	firebase_app \
-	firebase_analytics
+	firebase_analytics \
+	firebase_app
 LOCAL_WHOLE_STATIC_LIBRARIES:=\
 	android_native_app_glue
 LOCAL_C_INCLUDES:=\
