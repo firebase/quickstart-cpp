@@ -80,5 +80,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
         analytics::kEventLevelUp, kLevelUpParameters,
         sizeof(kLevelUpParameters) / sizeof(kLevelUpParameters[0]));
   }
+
+#if defined(__ANDROID__)
+  // Wait until the user wants to quit the app.
+  while (!ProcessAndroidEvents(1000)) {
+  }
+#endif  // defined(__ANDROID__)
+
+
   return 0;
 }

@@ -25,7 +25,7 @@ extern "C" int common_main(int argc, const char* argv[]);
 static struct android_app* gAppState = nullptr;
 
 // Process events pending on the main thread.
-void ProcessAndroidEvents(int msec) {
+bool ProcessAndroidEvents(int msec) {
   struct android_poll_source* source = nullptr;
   int events;
   int looperId = ALooper_pollAll(msec, nullptr, &events,
@@ -33,6 +33,7 @@ void ProcessAndroidEvents(int msec) {
   if (looperId >= 0 && source) {
     source->process(gAppState, source);
   }
+  return gAppState->destroyRequested;
 }
 
 // Log a message that can be viewed in "adb logcat".
