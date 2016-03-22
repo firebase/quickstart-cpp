@@ -51,12 +51,21 @@ static const char kTestPasswordUpdated[] = "testpasswordupdated";
 static const char kTestDisplayName[] = "my display name";
 static const char kTestPhotoUri[] = "my photo uri";
 
+// TODO(jsanmiya): These should be the same between platforms.
+// Remove when standardized.
+static const char kFirebaseProviderId[] =
+#if defined(__ANDROID__)
+  "firebase";
+#else   // !defined(__ANDROID__)
+  "Firebase";
+#endif  // !defined(__ANDROID__)
+
 App* g_app;
 
 // Pause the current thread for the specified number of milliseconds.
 static void Wait(int ms) {
 #if defined(__ANDROID__)
-  ProcessAndroidEvents(100);
+  ProcessAndroidEvents(ms);
 #else   // !defined(__ANDROID__)
   usleep(1000 * ms);
 #endif  // !defined(__ANDROID__)
@@ -66,9 +75,14 @@ static void Wait(int ms) {
 // Print a message for whether the result mathes our expectations.
 static void WaitForFuture(const FutureBase& future, const char* fn,
                           AuthError expected_error) {
+  // Note if the future has not be started properly.
+  if (future.Status() == ::firebase::kFutureStatus_Invalid) {
+    LogMessage("ERROR! Future for %s is invalid", fn);
+  }
+
   // Wait for future to complete.
   while (future.Status() == ::firebase::kFutureStatus_Pending) {
-    Wait(400);
+    Wait(100);
     LogMessage("  Calling %s...", fn);
   }
 
@@ -89,7 +103,9 @@ static void WaitForSignInFuture(const FutureBase& future, const char* fn,
 
   const Future<User*>& sign_in_future =
       static_cast<const Future<User*>&>(future);
-  const User* sign_in_user = *sign_in_future.Result();
+  const User* const* sign_in_user_ptr = sign_in_future.Result();
+  const User* sign_in_user =
+      sign_in_user_ptr == NULL ? NULL : *sign_in_user_ptr;
   const User* auth_user = auth->CurrentUser();
 
   if (sign_in_user != auth_user) {
@@ -138,6 +154,20 @@ static void ExpectStringsEqual(const char* test, const char* expected,
   } else {
     LogMessage("ERROR! %s is '%s' instead of '%s'", test, actual, expected);
   }
+}
+
+// NOTE: Don't use this sort of platform-specific logic in your applications.
+// TODO(jsanmiya): All errors should be the same, regardless of platform.
+// Remove when standardized.
+inline AuthError TEMP_PlatformSpecificError(AuthError android_error,
+                                            AuthError ios_error) {
+#if defined(__ANDROID__)
+  (void)ios_error;
+  return android_error;
+#else  // !defined(__ANDROID__)
+  (void)android_error;
+  return ios_error;
+#endif  // !defined(__ANDROID__)
 }
 
 // Execute all methods of the C++ Auth API.
@@ -262,7 +292,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
   Future<User*> facebook_bad = auth->SignInWithCredential(facebook_cred_bad);
   WaitForSignInFuture(facebook_bad,
                       "Auth::SignInWithCredential() bad Facebook credentials",
-                      firebase::kAuthError_GeneralBackendError, auth);
+                      TEMP_PlatformSpecificError(
+                        firebase::kAuthError_GeneralBackendError,
+                        firebase::kAuthError_InternalError), auth);
 
   // Use bad Google credentials. Should fail.
   // TODO(jsanmiya): Also add good Google credentials.
@@ -271,7 +303,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
   Future<User*> google_bad = auth->SignInWithCredential(google_cred_bad);
   WaitForSignInFuture(google_bad,
                       "Auth::SignInWithCredential() bad Google credentials",
-                      firebase::kAuthError_GeneralBackendError, auth);
+                      TEMP_PlatformSpecificError(
+                        firebase::kAuthError_GeneralBackendError,
+                        firebase::kAuthError_InternalError), auth);
 
   // Test Auth::SendPasswordResetEmail().
   // Use existing email. Should succeed.
@@ -286,7 +320,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
       auth->SendPasswordResetEmail(kTestEmailBad);
   WaitForFuture(send_password_reset_bad,
                 "Auth::SendPasswordResetEmail() bad email",
-                firebase::kAuthError_EmailNotFound);
+                TEMP_PlatformSpecificError(
+                        firebase::kAuthError_EmailNotFound,
+                        firebase::kAuthError_InvalidEmail));
 
   // Test unimplemented APIs, just to ensure they don't crash.
   Future<User*> confirm_password_reset =
@@ -317,7 +353,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
                      anonymous_user->DisplayName().c_str());
   ExpectStringsEqual("Anonymous user PhotoUrl", "",
                      anonymous_user->PhotoUrl().c_str());
-  ExpectStringsEqual("Anonymous user ProviderId", "firebase",
+  ExpectStringsEqual("Anonymous user ProviderId", kFirebaseProviderId,
                      anonymous_user->ProviderId().c_str());
   ExpectTrue("Anonymous email Anonymous()", anonymous_user->Anonymous());
 
@@ -341,7 +377,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   ExpectStringsEqual("Email user DisplayName", "",
                      email_user->DisplayName().c_str());
   ExpectStringsEqual("Email user PhotoUrl", "", email_user->PhotoUrl().c_str());
-  ExpectStringsEqual("Email user ProviderId", "firebase",
+  ExpectStringsEqual("Email user ProviderId", kFirebaseProviderId,
                      email_user->ProviderId().c_str());
   ExpectFalse("Email email Anonymous()", email_user->Anonymous());
 
@@ -379,7 +415,20 @@ extern "C" int common_main(int argc, const char* argv[]) {
   // Test User::Unlink().
   Future<User*> unlink_future = email_user->Unlink("firebase");
   WaitForSignInFuture(unlink_future, "User::Unlink()",
-                      firebase::kAuthError_EmailSignUpNotAllowed, auth);
+                      TEMP_PlatformSpecificError(
+                        firebase::kAuthError_EmailSignUpNotAllowed,
+                        firebase::kAuthError_NoSuchProvider), auth);
+
+  // Sign in again if user is now invalid.
+  // TODO(jsanmiya): User should not be invalid on bad Unlink. Remove this
+  // when iOS implementation is fixed.
+  if (auth->CurrentUser() == nullptr) {
+    Future<User*> email_sign_in_again = auth->SignInWithCredential(user_cred);
+    WaitForSignInFuture(email_sign_in_again,
+                        "Auth::SignInWithCredential() again", kAuthError_None,
+                        auth);
+    email_user = *email_sign_in_again.Result();
+  }
 
   // Test User::ProviderData().
   const std::vector<UserInfoInterface*>& provider_data =
@@ -424,12 +473,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
   Future<void> send_email_verification_future =
       email_user->SendEmailVerification();
   WaitForFuture(send_email_verification_future, "User::SendEmailVerification()",
-                firebase::kAuthError_Unimplemented);
+                TEMP_PlatformSpecificError(
+                        firebase::kAuthError_Unimplemented,
+                        firebase::kAuthError_InternalError));
 
   // Test User::Delete().
   Future<void> delete_future = email_user->Delete();
   WaitForFuture(delete_future, "User::Delete()",
-                firebase::kAuthError_Unimplemented);
+                TEMP_PlatformSpecificError(
+                        firebase::kAuthError_Unimplemented,
+                        firebase::kAuthError_TokenExpired));
 
   LogMessage("Completed Auth tests.");
   return 0;

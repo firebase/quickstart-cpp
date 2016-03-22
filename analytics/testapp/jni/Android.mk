@@ -26,14 +26,12 @@ $(FIREBASE_CPP_SDK_DIR)/libs/android/$(TARGET_ARCH_ABI)/$(STL)
 include $(CLEAR_VARS)
 LOCAL_MODULE:=firebase_app
 LOCAL_SRC_FILES:=$(FIREBASE_LIBRARY_PATH)/libapp.a
-LOCAL_EXPORT_LDLIBS:=-llog -landroid
 LOCAL_EXPORT_C_INCLUDES:=$(FIREBASE_CPP_SDK_DIR)/include
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE:=firebase_analytics
 LOCAL_SRC_FILES:=$(FIREBASE_LIBRARY_PATH)/libanalytics.a
-LOCAL_STATIC_LIBRARIES:=firebase_app
 LOCAL_EXPORT_C_INCLUDES:=$(FIREBASE_CPP_SDK_DIR)/include
 include $(PREBUILT_STATIC_LIBRARY)
 
@@ -50,6 +48,7 @@ LOCAL_WHOLE_STATIC_LIBRARIES:=\
 LOCAL_C_INCLUDES:=\
 	$(NDK_ROOT)/sources/android/native_app_glue \
 	$(LOCAL_PATH)/src
+LOCAL_LDLIBS:=-llog -landroid
 LOCAL_ARM_MODE:=arm
 LOCAL_LDFLAGS:=-Wl,-z,defs -Wl,--no-undefined
 include $(BUILD_SHARED_LIBRARY)

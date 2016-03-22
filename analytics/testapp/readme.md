@@ -13,7 +13,7 @@ Introduction
 Getting Started
 ---------------
 
-- iOS
+### iOS
   - [Add Firebase to your iOS Project](https://developers.google.com/firebase/docs/ios/setup).
     You can use "com.google.ios.analytics.testapp" as the App ID while
     you're testing.
@@ -24,15 +24,16 @@ Getting Started
   - The application has no user interface, the output of the app can be viewed
     via the console.  In Xcode,  select
     "View --> Debug Area --> Activate Console" from the menu.
-  - After a few hours data should be visible in the Firebase Console accessible
-    from [https://developers.google.com/firebase/]().
+  - After 5 hours, data should be visible in the Firebase Console under the
+    "Analytics" tab accessible from
+    [https://developers.google.com/firebase/]().
 
-- Android
+### Android
   - [Add Firebase to your Android Project](https://developers.google.com/firebase/docs/android/setup).
     You can use "com.google.android.analytics.testapp" as the App ID while
     you're testing.
   - Configure the location of the Firebase C++ SDK by setting the
-    firebase_cpp_sdk.dir Gradle property to the SDK install directory.
+    firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
     > echo "systemProp.firebase\_cpp\_sdk.dir=~/firebase\_cpp\_sdk" >> gradle.properties
   - Configure the location of the Android NDK by setting the ndk.dir Gradle
@@ -44,8 +45,9 @@ Getting Started
   - The application has no user interface, the output of the app can be viewed
     in the logcat output of Android studio or by running "adb logcat" from
     the command line.
-  - After a few hours data should be visible in the Firebase Console accessible
-    from [https://developers.google.com/firebase/]().
+  - After 5 hours, data should be visible in the Firebase Console under the
+    "Analytics" tab accessible from
+    [https://developers.google.com/firebase/]().
 
 Support
 -------
