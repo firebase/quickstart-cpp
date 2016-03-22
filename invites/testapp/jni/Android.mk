@@ -14,30 +14,29 @@
 
 LOCAL_PATH:=$(call my-dir)/..
 
-ifeq ($(FIREBASE_PACKAGE_PATH),)
-$(error FIREBASE_PACKAGE_PATH must specify the Firebase package location.)
+ifeq ($(FIREBASE_CPP_SDK_DIR),)
+$(error FIREBASE_CPP_SDK_DIR must specify the Firebase package location.)
 endif
 
 # With Firebase libraries for the selected build configuration (ABI + STL)
-# TODO(smiles): Re-enable STL when cl/115590224 is checked in.
+STL:=$(firstword $(subst _, ,$(APP_STL)))
 FIREBASE_LIBRARY_PATH:=\
-$(FIREBASE_PACKAGE_PATH)/android/$(TARGET_ARCH_ABI)# /$(APP_STL)
+$(FIREBASE_CPP_SDK_DIR)/libs/android/$(TARGET_ARCH_ABI)/$(STL)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE:=firebase_app
 LOCAL_SRC_FILES:=$(FIREBASE_LIBRARY_PATH)/libapp.a
-LOCAL_EXPORT_C_INCLUDES:=$(FIREBASE_PACKAGE_PATH)/include
+LOCAL_EXPORT_C_INCLUDES:=$(FIREBASE_CPP_SDK_DIR)/include
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE:=firebase_invites
 LOCAL_SRC_FILES:=$(FIREBASE_LIBRARY_PATH)/libinvites.a
-LOCAL_STATIC_LIBRARIES:=firebase_app
-LOCAL_EXPORT_C_INCLUDES:=$(FIREBASE_PACKAGE_PATH)/include
+LOCAL_EXPORT_C_INCLUDES:=$(FIREBASE_CPP_SDK_DIR)/include
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:=libmain_activity
+LOCAL_MODULE:=android_main
 LOCAL_SRC_FILES:=\
 	$(LOCAL_PATH)/src/common_main.cc \
 	$(LOCAL_PATH)/src/android/android_main.cc
@@ -49,8 +48,9 @@ LOCAL_WHOLE_STATIC_LIBRARIES:=\
 LOCAL_C_INCLUDES:=\
 	$(NDK_ROOT)/sources/android/native_app_glue \
 	$(LOCAL_PATH)/src
-LOCAL_ARM_MODE:=arm
 LOCAL_LDLIBS:=-llog -landroid
+LOCAL_ARM_MODE:=arm
+LOCAL_LDFLAGS:=-Wl,-z,defs -Wl,--no-undefined
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-add-path,$(NDK_ROOT)/sources/android)
