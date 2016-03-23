@@ -24,8 +24,16 @@ Getting Started
     your project" steps from the
     [Try App Invites on iOS](https://developers.google.com/app-invites/ios/guides/start)
     doc to configure the project.
-    -  Use "com.google.ios.invites.testapp" as the App ID while you're testing,
-    and a random App Store ID such as 12345678.
+    - Use "com.google.ios.invites.testapp" as the iOS Bundle ID (App ID) while
+      you're testing, and a random App Store ID such as 12345678.
+    - Make sure you set up a URL type to handle the callback. In your project's
+      Info tab, under the URL Types section, find the URL Schemes box containing
+      YOUR\_REVERSED\_CLIENT\_ID. Replace this with the value of the
+      REVERSED\_CLIENT\_ID string in GoogleService-Info.plist.
+- You will need to install the pods and open the .xcworkspace project to
+    continue building the testapp in Xcode:
+    > pod install
+    > open testapp.xcworkspace
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase_invites.framework

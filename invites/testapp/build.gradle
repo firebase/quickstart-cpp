@@ -96,7 +96,7 @@ project.ext {
 
 task ndkBuildCompile(type:Exec) {
   description 'Use ndk-build to compile the C++ application.'
-  commandLine("${project.ext.ndk_dir}${File.separator}ndk-build", "V=1",
+  commandLine("${project.ext.ndk_dir}${File.separator}ndk-build",
               "FIREBASE_CPP_SDK_DIR=${project.ext.firebase_cpp_sdk_dir}",
               sprintf("APP_PLATFORM=android-%d",
                       android.defaultConfig.minSdkVersion.mApiLevel))
