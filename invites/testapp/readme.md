@@ -35,8 +35,9 @@ Building and Running the testapp
     - For further details please refer to the
       [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
   - Register your iOS app with Firebase.
-    - Create a new app on [Firebase console](https://g.co/firebase), and attach
-      your iOS app to it.
+    - Create a new app on
+      [developers.google.com](https://developers.google.com/mobile/add?platform=ios&cntapi=appinvite&cntapp=Invites%20TestApp&cntpkg=com.google.ios.invites.testapp),
+      and attach your iOS app to it.
       - For Invites, you will need an App Store ID. Use something random such
         as 12345678."
       - You can use "com.google.ios.invites.testapp" as the iOS Bundle ID
@@ -70,8 +71,9 @@ Building and Running the testapp
 
 ### Android
   - Register your Android app with Firebase.
-    - Create a new app on [Firebase console](https://g.co/firebase), and attach
-      your Android app to it.
+    - Create a new app on
+      [developers.google.com](https://developers.google.com/mobile/add?platform=android&cntapi=appinvite&cntapp=Invites%20TestApp&cntpkg=com.google.android.invites.testapp),
+      and attach your Android app to it.
       - You can use "com.google.android.invites.testapp" as the Package Name
         while you're testing.
       - To [generate a SHA1](https://developers.google.com/android/guides/client-auth)
