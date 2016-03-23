@@ -10,18 +10,53 @@ Introduction
 
 - [Read more about Firebase Analytics](https://developers.google.com/firebase/)
 
-Getting Started
----------------
+Building and Running the testapp
+--------------------------------
 
 ### iOS
-  - [Add Firebase to your iOS Project](https://developers.google.com/firebase/docs/ios/setup).
-    You can use "com.google.ios.analytics.testapp" as the App ID while
-    you're testing.
+  - Link your iOS app to the Firebase libraries.
+    - Get access to the Firebase SDK git repo via
+      [git cookie](https://cpdc-eap.googlesource.com/new-password).
+    - Get CocoaPods version 1 or later by running,
+        ```
+        $ sudo gem install CocoaPods --pre
+        ```
+    - From the testapp directory, install the CocoaPods listed in the Podfile
+      by running,
+        ```
+        $ pod install
+        ```
+    - Open the generated Xcode workspace (which now has the CocoaPods),
+        ```
+        $ open testapp.xcworkspace
+        ```
+    - For further details please refer to the
+      [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
+  - Register your iOS app with Firebase.
+    - Create a new app on [Firebase console](https://g.co/firebase), and attach
+      your iOS app to it.
+      - You can use "com.google.ios.analytics.testapp" as the iOS Bundle ID
+        while you're testing. You can omit App Store ID while testing.
+    - Add the GoogleService-Info.plist that you downloaded from Firebase
+      console to the testapp root directory. This file identifies your iOS app
+      to the Firebase backend.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase_analytics.framework
-  - From XCode build & run the sample on an iOS device or emulator.
-  - The application has no user interface, the output of the app can be viewed
+    - You will need to either,
+       1. Check "Copy items if needed" when adding the frameworks, or
+       2. Add the framework path in "Framework Search Paths"
+          - e.g. If you downloaded the Firebase C++ SDK to
+            `/Users/me/firebase_cpp_sdk`,
+            then you would add the path
+            `/Users/me/firebase_cpp_sdk/frameworks/ios/universal`.
+          - To add the path, in XCode, select your project in the project
+            navigator, then select your target in the main window.
+            Select the "Build Settings" tab, and click "All" to see all
+            the build settings. Scroll down to "Search Paths", and add
+            your path to "Framework Search Paths".
+  - In XCode, build & run the sample on an iOS device or simulator.
+  - The testapp has no user interface. The output of the app can be viewed
     via the console.  In Xcode,  select
     "View --> Debug Area --> Activate Console" from the menu.
   - After 5 hours, data should be visible in the Firebase Console under the
@@ -29,20 +64,46 @@ Getting Started
     [https://developers.google.com/firebase/]().
 
 ### Android
-  - [Add Firebase to your Android Project](https://developers.google.com/firebase/docs/android/setup).
-    You can use "com.google.android.analytics.testapp" as the App ID while
-    you're testing.
+  - Register your Android app with Firebase.
+    - Create a new app on [Firebase console](https://g.co/firebase), and attach
+      your Android app to it.
+      - You can use "com.google.android.analytics.testapp" as the Package Name
+        while you're testing.
+      - To [generate a SHA1](https://developers.google.com/android/guides/client-auth)
+        run this command on Mac and Linux,
+        ```
+        keytool -exportcert -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore
+        ```
+        or this command on Windows,
+        ```
+        keytool -exportcert -list -v -alias androiddebugkey -keystore %USERPROFILE%\.android\debug.keystore
+        ```
+      - If keytool reports that you do not have a debug.keystore, you can
+        [create one with](http://developer.android.com/tools/publishing/app-signing.html#signing-manually),
+        ```
+        keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"
+        ```
+    - Add the `google-services.json` file that you downloaded from Firebase
+      console to the root directory of testapp. This file identifies your
+      Android app to the Firebase backend.
+    - For further details please refer to the
+      [general instructions for setting up an Android app with Firebase](https://developers.google.com/firebase/docs/android/setup).
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
-    > echo "systemProp.firebase\_cpp\_sdk.dir=~/firebase\_cpp\_sdk" >> gradle.properties
-  - Configure the location of the Android NDK by setting the ndk.dir Gradle
-    property to the NDK install directory.
-    For example, in the project directory:
-    > echo "ndk.dir=~/ndk" >> local.properties
+      ```
+      > echo "systemProp.firebase\_cpp\_sdk.dir=/User/$USER/firebase\_cpp\_sdk" >> gradle.properties
+      ```
+  - Ensure the Android SDK and NDK locations are set in Android Studio.
+    - From the Android Studio launch menu, go to
+      Configure/Project Defaults/Project Structure and download the SDK and NDK if
+      the locations are not yet set.
   - Open *build.gradle* in Android Studio.
-  - Build & run the sample on an Android device or emulator.
-  - The application has no user interface, the output of the app can be viewed
+    - From the Android Studio launch menu, "Open an existing Android Studio
+      project", and select `build.gradle`.
+  - Install the SDK Platforms that Android Studio reports missing.
+  - Build the testapp and run it on an Android device or emulator.
+  - The testapp has no user interface. The output of the app can be viewed
     in the logcat output of Android studio or by running "adb logcat" from
     the command line.
   - After 5 hours, data should be visible in the Firebase Console under the
