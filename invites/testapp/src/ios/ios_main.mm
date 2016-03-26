@@ -34,11 +34,10 @@ extern "C" int common_main(int argc, const char* argv[]);
 
 - (void)viewDidLoad {
   [super viewDidLoad];
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
-                 ^{
-                   const char* argv[] = {[self.appName UTF8String]};
-                   common_main(1, argv);
-                 });
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    const char* argv[] = {[self.appName UTF8String]};
+    common_main(1, argv);
+  });
 }
 
 @end
@@ -70,15 +69,11 @@ int main(int argc, char* argv[]) {
   // Sending invites requires a visible ViewController.
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   FBIViewController* viewController = [[FBIViewController alloc] init];
-  viewController.appName =
-      [NSString stringWithUTF8String:FIREBASE_TESTAPP_NAME];
+  viewController.appName = [NSString stringWithUTF8String:FIREBASE_TESTAPP_NAME];
   self.window.rootViewController = viewController;
   [self.window makeKeyAndVisible];
 
-  const char* url =
-      [[[launchOptions objectForKey:UIApplicationLaunchOptionsURLKey]
-          absoluteString] UTF8String];
-  FirebaseInvitesSetLaunchUrl(url);
+  FirebaseInvitesSetLaunchOptions(launchOptions);
   return YES;
 }
 
@@ -86,8 +81,13 @@ int main(int argc, char* argv[]) {
               openURL:(NSURL*)url
     sourceApplication:(NSString*)sourceApplication
            annotation:(id)annotation {
-  FirebaseInvitesOpenUrl([[url absoluteString] UTF8String]);
-  return YES;
+  return FirebaseInvitesOpenUrl(url, sourceApplication, annotation);
+}
+
+- (BOOL)application:(UIApplication*)application openURL:(NSURL*)url options:(NSDictionary*)options {
+  return FirebaseInvitesOpenUrl(url,
+                                options[UIApplicationOpenURLOptionsSourceApplicationKey],
+                                options[UIApplicationOpenURLOptionsAnnotationKey]);
 }
 
 @end
