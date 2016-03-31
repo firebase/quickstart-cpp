@@ -1,0 +1,8 @@
+source 'https://cpdc-eap.googlesource.com/spec.git'
+source 'https://github.com/CocoaPods/Specs.git'
+platform :ios, '7.0'
+# AdMob test application.
+target 'testapp' do
+  pod 'Firebase/Core'
+  pod 'Google-Mobile-Ads-SDK', '~> 7.7’
+end
