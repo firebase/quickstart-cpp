@@ -72,11 +72,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
   ::firebase::messaging::Subscribe("/topics/TestTopic");
   LogMessage("Subscribed to TestTopic");
 
-#if defined(__ANDROID__)
   while (!ProcessEvents(1000)) {
     // Process events so that the client doesn't hang.
     LogMessage("Main tick");
   }
-#endif  // defined(__ANDROID__)
   return 0;
 }

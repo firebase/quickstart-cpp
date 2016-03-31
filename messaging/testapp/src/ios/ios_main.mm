@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
   // Override point for customization after application launch.
   // TOOD(smiles): This needs to run on a separate thread so UIApplicationMain() can
   // notify our app delegate with events.
-  dispatch_async(dispatch_get_main_queue(), ^{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     const char *argv[] = {FIREBASE_TESTAPP_NAME};
     exit_status = common_main(1, argv);
   });
