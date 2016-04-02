@@ -24,13 +24,26 @@ extern "C" int common_main(int argc, const char* argv[]);
 
 static int exit_status = 0;
 
+static UITextView *textView;
+
 // Log a message that can be viewed in "adb logcat".
 int LogMessage(const char* format, ...) {
-  va_list list;
   int rc = 0;
-  va_start(list, format);
-  NSLogv([NSString stringWithUTF8String:format], list);
-  va_end(list);
+  va_list args;
+  NSString *format_string = [NSString stringWithUTF8String:format];
+  va_start(args, format);
+  NSString* log = [[NSString alloc] initWithFormat:format_string arguments:args];
+  va_end(args);
+  va_start(args, format);
+  NSLogv(format_string, args);
+  va_end(args);
+
+  log = [log stringByAppendingString: @"\n"];
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    textView.text = [textView.text stringByAppendingString: log];
+  });
+
   return rc;
 }
 
@@ -42,9 +55,23 @@ int main(int argc, char* argv[]) {
 }
 
 @implementation AppDelegate
-
 - (BOOL)application:(UIApplication *)application
     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+
+  self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+  self.window.backgroundColor = [UIColor whiteColor];
+  UIViewController *viewController = [[UIViewController alloc] init];
+  self.window.rootViewController = viewController;
+  [self.window makeKeyAndVisible];
+
+  textView = [[UITextView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+
+  textView.editable = false;
+  textView.scrollEnabled = true;
+  textView.userInteractionEnabled = true;
+
+  [viewController.view addSubview: textView];
+
   // Override point for customization after application launch.
   dispatch_async(dispatch_get_main_queue(), ^{
     const char *argv[] = {FIREBASE_TESTAPP_NAME};

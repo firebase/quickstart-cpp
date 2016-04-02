@@ -17,6 +17,7 @@
 #include "firebase/admob/interstitial_ad.h"
 #include "firebase/admob/types.h"
 #include "firebase/app.h"
+#include "firebase/future.h"
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
@@ -52,8 +53,8 @@ static const char* kExtraValue = "the_value_for_that_extra";
 
 // Global vars.
 ::firebase::App* g_app;
-::firebase::admob::BannerView g_banner;
-::firebase::admob::InterstitialAd g_int;
+::firebase::admob::BannerView* g_banner;
+::firebase::admob::InterstitialAd* g_int;
 ::firebase::admob::AdRequest g_request;
 
 // Extras to use later
@@ -125,63 +126,56 @@ extern "C" int common_main(void* ad_parent) {
   ad_size.height = kBannerHeight;
 
   LogMessage("Creating the BannerView.");
-  g_banner.Initialize(static_cast<admob::AdParent>(ad_parent), kBannerAdUnit,
-                      ad_size);
+  g_banner = new admob::BannerView();
+  g_banner->Initialize(static_cast<admob::AdParent>(ad_parent), kBannerAdUnit,
+                       ad_size);
+
+  WaitForFutureCompletion(g_banner->InitializeLastResult());
+
+  // When the BannerView is initialized, load an ad.
+  LogMessage("Loading a banner ad.");
+  g_banner->LoadAd(g_request);
+
+  WaitForFutureCompletion(g_banner->LoadAdLastResult());
+
+  // When the BannerView has loaded an ad, show it.
+  LogMessage("Showing the banner.");
+  g_banner->Show();
 
   LogMessage("Creating the InterstitialAd.");
-  g_int.Initialize(static_cast<admob::AdParent>(ad_parent),
-                   kInterstitialAdUnit);
+  g_int = new admob::InterstitialAd();
+  g_int->Initialize(static_cast<admob::AdParent>(ad_parent),
+                    kInterstitialAdUnit);
 
+  WaitForFutureCompletion(g_int->InitializeLastResult());
+
+  // When the InterstitialAd is initialized, load an ad.
+  LogMessage("Loading an interstitial ad.");
+  g_int->LoadAd(g_request);
+
+  WaitForFutureCompletion(g_int->LoadAdLastResult());
+
+  // When the InterstitialAd has loaded an ad, show it.
+  LogMessage("Showing the interstitial.");
+  g_int->Show();
+
+  // Wait until the user kills the app.
+#if defined(__ANDROID__)
+  while (!ProcessAndroidEvents(1000)) {
+  }
+#endif  // defined(__ANDROID__)
+
+  return 0;
+}
+
+void WaitForFutureCompletion(firebase::FutureBase future) {
 #if defined(__ANDROID__)
   while (!ProcessAndroidEvents(1000)) {
 #else
   while (true) {
 #endif  // defined(__ANDROID__)
-
-    admob::BannerView::BannerViewPresentationState banner_presentation =
-        g_banner.GetPresentationState();
-    admob::BannerView::BannerViewLifecycleState banner_lifecycle =
-        g_banner.GetLifecycleState();
-    admob::InterstitialAd::InterstitialAdPresentationState
-        interstitial_presentation = g_int.GetPresentationState();
-    admob::InterstitialAd::InterstitialAdLifecycleState interstitial_lifecycle =
-        g_int.GetLifecycleState();
-
-    LogMessage("BannerView status: %d, %d -- InterstitialAd status: %d, %d",
-               banner_presentation, banner_lifecycle, interstitial_presentation,
-               interstitial_lifecycle);
-
-    // When the BannerView is initialized, load an ad and show it.
-    if (banner_lifecycle == admob::BannerView::kBannerViewInitialized) {
-      LogMessage("Loading banner ad...");
-      g_banner.LoadAd(g_request);
-      g_banner.Show();
-    }
-
-    // When the InterstitialAd is initialized, load an ad.
-    if (interstitial_lifecycle ==
-        admob::InterstitialAd::kInterstitialAdInitialized) {
-      LogMessage("Loading interstitial ad...");
-      g_int.LoadAd(g_request);
-    }
-
-    // When the InterstitialAd is loaded and not yet shown, show it.
-    if ((interstitial_lifecycle ==
-         admob::InterstitialAd::kInterstitialAdLoaded) &&
-        (interstitial_presentation ==
-         admob::InterstitialAd::kInterstitialAdHidden)) {
-      LogMessage("Showing interstitial ad...");
-      g_int.Show();
-    }
-
-    // If both the BannerView and InterstitialAd are successfully showing, exit.
-    if ((banner_presentation == admob::BannerView::kBannerViewVisibleWithAd) &&
-        (interstitial_presentation ==
-         admob::InterstitialAd::kInterstitialAdCoveringUI)) {
-      LogMessage("Both ads are showing; we're done here!");
+    if (future.Status() != ::firebase::kFutureStatus_Pending) {
       break;
     }
   }
-
-  return 0;
 }

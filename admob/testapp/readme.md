@@ -15,15 +15,48 @@ Getting Started
 ---------------
 
 ### iOS
-  - [Add Firebase to your iOS Project](https://developers.google.com/firebase/docs/ios/setup).
-    You can use "com.google.ios.admob.testapp" as the App ID while
-    you're testing.
+ - Link your iOS app to the Firebase libraries.
+    - Get access to the Firebase SDK git repo via
+      [git cookie](https://cpdc-eap.googlesource.com/new-password).
+    - Get CocoaPods version 1 or later by running,
+        ```
+        $ sudo gem install CocoaPods --pre
+        ```
+    - From the testapp directory, install the CocoaPods listed in the Podfile
+      by running,
+        ```
+        $ pod install
+        ```
+    - Open the generated Xcode workspace (which now has the CocoaPods),
+        ```
+        $ open testapp.xcworkspace
+        ```
+    - For further details please refer to the
+      [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
+  - Register your iOS app with Firebase.
+    - Create a new app on [Firebase console](https://g.co/firebase), and attach
+      your iOS app to it.
+      - You can use "com.google.ios.admob.testapp" as the iOS Bundle ID
+        while you're testing. You can omit App Store ID while testing.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase_admob.framework
-  - From XCode build & run the sample on an iOS device or emulator.
-  - The application displays ads, but has no other user interaction. The output
-    of the app can be viewed via the console.  In Xcode,  select
+    - You will need to either,
+       1. Check "Copy items if needed" when adding the frameworks, or
+       2. Add the framework path in "Framework Search Paths"
+          - e.g. If you downloaded the Firebase C++ SDK to
+            `/Users/me/firebase_cpp_sdk`,
+            then you would add the path
+            `/Users/me/firebase_cpp_sdk/frameworks/ios/universal`.
+          - To add the path, in Xcode, select your project in the project
+            navigator, then select your target in the main window.
+            Select the "Build Settings" tab, and click "All" to see all
+            the build settings. Scroll down to "Search Paths", and add
+            your path to "Framework Search Paths".
+  - In Xcode, build & run the sample on an iOS device or simulator.
+  - The testapp displays a banner ad and an interstitial ad. You can
+    dismiss the interstitial ad to see the banner ad. The output of the app can
+    be viewed via the console. To view the conscole in Xcode, select
     "View --> Debug Area --> Activate Console" from the menu.
 
 ### Android
