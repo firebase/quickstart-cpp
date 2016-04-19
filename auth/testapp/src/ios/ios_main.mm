@@ -14,14 +14,10 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-
 #include <stdarg.h>
 
 #include "ios/ios_main.h"
-
 #include "main.h"
-
-#import <UIKit/UIKit.h>
 
 @interface FBIViewController : UIViewController
 @property(nonatomic) NSString* appName;
@@ -44,13 +40,25 @@ extern "C" int common_main(int argc, const char* argv[]);
 
 static int exit_status = 0;
 
+static UITextView *textView;
+
 // Log a message that can be viewed in "adb logcat".
 int LogMessage(const char* format, ...) {
-  va_list list;
   int rc = 0;
-  va_start(list, format);
-  NSLogv(@(format), list);
-  va_end(list);
+  va_list args;
+  NSString *formatString = @(format);
+  va_start(args, format);
+  NSString* log = [[NSString alloc] initWithFormat:formatString arguments:args];
+  va_end(args);
+  va_start(args, format);
+  NSLogv(formatString, args);
+  va_end(args);
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    textView.text = [textView.text stringByAppendingString: @"\n"];
+    textView.text = [textView.text stringByAppendingString: log];
+  });
+
   return rc;
 }
 
@@ -59,6 +67,14 @@ int main(int argc, char* argv[]) {
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
   }
   return exit_status;
+}
+
+void InitLogWindow(UIViewController* viewController) {
+  textView = [[UITextView alloc] initWithFrame:viewController.view.bounds];
+  textView.editable = false;
+  textView.scrollEnabled = true;
+  textView.userInteractionEnabled = true;
+  [viewController.view addSubview: textView];
 }
 
 @implementation AppDelegate
@@ -71,6 +87,7 @@ int main(int argc, char* argv[]) {
   FBIViewController* viewController = [[FBIViewController alloc] init];
   viewController.appName = @(FIREBASE_TESTAPP_NAME);
   self.window.rootViewController = viewController;
+  InitLogWindow(viewController);
   [self.window makeKeyAndVisible];
 
   return YES;

@@ -29,13 +29,26 @@ bool ProcessEvents(int msec) {
   return false;
 }
 
+
+static UITextView *textView;
+
 // Log a message that can be viewed in "adb logcat".
 int LogMessage(const char* format, ...) {
-  va_list list;
   int rc = 0;
-  va_start(list, format);
-  NSLogv([NSString stringWithUTF8String:format], list);
-  va_end(list);
+  va_list args;
+  NSString *formatString = @(format);
+  va_start(args, format);
+  NSString *log = [[NSString alloc] initWithFormat:formatString arguments:args];
+  va_end(args);
+  va_start(args, format);
+  NSLogv(formatString, args);
+  va_end(args);
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    textView.text = [textView.text stringByAppendingString: @"\n"];
+    textView.text = [textView.text stringByAppendingString: log];
+  });
+
   return rc;
 }
 
@@ -46,6 +59,14 @@ int main(int argc, char* argv[]) {
   return exit_status;
 }
 
+void InitLogWindow(UIViewController *viewController) {
+  textView = [[UITextView alloc] initWithFrame:viewController.view.bounds];
+  textView.editable = false;
+  textView.scrollEnabled = true;
+  textView.userInteractionEnabled = true;
+  [viewController.view addSubview: textView];
+}
+
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application
@@ -53,6 +74,14 @@ int main(int argc, char* argv[]) {
   // Override point for customization after application launch.
   // TOOD(smiles): This needs to run on a separate thread so UIApplicationMain() can
   // notify our app delegate with events.
+
+  self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+  self.window.backgroundColor = [UIColor whiteColor];
+  UIViewController *viewController = [[UIViewController alloc] init];
+  self.window.rootViewController = viewController;
+  [self.window makeKeyAndVisible];
+  InitLogWindow(viewController);
+
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     const char *argv[] = {FIREBASE_TESTAPP_NAME};
     exit_status = common_main(1, argv);

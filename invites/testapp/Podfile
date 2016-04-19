@@ -3,6 +3,8 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Invites test application.
 target 'testapp' do
-  pod 'Firebase/Core'
-  pod 'Firebase/AppInvites'
+  pod 'AppInvites', '1.1.4'
+  pod 'DurableDeepLinkService', '1.1.3'
+  pod 'Firebase/AppInvites', '3.1.1'
+  pod 'Firebase/Core', '3.1.1'
 end

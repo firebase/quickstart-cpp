@@ -32,7 +32,7 @@ extern "C" int LogMessage(const char* format, ...);
 
 #if defined(__ANDROID__)
 // Android specific method to flush pending events for the main thread.
-bool ProcessAndroidEvents(int msec);
+bool ProcessEvents(int msec);
 // Get the JNI environment.
 JNIEnv* GetJniEnv();
 // Get the activity.

@@ -83,7 +83,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
 #if defined(__ANDROID__)
   // Wait until the user wants to quit the app.
-  while (!ProcessAndroidEvents(1000)) {
+  while (!ProcessEvents(1000)) {
   }
 #endif  // defined(__ANDROID__)
 

@@ -23,14 +23,14 @@
 
 @end
 
-extern "C" int common_main(void* ad_parent);
+extern "C" int common_main(firebase::admob::AdParent ad_parent);
 
 @implementation FBAViewController
 
 - (void)viewDidLoad {
   [super viewDidLoad];
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    common_main((__bridge void*)self.view);
+    common_main(self.view);
   });
 }
 
@@ -38,7 +38,7 @@ extern "C" int common_main(void* ad_parent);
 
 static int exit_status = 0;
 
-// Log a message that can be viewed in "adb logcat".
+// Log a message that can be viewed in the console.
 int LogMessage(const char* format, ...) {
   va_list list;
   int rc = 0;

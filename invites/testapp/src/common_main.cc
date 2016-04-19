@@ -26,7 +26,7 @@
 // Flush pending events for the main thread.
 void process_events() {
 #if defined(__ANDROID__)
-  ProcessAndroidEvents(10);
+  ProcessEvents(10);
 #endif  // defined(__ANDROID__)
 }
 

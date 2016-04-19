@@ -72,8 +72,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
   ::firebase::messaging::Subscribe("/topics/TestTopic");
   LogMessage("Subscribed to TestTopic");
 
-  while (!ProcessEvents(1000)) {
+  bool done = false;
+  while (!done) {
     // Process events so that the client doesn't hang.
+    done = ProcessEvents(1000);
     LogMessage("Main tick");
   }
   return 0;

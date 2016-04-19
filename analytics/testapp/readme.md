@@ -42,7 +42,7 @@ Building and Running the testapp
       to the Firebase backend.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
-    - frameworks/ios/universal/firebase_analytics.framework
+    - frameworks/ios/universal/firebase\_analytics.framework
     - You will need to either,
        1. Check "Copy items if needed" when adding the frameworks, or
        2. Add the framework path in "Framework Search Paths"

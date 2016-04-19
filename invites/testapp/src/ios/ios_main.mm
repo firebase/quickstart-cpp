@@ -17,7 +17,6 @@
 
 #include <stdarg.h>
 
-#include "firebase/invites/ios_startup.h"
 #include "ios/ios_main.h"
 
 #include "main.h"
@@ -44,13 +43,25 @@ extern "C" int common_main(int argc, const char* argv[]);
 
 static int exit_status = 0;
 
+static UITextView *textView;
+
 // Log a message that can be viewed in "adb logcat".
 int LogMessage(const char* format, ...) {
-  va_list list;
   int rc = 0;
-  va_start(list, format);
-  NSLogv(@(format), list);
-  va_end(list);
+  va_list args;
+  NSString *format_string = @(format);
+  va_start(args, format);
+  NSString* log = [[NSString alloc] initWithFormat:format_string arguments:args];
+  va_end(args);
+  va_start(args, format);
+  NSLogv(format_string, args);
+  va_end(args);
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    textView.text = [textView.text stringByAppendingString: @"\n"];
+    textView.text = [textView.text stringByAppendingString: log];
+  });
+
   return rc;
 }
 
@@ -59,6 +70,14 @@ int main(int argc, char* argv[]) {
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
   }
   return exit_status;
+}
+
+void InitLogWindow(UIViewController* viewController) {
+  textView = [[UITextView alloc] initWithFrame:viewController.view.bounds];
+  textView.editable = false;
+  textView.scrollEnabled = true;
+  textView.userInteractionEnabled = true;
+  [viewController.view addSubview: textView];
 }
 
 @implementation AppDelegate
@@ -71,23 +90,10 @@ int main(int argc, char* argv[]) {
   FBIViewController* viewController = [[FBIViewController alloc] init];
   viewController.appName = [NSString stringWithUTF8String:FIREBASE_TESTAPP_NAME];
   self.window.rootViewController = viewController;
+  InitLogWindow(viewController);
   [self.window makeKeyAndVisible];
 
-  FirebaseInvitesSetLaunchOptions(launchOptions);
   return YES;
-}
-
-- (BOOL)application:(UIApplication*)application
-              openURL:(NSURL*)url
-    sourceApplication:(NSString*)sourceApplication
-           annotation:(id)annotation {
-  return FirebaseInvitesOpenUrl(url, sourceApplication, annotation);
-}
-
-- (BOOL)application:(UIApplication*)application openURL:(NSURL*)url options:(NSDictionary*)options {
-  return FirebaseInvitesOpenUrl(url,
-                                options[UIApplicationOpenURLOptionsSourceApplicationKey],
-                                options[UIApplicationOpenURLOptionsAnnotationKey]);
 }
 
 @end

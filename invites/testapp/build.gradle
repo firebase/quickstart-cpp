@@ -19,43 +19,6 @@ allprojects {
 
 apply plugin: 'com.android.application'
 
-android {
-    compileSdkVersion 23
-    buildToolsVersion '23.0.1'
-
-    sourceSets {
-      main {
-        jniLibs.srcDirs = ['libs']
-        manifest.srcFile 'AndroidManifest.xml'
-        java.srcDirs = ['src/android/java']
-        res.srcDirs = ['res']
-      }
-    }
-
-    defaultConfig {
-        applicationId 'com.google.android.invites.testapp'
-        minSdkVersion 14
-        targetSdkVersion 23
-        versionCode 1
-        versionName '1.0'
-    }
-    buildTypes {
-      release {
-            // Proguard temporarily disabled until we have a template for
-            // classes referenced from JNI that shouldn't be stripped.
-            //minifyEnabled true
-            //proguardFiles getDefaultProguardFile('proguard-android.txt')
-      }
-    }
-}
-
-dependencies {
-  compile fileTree(dir: 'libs', include: ['*.jar'])
-  compile 'com.google.android.gms:firebase-appinvites:8.5.4'
-}
-
-apply plugin: 'com.google.gms.google-services'
-
 // Pre-experimental Gradle plug-in NDK boilerplate below.
 // Right now the Firebase plug-in does not work with the experimental
 // Gradle plug-in so we're using ndk-build for the moment.
@@ -93,6 +56,45 @@ project.ext {
     }
   }
 }
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion '23.0.1'
+
+    sourceSets {
+      main {
+        jniLibs.srcDirs = ['libs']
+        manifest.srcFile 'AndroidManifest.xml'
+        java.srcDirs = ['src/android/java']
+        res.srcDirs = ['res']
+      }
+    }
+
+    defaultConfig {
+        applicationId 'com.google.android.invites.testapp'
+        minSdkVersion 14
+        targetSdkVersion 23
+        versionCode 1
+        versionName '1.0'
+    }
+    buildTypes {
+      release {
+            minifyEnabled true
+            proguardFile getDefaultProguardFile('proguard-android.txt')
+            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/app.pro")
+            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/invites.pro")
+            proguardFile file('proguard.pro')
+      }
+    }
+}
+
+dependencies {
+  compile fileTree(dir: 'libs', include: ['*.jar'])
+  compile 'com.google.android.gms:firebase-appinvites:8.5.4'
+}
+
+apply plugin: 'com.google.gms.google-services'
+
 
 task ndkBuildCompile(type:Exec) {
   description 'Use ndk-build to compile the C++ application.'

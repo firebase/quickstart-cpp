@@ -65,7 +65,7 @@ App* g_app;
 // Pause the current thread for the specified number of milliseconds.
 static void Wait(int ms) {
 #if defined(__ANDROID__)
-  ProcessAndroidEvents(ms);
+  ProcessEvents(ms);
 #else   // !defined(__ANDROID__)
   usleep(1000 * ms);
 #endif  // !defined(__ANDROID__)

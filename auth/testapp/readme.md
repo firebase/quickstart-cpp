@@ -56,9 +56,9 @@ Building and Running the testapp
     - Add the GoogleService-Info.plist that you downloaded from Firebase
       console to the testapp root directory. This file identifies your iOS app
       to the Firebase backend.
-    - In Firebase console, select "Auth" then enable "Email/Password" in addition
-      to "Anonymous" (which should already be enabled). This will allow the
-      testapp to use email accounts.
+    - In Firebase console, select "Auth", then enable "Email/Password", and also
+      enable "Anonymous". This will allow the testapp to use email accounts and
+      anonymous sign-in.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase_auth.framework
@@ -103,9 +103,9 @@ Building and Running the testapp
     - Add the `google-services.json` file that you downloaded from Firebase
       console to the root directory of testapp. This file identifies your
       Android app to the Firebase backend.
-    - In Firebase console, select "Auth" then enable "Email/Password" in addition
-      to "Anonymous" (which should already be enabled). This will allow the
-      testapp to use email accounts.
+    - In Firebase console, select "Auth", then enable "Email/Password", and also
+      enable "Anonymous". This will allow the testapp to use email accounts and
+      anonymous sign-in.
     - For further details please refer to the
       [general instructions for setting up an Android app with Firebase](https://developers.google.com/firebase/docs/android/setup).
   - Configure the location of the Firebase C++ SDK by setting the

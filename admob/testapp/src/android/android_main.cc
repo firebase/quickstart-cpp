@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <stdarg.h>
+
 #include <android/log.h>
 #include <android_native_app_glue.h>
-#include <stdarg.h>
 
 #include "main.h"  // NOLINT
 

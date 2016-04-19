@@ -22,6 +22,39 @@
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
 
+// A simple listener that logs changes to a BannerView.
+class LoggingBannerViewListener : public firebase::admob::BannerView::Listener {
+ public:
+  LoggingBannerViewListener() {}
+  void OnPresentationStateChanged(
+      firebase::admob::BannerView* banner_view,
+      firebase::admob::BannerView::PresentationState new_state) {
+    ::LogMessage("BannerView PresentationState has changed to %d.", new_state);
+  }
+
+  void OnBoundingBoxChanged(firebase::admob::BannerView* banner_view,
+                            firebase::admob::BoundingBox new_box) {
+    ::LogMessage(
+        "BannerView BoundingBox has changed to (x: %d, y: %d, width: %d, "
+        "height "
+        "%d)",
+        new_box.x, new_box.y, new_box.width, new_box.height);
+  }
+};
+
+// A simple listener that logs changes to an InterstitialAd.
+class LoggingInterstitialAdListener
+    : public firebase::admob::InterstitialAd::Listener {
+ public:
+  LoggingInterstitialAdListener() {}
+  void OnPresentationStateChanged(
+      firebase::admob::InterstitialAd* interstitial_ad,
+      firebase::admob::InterstitialAd::PresentationState new_state) {
+    ::LogMessage("InterstitialAd PresentationState has changed to %d.",
+                 new_state);
+  }
+};
+
 // These ad units are configured to always serve test ads.
 #if defined(__ANDROID__)
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/6300978111";
@@ -56,13 +89,27 @@ static const char* kExtraValue = "the_value_for_that_extra";
 ::firebase::admob::BannerView* g_banner;
 ::firebase::admob::InterstitialAd* g_int;
 ::firebase::admob::AdRequest g_request;
+LoggingBannerViewListener g_banner_listener;
+LoggingInterstitialAdListener g_int_listener;
 
 // Extras to use later
 ::firebase::admob::KeyValuePair g_extra;
 ::firebase::admob::KeyValuePair* g_extras_array[] = {&g_extra};
 
+static void WaitForFutureCompletion(firebase::FutureBase future) {
+#if defined(__ANDROID__)
+  while (!ProcessAndroidEvents(1000)) {
+#else
+  while (true) {
+#endif  // defined(__ANDROID__)
+    if (future.Status() != ::firebase::kFutureStatus_Pending) {
+      break;
+    }
+  }
+}
+
 // Execute all methods of the C++ admob API.
-extern "C" int common_main(void* ad_parent) {
+extern "C" int common_main(::firebase::admob::AdParent ad_parent) {
   namespace admob = ::firebase::admob;
 
   LogMessage("Initializing the AdMob library");
@@ -127,6 +174,7 @@ extern "C" int common_main(void* ad_parent) {
 
   LogMessage("Creating the BannerView.");
   g_banner = new admob::BannerView();
+  g_banner->SetListener(&g_banner_listener);
   g_banner->Initialize(static_cast<admob::AdParent>(ad_parent), kBannerAdUnit,
                        ad_size);
 
@@ -142,8 +190,23 @@ extern "C" int common_main(void* ad_parent) {
   LogMessage("Showing the banner.");
   g_banner->Show();
 
+  WaitForFutureCompletion(g_banner->ShowLastResult());
+
+  // When the BannerView has shown, move it.
+  LogMessage("Moving the banner to top-center.");
+  g_banner->MoveTo(admob::BannerView::kPositionTop);
+
+  WaitForFutureCompletion(g_banner->MoveToLastResult());
+
+  // When the BannerView has moved, move it again!
+  LogMessage("Moving the banner to (100, 200).");
+  g_banner->MoveTo(100, 200);
+
+  WaitForFutureCompletion(g_banner->MoveToLastResult());
+
   LogMessage("Creating the InterstitialAd.");
   g_int = new admob::InterstitialAd();
+  g_int->SetListener(&g_int_listener);
   g_int->Initialize(static_cast<admob::AdParent>(ad_parent),
                     kInterstitialAdUnit);
 
@@ -159,23 +222,11 @@ extern "C" int common_main(void* ad_parent) {
   LogMessage("Showing the interstitial.");
   g_int->Show();
 
-  // Wait until the user kills the app.
+// Wait until the user kills the app.
 #if defined(__ANDROID__)
   while (!ProcessAndroidEvents(1000)) {
   }
 #endif  // defined(__ANDROID__)
 
   return 0;
-}
-
-void WaitForFutureCompletion(firebase::FutureBase future) {
-#if defined(__ANDROID__)
-  while (!ProcessAndroidEvents(1000)) {
-#else
-  while (true) {
-#endif  // defined(__ANDROID__)
-    if (future.Status() != ::firebase::kFutureStatus_Pending) {
-      break;
-    }
-  }
 }

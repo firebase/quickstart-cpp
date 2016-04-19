@@ -20,10 +20,6 @@
 #include <jni.h>
 #endif  // defined(__ANDROID__)
 
-#include "firebase/admob.h"
-#include "firebase/admob/types.h"
-#include "firebase/future.h"
-
 // Defined using -DANDROID_MAIN_APP_NAME=some_app_name when compiling this
 // file.
 #ifndef FIREBASE_TESTAPP_NAME
@@ -42,7 +38,5 @@ JNIEnv* GetJniEnv();
 // Get the activity.
 jobject GetActivity();
 #endif  // defined(__ANDROID__)
-
-void WaitForFutureCompletion(firebase::FutureBase future);
 
 #endif  // FIREBASE_TESTAPP_MAIN_H_  // NOLINT
