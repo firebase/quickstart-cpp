@@ -60,7 +60,6 @@ Building and Running the testapp
   - The testapp has no user interface. The output of the app can be viewed
     via the console.  In Xcode,  select
     "View --> Debug Area --> Activate Console" from the menu.
-  - TODO(smiles): Describe how to use send config data to the app here.
 
 ### Android
   - Register your Android app with Firebase.
@@ -105,7 +104,18 @@ Building and Running the testapp
   - The testapp has no user interface. The output of the app can be viewed
     in the logcat output of Android studio or by running "adb logcat" from
     the command line.
-  - TODO(smiles): Describe how to use send config data to the app here.
+
+Using the Test App
+------------------
+- In the Firebase Console, under "Remote Config", you can define parameters.
+  - This sample uses "TestBoolean", "TestLong", "TestDouble", "TestString",
+and "TestData".
+- Install and run the test app on your iOS or Android device or emulator.
+- When you run the app, it will print default values for those five parameters,
+which are set by the call to `SetDefaults()`
+- The app then fetches those parameters from the Firebase Console, and prints
+out the values again.
+  - Note that if new values are not set, the same default values are printed.
 
 Support
 -------
