@@ -12,11 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import "ios/ios_main.h"
+
 #import <Foundation/Foundation.h>
 
 #include <stdarg.h>
 
-#include "ios/ios_main.h"
+#include "firebase/admob/types.h"
 #include "main.h"
 
 @interface FBAViewController : UIViewController
