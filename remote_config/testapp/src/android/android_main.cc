@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <android/log.h>
-#include <android_native_app_glue.h>
 #include <stdarg.h>
 #include <stdio.h>
+
+#include <android/log.h>
+#include <android_native_app_glue.h>
 #include <cassert>
 
 #include "main.h"  // NOLINT
@@ -27,6 +28,7 @@ extern "C" int common_main(int argc, const char* argv[]);
 static struct android_app* gAppState = nullptr;
 
 // Process events pending on the main thread.
+// Returns true when the app receives an event requesting exit.
 bool ProcessEvents(int msec) {
   struct android_poll_source* source = nullptr;
   int events;
@@ -38,84 +40,151 @@ bool ProcessEvents(int msec) {
   return gAppState->destroyRequested;
 }
 
-// Vars that we need available for appending text to the log window:
-class TextViewData {
- public:
-  TextViewData()
-      : text_view_obj_(0),
-        text_view_class_(0),
-        string_class_(0),
-        text_view_append_(0) {}
+// Get the activity.
+jobject GetActivity() { return gAppState->activity->clazz; }
 
-  ~TextViewData() {
+// Find a class, attempting to load the class if it's not found.
+jclass FindClass(JNIEnv* env, jobject activity_object, const char* class_name) {
+  jclass class_object = env->FindClass(class_name);
+  if (env->ExceptionCheck()) {
+    env->ExceptionClear();
+    // If the class isn't found it's possible NativeActivity is being used by
+    // the application which means the class path is set to only load system
+    // classes.  The following falls back to loading the class using the
+    // Activity before retrieving a reference to it.
+    jclass activity_class = env->FindClass("android/app/Activity");
+    jmethodID activity_get_class_loader = env->GetMethodID(
+        activity_class, "getClassLoader", "()Ljava/lang/ClassLoader;");
+
+    jobject class_loader_object =
+        env->CallObjectMethod(activity_object, activity_get_class_loader);
+
+    jclass class_loader_class = env->FindClass("java/lang/ClassLoader");
+    jmethodID class_loader_load_class =
+        env->GetMethodID(class_loader_class, "loadClass",
+                         "(Ljava/lang/String;)Ljava/lang/Class;");
+    jstring class_name_object = env->NewStringUTF(class_name);
+
+    class_object = static_cast<jclass>(env->CallObjectMethod(
+        class_loader_object, class_loader_load_class, class_name_object));
+
+    if (env->ExceptionCheck()) {
+      env->ExceptionClear();
+      class_object = nullptr;
+    }
+    env->DeleteLocalRef(class_name_object);
+    env->DeleteLocalRef(class_loader_object);
+  }
+  return class_object;
+}
+
+// Vars that we need available for appending text to the log window:
+class LoggingUtilsData {
+ public:
+  LoggingUtilsData()
+      : logging_utils_class_(0),
+        logging_utils_add_log_text_(0),
+        logging_utils_init_log_window_(0) {}
+
+  ~LoggingUtilsData() {
     JNIEnv* env = GetJniEnv();
     assert(env);
-    env->DeleteLocalRef(text_view_obj_);
-    text_view_obj_ = 0;
+    if (logging_utils_class_) {
+      env->DeleteGlobalRef(logging_utils_class_);
+    }
   }
 
-  jobject text_view_obj() const { return text_view_obj_; }
-  void set_text_view_obj(jobject text_view_obj) {
-    text_view_obj_ = text_view_obj;
+  void Init() {
+    JNIEnv* env = GetJniEnv();
+    assert(env);
+
+    jclass logging_utils_class = FindClass(
+        env, GetActivity(), "com/google/firebase/example/LoggingUtils");
+    assert(logging_utils_class != 0);
+
+    // Need to store as global references so it don't get moved during garbage
+    // collection.
+    logging_utils_class_ =
+        static_cast<jclass>(env->NewGlobalRef(logging_utils_class));
+    env->DeleteLocalRef(logging_utils_class);
+
+    logging_utils_init_log_window_ = env->GetStaticMethodID(
+        logging_utils_class_, "initLogWindow", "(Landroid/app/Activity;)V");
+    logging_utils_add_log_text_ = env->GetStaticMethodID(
+        logging_utils_class_, "addLogText", "(Ljava/lang/String;)V");
+
+    env->CallStaticVoidMethod(logging_utils_class_,
+                              logging_utils_init_log_window_, GetActivity());
   }
 
-  jclass text_view_class() const { return text_view_class_; }
-  void set_text_view_class(jclass text_view_class) {
-    text_view_class_ = text_view_class;
-  }
-
-  jclass string_class() const { return string_class_; }
-  void set_string_class(jclass string_class) { string_class_ = string_class; }
-
-  jmethodID text_view_append() const { return text_view_append_; }
-  void set_text_view_append(jmethodID text_view_append) {
-    text_view_append_ = text_view_append;
+  void AppendText(const char* text) {
+    if (logging_utils_class_ == 0) return;  // haven't been initted yet
+    JNIEnv* env = GetJniEnv();
+    assert(env);
+    jstring text_string = env->NewStringUTF(text);
+    env->CallStaticVoidMethod(logging_utils_class_, logging_utils_add_log_text_,
+                              text_string);
+    env->DeleteLocalRef(text_string);
   }
 
  private:
-  jobject text_view_obj_;
-  jclass text_view_class_;
-  jclass string_class_;
-  jmethodID text_view_append_;
+  jclass logging_utils_class_;
+  jmethodID logging_utils_add_log_text_;
+  jmethodID logging_utils_init_log_window_;
 };
-TextViewData text_view_data;
+LoggingUtilsData logging_utils_data;
 
-// Appends a string to the text view to be displayed.
-// Warning - do not put log statements in here.  Since the log statement
-// mirrors its output to this, trying to call LogMessage from this subroutine
-// causes loops and problems.
-void AppendTextViewText(const char* text) {
-  // Abort if the text view hasn't been created yet.
-  if (text_view_data.text_view_obj() == 0) {
-    return;
-  }
+// Checks if a JNI exception has happened, and if so, logs it to the console.
+void CheckJNIException() {
   JNIEnv* env = GetJniEnv();
-  assert(env);
+  if (env->ExceptionCheck()) {
+    // Get the exception text.
+    jthrowable exception = env->ExceptionOccurred();
+    env->ExceptionClear();
 
-  jstring text_string = env->NewStringUTF(text);
+    // Convert the exception to a string.
+    jclass object_class = env->FindClass("java/lang/Object");
+    jmethodID toString =
+        env->GetMethodID(object_class, "toString", "()Ljava/lang/String;");
+    jstring s = (jstring)env->CallObjectMethod(exception, toString);
+    const char* exception_text = env->GetStringUTFChars(s, nullptr);
 
-  env->CallVoidMethod(text_view_data.text_view_obj(),
-                      text_view_data.text_view_append(), text_string);
+    // Log the exception text.
+    __android_log_print(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME,
+                        "-------------------JNI exception:");
+    __android_log_print(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME, "%s",
+                        exception_text);
+    __android_log_print(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME,
+                        "-------------------");
 
-  env->DeleteLocalRef(text_string);
+    // Also, assert fail.
+    assert(false);
+
+    // In the event we didn't assert fail, clean up.
+    env->ReleaseStringUTFChars(s, exception_text);
+    env->DeleteLocalRef(s);
+    env->DeleteLocalRef(exception);
+  }
 }
 
 // Log a message that can be viewed in "adb logcat".
 int LogMessage(const char* format, ...) {
   static const int kLineBufferSize = 100;
-  char buffer[kLineBufferSize + 1];
+  char buffer[kLineBufferSize + 2];
 
   va_list list;
   int rc;
   va_start(list, format);
   int string_len = vsnprintf(buffer, kLineBufferSize, format, list);
+  string_len = string_len < kLineBufferSize ? string_len : kLineBufferSize;
   // append a linebreak to the buffer:
   buffer[string_len] = '\n';
   buffer[string_len + 1] = '\0';
 
-  AppendTextViewText(buffer);
   rc = __android_log_vprint(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME, format,
                             list);
+  logging_utils_data.AppendText(buffer);
+  CheckJNIException();
   va_end(list);
   return rc;
 }
@@ -128,90 +197,12 @@ JNIEnv* GetJniEnv() {
   return result == JNI_OK ? env : nullptr;
 }
 
-// Get the activity.
-jobject GetActivity() { return gAppState->activity->clazz; }
-
-// Create a text view, inside of a scroll view, inside of a linear layout
-// and display them on screen.  This is equivalent to the following
-// java code:
-//  private TextView text_view = new TextView(this);
-//  LinearLayout linear_layout = new LinearLayout(this);
-//  linear_layout.addView(text);
-//  Window window = getWindow();
-//  window.takeSurface(null);
-//  window.setContentView(linear_layout);
-void CreateJavaTextView(android_app* state) {
-  JNIEnv* env = GetJniEnv();
-  assert(env);
-  // cache these off for later:
-  text_view_data.set_string_class(env->FindClass("java/lang/String"));
-  text_view_data.set_text_view_class(env->FindClass("android/widget/TextView"));
-  jclass scroll_view_class = env->FindClass("android/widget/ScrollView");
-
-  text_view_data.set_text_view_append(
-      env->GetMethodID(text_view_data.text_view_class(), "append",
-                       "(Ljava/lang/CharSequence;)V"));
-
-  // Construct a linear layout.
-  jclass linear_layout_class = env->FindClass("android/widget/LinearLayout");
-  jmethodID linear_layout_constructor = env->GetMethodID(
-      linear_layout_class, "<init>", "(Landroid/content/Context;)V");
-  jobject linear_layout_obj = env->NewObject(
-      linear_layout_class, linear_layout_constructor, state->activity->clazz);
-
-  // Construct a scrollview.
-  jmethodID scroll_view_constructor = env->GetMethodID(
-      scroll_view_class, "<init>", "(Landroid/content/Context;)V");
-  jobject scroll_view_obj = env->NewObject(
-      scroll_view_class, scroll_view_constructor, state->activity->clazz);
-
-  // Construct a text view
-  jmethodID text_view_constructor =
-      env->GetMethodID(text_view_data.text_view_class(), "<init>",
-                       "(Landroid/content/Context;)V");
-
-  text_view_data.set_text_view_obj(
-      env->NewObject(text_view_data.text_view_class(), text_view_constructor,
-                     state->activity->clazz));
-
-  // Add the text view to the scroll view
-  // and the scroll view to the linear layout.
-  jmethodID view_add_view = env->GetMethodID(linear_layout_class, "addView",
-                                             "(Landroid/view/View;)V");
-  env->CallVoidMethod(linear_layout_obj, view_add_view, scroll_view_obj);
-  env->CallVoidMethod(scroll_view_obj, view_add_view,
-                      text_view_data.text_view_obj());
-
-  // Add the linear layout to the view.
-  jclass activity_class = env->FindClass("android/app/Activity");
-  jmethodID activity_get_window =
-      env->GetMethodID(activity_class, "getWindow", "()Landroid/view/Window;");
-  jobject window_obj =
-      env->CallObjectMethod(state->activity->clazz, activity_get_window);
-
-  // Take control of the window and display the linearlayout in it.
-  jclass window_class = env->FindClass("android/view/Window");
-
-  jmethodID window_take_surface = env->GetMethodID(
-      window_class, "takeSurface", "(Landroid/view/SurfaceHolder$Callback2;)V");
-  env->CallVoidMethod(window_obj, window_take_surface, 0);
-
-  jmethodID window_set_content_view = env->GetMethodID(
-      window_class, "setContentView", "(Landroid/view/View;)V");
-  env->CallVoidMethod(window_obj, window_set_content_view, linear_layout_obj);
-
-  // Clean up our local references.
-  env->DeleteLocalRef(window_obj);
-  env->DeleteLocalRef(scroll_view_obj);
-  env->DeleteLocalRef(linear_layout_obj);
-}
-
 // Execute common_main(), flush pending events and finish the activity.
 extern "C" void android_main(struct android_app* state) {
   int return_value;
   gAppState = state;
   static const char* argv[] = {FIREBASE_TESTAPP_NAME};
-  CreateJavaTextView(state);
+  logging_utils_data.Init();
   return_value = common_main(1, argv);
   (void)return_value;  // Ignore the return value.
   ProcessEvents(10);

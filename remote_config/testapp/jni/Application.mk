@@ -16,6 +16,6 @@ APP_PLATFORM:=android-14
 # NOTE: Users can build against either armeabi-v7a or armeabi-v7a-hard.
 APP_ABI:=armeabi-v7a-hard arm64-v8a x86 x86_64 mips
 # armeabi and mips64 - Are broken when building NDK r11+ at the moment.
-APP_STL:=c++_static
+APP_STL:=gnustl_static  # NOTE: c++_static does not link at the moment.
 APP_MODULES:=android_main
 APP_CPPFLAGS+=-std=c++11

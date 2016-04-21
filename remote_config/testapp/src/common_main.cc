@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <assert.h>
+
 #include "firebase/app.h"
 #include "firebase/remote_config.h"
 
@@ -82,30 +84,36 @@ extern "C" int common_main(int argc, const char* argv[]) {
     assert(result == test_data);
   }
 
-  auto future_result = remote_config::Fetch();
+  LogMessage("Fetch...");
+  auto future_result = remote_config::Fetch(0);
   while (future_result.Status() == firebase::kFutureStatus_Pending) {
-    ProcessEvents(10);
+    ProcessEvents(1000);
   }
-  LogMessage("Done with Fetch");
+  LogMessage("Fetch Complete");
   bool activate_result = remote_config::ActivateFetched();
   LogMessage("ActivateFetched %s", activate_result ? "succeeded" : "failed");
+
+  const remote_config::ConfigInfo& info = remote_config::GetInfo();
+  LogMessage("Info last_fetch_time_ms=%d fetch_status=%d failure_reason=%d",
+             static_cast<int>(info.fetch_time), info.last_fetch_status,
+             info.last_fetch_failure_reason);
 
   // Print out the new values, which may be updated from the Fetch.
   {
     bool result = remote_config::GetBoolean("TestBoolean");
-    LogMessage("Updated Boolean %d", result ? 1 : 0);
+    LogMessage("Updated TestBoolean %d", result ? 1 : 0);
   }
   {
     int64_t result = remote_config::GetLong("TestLong");
-    LogMessage("Updated Long %lld", result);
+    LogMessage("Updated TestLong %lld", result);
   }
   {
     double result = remote_config::GetDouble("TestDouble");
-    LogMessage("Updated Double %f", result);
+    LogMessage("Updated TestDouble %f", result);
   }
   {
     std::string result = remote_config::GetString("TestString");
-    LogMessage("Updated String %s", result.c_str());
+    LogMessage("Updated TestString %s", result.c_str());
   }
   {
     std::vector<unsigned char> result = remote_config::GetData("TestData");
