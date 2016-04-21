@@ -208,10 +208,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("    * %s", it->c_str());
   }
 
+#if defined(AUTH_ANNONYMOUS_AND_CREATE_WORKING)
   // Test Auth::SignInAnonymously().
   Future<User*> sign_in_future = auth->SignInAnonymously();
   WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously()",
                       kAuthError_None, auth);
+#endif  // defined(AUTH_ANNONYMOUS_AND_CREATE_WORKING)
 
   // Test SignOut() after signed in anonymously.
   auth->SignOut();
@@ -252,6 +254,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
                       "Auth::SignInWithEmailAndPassword() bad password",
                       firebase::kAuthError_InvalidPassword, auth);
 
+#if defined(AUTH_ANNONYMOUS_AND_CREATE_WORKING)
   // Test Auth::CreateUserWithEmailAndPassword().
   // Create user with random email and password. Should succeed.
   const std::string new_email = CreateNewEmail();
@@ -267,6 +270,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   WaitForSignInFuture(create_future_bad,
                       "Auth::CreateUserWithEmailAndPassword() existing email",
                       firebase::kAuthError_EmailExists, auth);
+#endif  // defined(AUTH_ANNONYMOUS_AND_CREATE_WORKING)
 
   // Test Auth::SignInWithCredential() using email&password.
   // Use existing email. Should succeed.
@@ -338,8 +342,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
   WaitForFuture(apply_action_code, "Auth::ApplyActionCode()",
                 firebase::kAuthError_Unimplemented);
 
-  // --- User tests ------------------------------------------------------------
-  // Test anonymous user info strings.
+// --- User tests ------------------------------------------------------------
+// Test anonymous user info strings.
+#if defined(AUTH_ANNONYMOUS_AND_CREATE_WORKING)
   Future<User*> anon_sign_in_for_user = auth->SignInAnonymously();
   WaitForSignInFuture(anon_sign_in_for_user,
                       "Auth::SignInAnonymously() for User", kAuthError_None,
@@ -364,17 +369,20 @@ extern "C" int common_main(int argc, const char* argv[]) {
     Future<User*> link_future = anonymous_user->LinkWithCredential(user_cred);
     WaitForSignInFuture(link_future, "User::LinkWithCredential()",
                         kAuthError_None, auth);
+#else
+  {
+#endif  // defined(AUTH_ANNONYMOUS_AND_CREATE_WORKING)
 
     // Test email user info strings.
     Future<User*> email_sign_in_for_user =
-        auth->SignInWithCredential(user_cred);
+        auth->SignInWithEmailAndPassword(kTestEmail, kTestPassword);
     WaitForSignInFuture(email_sign_in_for_user,
-                        "Auth::SignInWithCredential() for User",
+                        "Auth::SignInWithEmailAndPassword() for User",
                         kAuthError_None, auth);
     User* email_user = *email_sign_in_for_user.Result();
     if (email_user != nullptr) {
       LogMessage("Email UId is %s", email_user->UId().c_str());
-      ExpectStringsEqual("Email user Email", newer_email.c_str(),
+      ExpectStringsEqual("Email user Email", kTestEmail,
                          email_user->Email().c_str());
       ExpectStringsEqual("Email user DisplayName", "",
                          email_user->DisplayName().c_str());
@@ -429,9 +437,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
       // when iOS implementation is fixed.
       if (auth->CurrentUser() == nullptr) {
         Future<User*> email_sign_in_again =
-            auth->SignInWithCredential(user_cred);
+            auth->SignInWithEmailAndPassword(kTestEmail, kTestPassword);
         WaitForSignInFuture(email_sign_in_again,
-                            "Auth::SignInWithCredential() again",
+                            "Auth::SignInWithEmailAndPassword() again",
                             kAuthError_None, auth);
         email_user = *email_sign_in_again.Result();
       }

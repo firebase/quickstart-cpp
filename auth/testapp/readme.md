@@ -130,6 +130,9 @@ Building and Running the testapp
 Known issues
 ------------
 
+  - Auth::SignInAnonymously() and Auth::CreateUserWithEmailAndPassword() are
+    temporarily broken. For the moment, they will always return
+    kAuthError_GeneralBackendError.
   - User::UpdateUserProfile() currently fails to set the photo URL on both
     Android and iOS, and also fails to set the display name on Android.
   - The iOS testapp generates benign asserts of the form:
@@ -148,6 +151,9 @@ Known issues
       - `User::ProviderData()`
   - Several API functions return different error codes on iOS and Android.
     The disparities will be eliminated in a subsequent release.
+  - When given invalid parameters, several API functions return
+    kAuthError_GeneralBackendError instead of kAuthError_InvalidEmail or
+    kAuthError_EmailNotFound.
 
 Support
 -------

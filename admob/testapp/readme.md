@@ -60,22 +60,52 @@ Getting Started
     "View --> Debug Area --> Activate Console" from the menu.
 
 ### Android
-  - [Add Firebase to your Android Project](https://developers.google.com/firebase/docs/android/setup).
-    You can use "com.google.android.admob.testapp" as the App ID while
-    you're testing.
+  - Register your Android app with Firebase.
+    - Create a new app on [Firebase console](https://g.co/firebase), and attach
+      your Android app to it.
+      - You can use "com.google.android.admob.testapp" as the Package Name
+        while you're testing.
+      - To [generate a SHA1](https://developers.google.com/android/guides/client-auth)
+        run this command on Mac and Linux,
+        ```
+        keytool -exportcert -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore
+        ```
+        or this command on Windows,
+        ```
+        keytool -exportcert -list -v -alias androiddebugkey -keystore %USERPROFILE%\.android\debug.keystore
+        ```
+      - If keytool reports that you do not have a debug.keystore, you can
+        [create one with](http://developer.android.com/tools/publishing/app-signing.html#signing-manually),
+        ```
+        keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -dname "CN=Android Debug,O=Android,C=US"
+        ```
+    - Add the `google-services.json` file that you downloaded from Firebase
+      console to the root directory of testapp. This file identifies your
+      Android app to the Firebase backend.
+    - For further details please refer to the
+      [general instructions for setting up an Android app with Firebase](https://developers.google.com/firebase/docs/android/setup).
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
-    > echo "systemProp.firebase\_cpp\_sdk.dir=~/firebase\_cpp\_sdk" >> gradle.properties
-  - Configure the location of the Android NDK by setting the ndk.dir Gradle
-    property to the NDK install directory.
-    For example, in the project directory:
-    > echo "ndk.dir=~/ndk" >> local.properties
+      ```
+      > echo "systemProp.firebase\_cpp\_sdk.dir=/User/$USER/firebase\_cpp\_sdk" >> gradle.properties
+      ```
+  - Ensure the Android SDK and NDK locations are set in Android Studio.
+    - From the Android Studio launch menu, go to
+      Configure/Project Defaults/Project Structure and download the SDK and NDK if
+      the locations are not yet set.
   - Open *build.gradle* in Android Studio.
-  - Build & run the sample on an Android device or emulator.
-  - The application displays ads, but has no other user interaction. The output
-    of the app can be viewed in the logcat output of Android studio or by
-    running "adb logcat" from the command line.
+    - From the Android Studio launch menu, "Open an existing Android Studio
+      project", and select `build.gradle`.
+  - Install the SDK Platforms that Android Studio reports missing.
+  - Build the testapp and run it on an Android device or emulator.
+  - The testapp will initialize AdMob, then load and display a test banner and
+    a test interstitial.
+  - Tapping on an ad to verify the clickthrough process is possible, and the
+    interstitial will wait to be closed by the user.
+  - While this is happening, information from the device log will be written
+    to an onscreen TextView.
+    - Logcat can also be used as normal.
 
 Support
 -------
