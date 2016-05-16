@@ -12,61 +12,108 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "ios/ios_main.h"
-
-#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 #include <stdarg.h>
 
-#include "firebase/admob/types.h"
 #include "main.h"
 
-@interface FBAViewController : UIViewController
+extern "C" int common_main(int argc, const char* argv[]);
+
+@interface AppDelegate : UIResponder<UIApplicationDelegate>
+
+@property(nonatomic, strong) UIWindow *window;
 
 @end
 
-extern "C" int common_main(firebase::admob::AdParent ad_parent);
+@interface FTAViewController : UIViewController
 
-@implementation FBAViewController
+@end
+
+static int g_exit_status = 0;
+static bool g_shutdown = false;
+static NSCondition *g_shutdown_complete;
+static NSCondition *g_shutdown_signal;
+static UITextView *g_text_view;
+static UIView *g_parent_view;
+
+@implementation FTAViewController
 
 - (void)viewDidLoad {
   [super viewDidLoad];
+  g_parent_view = self.view;
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    common_main(self.view);
+    const char *argv[] = {FIREBASE_TESTAPP_NAME};
+    [g_shutdown_signal lock];
+    g_exit_status = common_main(1, argv);
+    [g_shutdown_complete signal];
   });
 }
 
 @end
 
-static int exit_status = 0;
+bool ProcessEvents(int msec) {
+  [g_shutdown_signal
+      waitUntilDate:[NSDate dateWithTimeIntervalSinceNow:static_cast<float>(msec) / 1000.0f]];
+  return g_shutdown;
+}
+
+WindowContext GetWindowContext() {
+  return g_parent_view;
+}
 
 // Log a message that can be viewed in the console.
-int LogMessage(const char* format, ...) {
-  va_list list;
-  int rc = 0;
-  va_start(list, format);
-  NSLogv(@(format), list);
-  va_end(list);
-  return rc;
+void LogMessage(const char* format, ...) {
+  va_list args;
+  NSString *formatString = @(format);
+
+  va_start(args, format);
+  NSString *message = [[NSString alloc] initWithFormat:formatString arguments:args];
+  va_end(args);
+
+  NSLog(@"%@", message);
+  message = [message stringByAppendingString:@"\n"];
+
+  dispatch_async(dispatch_get_main_queue(), ^{
+    g_text_view.text = [g_text_view.text stringByAppendingString:message];
+  });
 }
 
 int main(int argc, char* argv[]) {
   @autoreleasepool {
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
   }
-  return exit_status;
+  return g_exit_status;
 }
 
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication*)application
     didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
-  self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-  FBAViewController* viewController = [[FBAViewController alloc] init];
+  g_shutdown_complete = [[NSCondition alloc] init];
+  g_shutdown_signal = [[NSCondition alloc] init];
+  [g_shutdown_complete lock];
+
+  self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+  FTAViewController *viewController = [[FTAViewController alloc] init];
   self.window.rootViewController = viewController;
   [self.window makeKeyAndVisible];
 
+  g_text_view = [[UITextView alloc] initWithFrame:viewController.view.bounds];
+
+  g_text_view.editable = NO;
+  g_text_view.scrollEnabled = YES;
+  g_text_view.userInteractionEnabled = YES;
+
+  [viewController.view addSubview:g_text_view];
+
   return YES;
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application {
+  g_shutdown = true;
+  [g_shutdown_signal signal];
+  [g_shutdown_complete wait];
 }
 
 @end

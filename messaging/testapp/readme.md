@@ -141,7 +141,7 @@ viewed via the console:
 - When you first run the app, it will print:
 `Recieved Registration Token: <code>`. Copy this code to a text editor.
 - Copy the ServerKey from the firebase console:
-  - Open your project in the [firebase console](g.co/firebase)
+  - Open your project in the [firebase console](https://console.firebase.google.com)
   - Click `Notifications` in the menu on the left
   - Select the `Credentials` tab.
   - Copy the `Server Key`

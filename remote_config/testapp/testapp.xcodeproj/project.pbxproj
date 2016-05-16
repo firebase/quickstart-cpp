@@ -14,6 +14,7 @@
 		529227211C85FB6A00C89379 /* common_main.cc in Sources */ = {isa = PBXBuildFile; fileRef = 5292271F1C85FB6A00C89379 /* common_main.cc */; };
 		529227241C85FB7600C89379 /* ios_main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 529227221C85FB7600C89379 /* ios_main.mm */; };
 		52B71EBB1C8600B600398745 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 52B71EBA1C8600B600398745 /* Images.xcassets */; };
+		D66B16871CE46E8900E5638A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D66B16861CE46E8900E5638A /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,7 @@
 		529227231C85FB7600C89379 /* ios_main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ios_main.h; path = src/ios/ios_main.h; sourceTree = "<group>"; };
 		52B71EBA1C8600B600398745 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = testapp/Images.xcassets; sourceTree = "<group>"; };
 		52FD1FF81C85FFA000BC68E3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = testapp/Info.plist; sourceTree = "<group>"; };
+		D66B16861CE46E8900E5638A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +50,7 @@
 		529226C91C85F68000C89379 = {
 			isa = PBXGroup;
 			children = (
+				D66B16861CE46E8900E5638A /* LaunchScreen.storyboard */,
 				520BC0381C869159008CFBC3 /* GoogleService-Info.plist */,
 				52B71EBA1C8600B600398745 /* Images.xcassets */,
 				52FD1FF81C85FFA000BC68E3 /* Info.plist */,
@@ -151,6 +154,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D66B16871CE46E8900E5638A /* LaunchScreen.storyboard in Resources */,
 				52B71EBB1C8600B600398745 /* Images.xcassets in Resources */,
 				520BC0391C869159008CFBC3 /* GoogleService-Info.plist in Resources */,
 			);

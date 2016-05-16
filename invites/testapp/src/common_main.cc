@@ -19,56 +19,48 @@
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
 
-::firebase::App* g_app;
-::firebase::invites::InvitesSender* g_sender;
-::firebase::invites::InvitesReceiver* g_receiver;
-
-// Flush pending events for the main thread.
-void process_events() {
-#if defined(__ANDROID__)
-  ProcessEvents(10);
-#endif  // defined(__ANDROID__)
-}
-
 // Execute all methods of the C++ Invites API.
 extern "C" int common_main(int argc, const char* argv[]) {
+  ::firebase::App* app;
+  ::firebase::invites::InvitesSender* sender;
+  ::firebase::invites::InvitesReceiver* receiver;
+
   LogMessage("Initializing Firebase App");
 
 #if defined(__ANDROID__)
-  g_app = ::firebase::App::Create(::firebase::AppOptions(FIREBASE_TESTAPP_NAME),
-                                  GetJniEnv(), GetActivity());
+  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
+                                GetActivity());
 #else
-  g_app =
-      ::firebase::App::Create(::firebase::AppOptions(FIREBASE_TESTAPP_NAME));
+  app = ::firebase::App::Create(::firebase::AppOptions());
 #endif  // defined(__ANDROID__)
 
   LogMessage("Created the Firebase App %x",
-             static_cast<int>(reinterpret_cast<intptr_t>(g_app)));
+             static_cast<int>(reinterpret_cast<intptr_t>(app)));
 
   LogMessage("Creating an InvitesReceiver");
-  g_receiver = new firebase::invites::InvitesReceiver(*g_app);
+  receiver = new firebase::invites::InvitesReceiver(*app);
 
   LogMessage("Creating an InvitesSender");
-  g_sender = new firebase::invites::InvitesSender(*g_app);
+  sender = new firebase::invites::InvitesSender(*app);
 
   bool testing_conversion = false;
   {
     // Check for received invitations.
     LogMessage("Fetch: Fetching invites...");
-    auto future_result = g_receiver->Fetch();
-    while (future_result.Status() == firebase::kFutureStatus_Pending) {
-      process_events();
+    auto future_result = receiver->Fetch();
+    while (future_result.Status() == firebase::kFutureStatusPending) {
+      if (ProcessEvents(10)) break;
     }
 
-    if (future_result.Status() == firebase::kFutureStatus_Invalid) {
+    if (future_result.Status() == firebase::kFutureStatusInvalid) {
       LogMessage("Fetch: Invalid, sorry!");
-    } else if (future_result.Status() == firebase::kFutureStatus_Complete) {
+    } else if (future_result.Status() == firebase::kFutureStatusComplete) {
       LogMessage("Fetch: Complete!");
-      auto result = *future_result.Result();
-      if (result.error_code != 0) {
-        LogMessage("Fetch: Error %d: %s", result.error_code,
-                   result.error_message.c_str());
+      if (future_result.Error() != 0) {
+        LogMessage("Fetch: Error %d: %s", future_result.Error(),
+                   future_result.ErrorMessage());
       } else {
+        auto result = *future_result.Result();
         // error_code == 0
         if (result.invitation_id != "") {
           LogMessage("Fetch: Got invitation ID: %s",
@@ -78,7 +70,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
           LogMessage("ConvertInvitation: Converting invitation %s",
                      result.invitation_id.c_str());
 
-          g_receiver->ConvertInvitation(result.invitation_id.c_str());
+          receiver->ConvertInvitation(result.invitation_id.c_str());
           testing_conversion = true;
         }
         if (result.deep_link != "") {
@@ -93,20 +85,20 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   // Check if we are performing a conversion.
   if (testing_conversion) {
-    auto future_result = g_receiver->ConvertInvitationLastResult();
-    while (future_result.Status() == firebase::kFutureStatus_Pending) {
-      process_events();
+    auto future_result = receiver->ConvertInvitationLastResult();
+    while (future_result.Status() == firebase::kFutureStatusPending) {
+      if (ProcessEvents(10)) break;
     }
 
-    if (future_result.Status() == firebase::kFutureStatus_Invalid) {
+    if (future_result.Status() == firebase::kFutureStatusInvalid) {
       LogMessage("ConvertInvitation: Invalid, sorry!");
-    } else if (future_result.Status() == firebase::kFutureStatus_Complete) {
+    } else if (future_result.Status() == firebase::kFutureStatusComplete) {
       LogMessage("ConvertInvitation: Complete!");
-      auto result = *future_result.Result();
-      if (result.error_code != 0) {
-        LogMessage("ConvertInvitation: Error %d: %s", result.error_code,
-                   result.error_message.c_str());
+      if (future_result.Error() != 0) {
+        LogMessage("ConvertInvitation: Error %d: %s", future_result.Error(),
+                   future_result.ErrorMessage());
       } else {
+        auto result = *future_result.Result();
         LogMessage(
             "ConvertInvitation: Successfully converted invitation ID: %s",
             result.invitation_id.c_str());
@@ -117,26 +109,26 @@ extern "C" int common_main(int argc, const char* argv[]) {
   {
     // Now try sending an invitation.
     LogMessage("SendInvite: Sending an invitation...");
-    g_sender->SetTitleText("Invites Test App");
-    g_sender->SetMessageText("Please try my app! It's awesome.");
-    g_sender->SetCallToActionText("Download it for FREE");
-    g_sender->SetDeepLinkUrl("http://google.com/abc");
+    sender->SetTitleText("Invites Test App");
+    sender->SetMessageText("Please try my app! It's awesome.");
+    sender->SetCallToActionText("Download it for FREE");
+    sender->SetDeepLinkUrl("http://google.com/abc");
 
-    auto future_result = g_sender->SendInvite();
-    while (future_result.Status() == firebase::kFutureStatus_Pending) {
-      process_events();
+    auto future_result = sender->SendInvite();
+    while (future_result.Status() == firebase::kFutureStatusPending) {
+      if (ProcessEvents(10)) break;
     }
 
-    if (future_result.Status() == firebase::kFutureStatus_Invalid) {
+    if (future_result.Status() == firebase::kFutureStatusInvalid) {
       LogMessage("SendInvite: Invalid, sorry!");
-    } else if (future_result.Status() == firebase::kFutureStatus_Complete) {
+    } else if (future_result.Status() == firebase::kFutureStatusComplete) {
       LogMessage("SendInvite: Complete!");
-      auto result = *future_result.Result();
-      if (result.error_code != 0) {
-        LogMessage("SendInvite: Error %d: %s", result.error_code,
-                   result.error_message.c_str());
+      if (future_result.Error() != 0) {
+        LogMessage("SendInvite: Error %d: %s", future_result.Error(),
+                   future_result.ErrorMessage());
       } else {
-        // error_code == 0
+        auto result = *future_result.Result();
+        // error == 0
         if (result.invitation_ids.size() == 0) {
           LogMessage("SendInvite: Nothing sent, user must have canceled.");
         } else {
@@ -150,12 +142,17 @@ extern "C" int common_main(int argc, const char* argv[]) {
       }
     }
   }
-
   LogMessage("Sample finished.");
-  delete g_sender;
-  g_sender = nullptr;
-  delete g_receiver;
-  g_receiver = nullptr;
+
+  while (!ProcessEvents(1000)) {
+  }
+
+  delete sender;
+  sender = nullptr;
+  delete receiver;
+  receiver = nullptr;
+  delete app;
+  app = nullptr;
 
   return 0;
 }

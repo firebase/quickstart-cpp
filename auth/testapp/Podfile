@@ -3,5 +3,5 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Auth test application.
 target 'testapp' do
-  pod 'Firebase/Auth', '3.1.1'
+  pod 'Firebase/Auth', '3.1.6'
 end

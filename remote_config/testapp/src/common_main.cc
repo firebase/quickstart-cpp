@@ -20,60 +20,50 @@
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
 
-::firebase::App* g_app;
-
 // Execute all methods of the C++ Remote Config API.
 extern "C" int common_main(int argc, const char* argv[]) {
   namespace remote_config = ::firebase::remote_config;
+  ::firebase::App* app;
 
   LogMessage("Initialize the Firebase Remote Config library");
 #if defined(__ANDROID__)
-  g_app = ::firebase::App::Create(::firebase::AppOptions(FIREBASE_TESTAPP_NAME),
-                                  GetJniEnv(), GetActivity());
+  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
+                                GetActivity());
 #else
-  g_app =
-      ::firebase::App::Create(::firebase::AppOptions(FIREBASE_TESTAPP_NAME));
+  app = ::firebase::App::Create(::firebase::AppOptions());
 #endif  // defined(__ANDROID__)
 
   LogMessage("Created the Firebase app %x",
-             static_cast<int>(reinterpret_cast<intptr_t>(g_app)));
-  remote_config::Initialize(*g_app);
+             static_cast<int>(reinterpret_cast<intptr_t>(app)));
+  remote_config::Initialize(*app);
   LogMessage("Initialized the Firebase Remote Config API");
 
-  std::map<const char*, const char*> defaults;
-  bool test_boolean = true;
-  defaults["TestBoolean"] = "True";
-  int64_t test_long = 42;
-  defaults["TestLong"] = "42";
-  double test_double = 3.14;
-  defaults["TestDouble"] = "3.14";
-  std::string test_string("Hello World");
-  defaults["TestString"] = "Hello World";
-  static const unsigned char test_data_array[] = {'a', 'b', 'c', 'd', 'e'};
-  std::vector<unsigned char> test_data(
-      test_data_array, &test_data_array[sizeof(test_data_array)]);
-  defaults["TestData"] = "abcde";
-  remote_config::SetDefaults(defaults);
+  static const remote_config::ConfigKeyValue defaults[] = {
+      {"TestBoolean", "True"},
+      {"TestLong", "42"},
+      {"TestDouble", "3.14"},
+      {"TestString", "Hello World"},
+      {"TestData", "abcde"}};
+  size_t default_count = sizeof(defaults) / sizeof(defaults[0]);
+  remote_config::SetDefaults(defaults, default_count);
 
+  // The return values may not be the set defaults, if a fetch was previously
+  // completed for the app that set them.
   {
     bool result = remote_config::GetBoolean("TestBoolean");
     LogMessage("Get TestBoolean %d", result ? 1 : 0);
-    assert(result == test_boolean);
   }
   {
     int64_t result = remote_config::GetLong("TestLong");
     LogMessage("Get TestLong %lld", result);
-    assert(result == test_long);
   }
   {
     double result = remote_config::GetDouble("TestDouble");
     LogMessage("Get TestDouble %f", result);
-    assert(result == test_double);
   }
   {
     std::string result = remote_config::GetString("TestString");
     LogMessage("Get TestString %s", result.c_str());
-    assert(result.compare(test_string) == 0);
   }
   {
     std::vector<unsigned char> result = remote_config::GetData("TestData");
@@ -81,51 +71,70 @@ extern "C" int common_main(int argc, const char* argv[]) {
       const unsigned char value = result[i];
       LogMessage("TestData[%d] = 0x%02x (%c)", i, value, value);
     }
-    assert(result == test_data);
   }
+
+  // Enable developer mode and verified it's enabled.
+  // NOTE: Developer mode should not be enabled in production applications.
+  remote_config::SetConfigSetting(remote_config::kConfigSettingDeveloperMode,
+                                  "1");
+  assert(*remote_config::GetConfigSetting(
+              remote_config::kConfigSettingDeveloperMode)
+              .c_str() == '1');
 
   LogMessage("Fetch...");
   auto future_result = remote_config::Fetch(0);
-  while (future_result.Status() == firebase::kFutureStatus_Pending) {
-    ProcessEvents(1000);
-  }
-  LogMessage("Fetch Complete");
-  bool activate_result = remote_config::ActivateFetched();
-  LogMessage("ActivateFetched %s", activate_result ? "succeeded" : "failed");
-
-  const remote_config::ConfigInfo& info = remote_config::GetInfo();
-  LogMessage("Info last_fetch_time_ms=%d fetch_status=%d failure_reason=%d",
-             static_cast<int>(info.fetch_time), info.last_fetch_status,
-             info.last_fetch_failure_reason);
-
-  // Print out the new values, which may be updated from the Fetch.
-  {
-    bool result = remote_config::GetBoolean("TestBoolean");
-    LogMessage("Updated TestBoolean %d", result ? 1 : 0);
-  }
-  {
-    int64_t result = remote_config::GetLong("TestLong");
-    LogMessage("Updated TestLong %lld", result);
-  }
-  {
-    double result = remote_config::GetDouble("TestDouble");
-    LogMessage("Updated TestDouble %f", result);
-  }
-  {
-    std::string result = remote_config::GetString("TestString");
-    LogMessage("Updated TestString %s", result.c_str());
-  }
-  {
-    std::vector<unsigned char> result = remote_config::GetData("TestData");
-    for (size_t i = 0; i < result.size(); ++i) {
-      const unsigned char value = result[i];
-      LogMessage("TestData[%d] = 0x%02x (%c)", i, value, value);
+  while (future_result.Status() == firebase::kFutureStatusPending) {
+    if (ProcessEvents(1000)) {
+      break;
     }
   }
+
+  if (future_result.Status() == firebase::kFutureStatusComplete) {
+    LogMessage("Fetch Complete");
+    bool activate_result = remote_config::ActivateFetched();
+    LogMessage("ActivateFetched %s", activate_result ? "succeeded" : "failed");
+
+    const remote_config::ConfigInfo& info = remote_config::GetInfo();
+    LogMessage("Info last_fetch_time_ms=%d fetch_status=%d failure_reason=%d",
+               static_cast<int>(info.fetch_time), info.last_fetch_status,
+               info.last_fetch_failure_reason);
+
+    // Print out the new values, which may be updated from the Fetch.
+    {
+      bool result = remote_config::GetBoolean("TestBoolean");
+      LogMessage("Updated TestBoolean %d", result ? 1 : 0);
+    }
+    {
+      int64_t result = remote_config::GetLong("TestLong");
+      LogMessage("Updated TestLong %lld", result);
+    }
+    {
+      double result = remote_config::GetDouble("TestDouble");
+      LogMessage("Updated TestDouble %f", result);
+    }
+    {
+      std::string result = remote_config::GetString("TestString");
+      LogMessage("Updated TestString %s", result.c_str());
+    }
+    {
+      std::vector<unsigned char> result = remote_config::GetData("TestData");
+      for (size_t i = 0; i < result.size(); ++i) {
+        const unsigned char value = result[i];
+        LogMessage("TestData[%d] = 0x%02x (%c)", i, value, value);
+      }
+    }
+  }
+  // Release a handle to the future so we can shutdown the Remote Config API
+  // when exiting the app.  Alternatively we could have placed future_result
+  // in a scope different to our shutdown code below.
+  future_result.Release();
 
   // Wait until the user wants to quit the app.
   while (!ProcessEvents(1000)) {
   }
+
+  remote_config::Terminate();
+  delete app;
 
   return 0;
 }

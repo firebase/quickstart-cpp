@@ -21,28 +21,30 @@
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
 
-::firebase::App* g_app;
-
 // Execute all methods of the C++ Analytics API.
 extern "C" int common_main(int argc, const char* argv[]) {
   namespace analytics = ::firebase::analytics;
+  ::firebase::App* app;
 
   LogMessage("Initialize the Analytics library");
 #if defined(__ANDROID__)
-  g_app = ::firebase::App::Create(::firebase::AppOptions(FIREBASE_TESTAPP_NAME),
-                                  GetJniEnv(), GetActivity());
+  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
+                                GetActivity());
 #else
-  g_app =
-      ::firebase::App::Create(::firebase::AppOptions(FIREBASE_TESTAPP_NAME));
+  app = ::firebase::App::Create(::firebase::AppOptions());
 #endif  // defined(__ANDROID__)
 
   LogMessage("Created the firebase app %x",
-             static_cast<int>(reinterpret_cast<intptr_t>(g_app)));
-  analytics::Initialize(*g_app);
+             static_cast<int>(reinterpret_cast<intptr_t>(app)));
+  analytics::Initialize(*app);
   LogMessage("Initialized the firebase analytics API");
 
   LogMessage("Enabling data collection.");
   analytics::SetAnalyticsCollectionEnabled(true);
+  // App needs to be open at least 1s before logging a valid session.
+  analytics::SetMinimumSessionDuration(1000);
+  // App session times out after 5s.
+  analytics::SetSessionTimeoutDuration(5000);
 
   LogMessage("Set user properties.");
   // Set the user's sign up method.
@@ -81,12 +83,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
         sizeof(kLevelUpParameters) / sizeof(kLevelUpParameters[0]));
   }
 
-#if defined(__ANDROID__)
+  LogMessage("Complete");
+
   // Wait until the user wants to quit the app.
   while (!ProcessEvents(1000)) {
   }
-#endif  // defined(__ANDROID__)
 
+  analytics::Terminate();
+  delete app;
+
+  LogMessage("Shutdown");
 
   return 0;
 }

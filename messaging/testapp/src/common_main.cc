@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <pthread.h>
-#include <unistd.h>
 #include "firebase/app.h"
 #include "firebase/messaging.h"
 
@@ -55,18 +53,17 @@ MessageListener g_listener;
 
 // Execute all methods of the C++ Firebase Cloud Messaging API.
 extern "C" int common_main(int argc, const char* argv[]) {
-  ::firebase::App* g_app;
+  ::firebase::App* app;
 #if defined(__ANDROID__)
-  g_app = ::firebase::App::Create(::firebase::AppOptions(FIREBASE_TESTAPP_NAME),
-                                  GetJniEnv(), GetActivity());
+  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
+                                GetActivity());
 #else
-  g_app =
-      ::firebase::App::Create(::firebase::AppOptions(FIREBASE_TESTAPP_NAME));
+  app = ::firebase::App::Create(::firebase::AppOptions());
 #endif  // defined(__ANDROID__)
 
   LogMessage("Initialized Firebase App.");
 
-  ::firebase::messaging::Initialize(*g_app, &g_listener);
+  ::firebase::messaging::Initialize(*app, &g_listener);
   LogMessage("Initialized Firebase Cloud Messaging.");
 
   ::firebase::messaging::Subscribe("/topics/TestTopic");
@@ -76,7 +73,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
   while (!done) {
     // Process events so that the client doesn't hang.
     done = ProcessEvents(1000);
-    LogMessage("Main tick");
   }
+  ::firebase::messaging::Terminate();
+  delete app;
+
   return 0;
 }

@@ -34,7 +34,7 @@ Getting Started
     - For further details please refer to the
       [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
   - Register your iOS app with Firebase.
-    - Create a new app on [Firebase console](https://g.co/firebase), and attach
+    - Create a new app on the [Firebase console](https://console.firebase.google.com), and attach
       your iOS app to it.
       - You can use "com.google.ios.admob.testapp" as the iOS Bundle ID
         while you're testing. You can omit App Store ID while testing.
@@ -44,7 +44,7 @@ Getting Started
     - You will need to either,
        1. Check "Copy items if needed" when adding the frameworks, or
        2. Add the framework path in "Framework Search Paths"
-          - e.g. If you downloaded the Firebase C++ SDK to
+          - For example, if you downloaded the Firebase C++ SDK to
             `/Users/me/firebase_cpp_sdk`,
             then you would add the path
             `/Users/me/firebase_cpp_sdk/frameworks/ios/universal`.
@@ -61,7 +61,7 @@ Getting Started
 
 ### Android
   - Register your Android app with Firebase.
-    - Create a new app on [Firebase console](https://g.co/firebase), and attach
+    - Create a new app on the [Firebase console](https://console.firebase.google.com), and attach
       your Android app to it.
       - You can use "com.google.android.admob.testapp" as the Package Name
         while you're testing.

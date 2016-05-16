@@ -33,7 +33,7 @@ Building and Running the testapp
     - For further details please refer to the
       [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
   - Register your iOS app with Firebase.
-    - Create a new app on [Firebase console](https://g.co/firebase), and attach
+    - Create a new app on the [Firebase console](https://console.firebase.google.com), and attach
       your iOS app to it.
       - You can use "com.google.ios.analytics.testapp" as the iOS Bundle ID
         while you're testing. You can omit App Store ID while testing.
@@ -65,7 +65,7 @@ Building and Running the testapp
 
 ### Android
   - Register your Android app with Firebase.
-    - Create a new app on [Firebase console](https://g.co/firebase), and attach
+    - Create a new app on the [Firebase console](https://console.firebase.google.com), and attach
       your Android app to it.
       - You can use "com.google.android.analytics.testapp" as the Package Name
         while you're testing.

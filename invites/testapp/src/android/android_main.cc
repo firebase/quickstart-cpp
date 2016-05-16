@@ -17,6 +17,7 @@
 
 #include <android/log.h>
 #include <android_native_app_glue.h>
+#include <pthread.h>
 #include <cassert>
 
 #include "main.h"  // NOLINT
@@ -25,7 +26,16 @@
 
 extern "C" int common_main(int argc, const char* argv[]);
 
-static struct android_app* gAppState = nullptr;
+static struct android_app* g_app_state = nullptr;
+static bool g_destroy_requested = false;
+static bool g_started = false;
+static bool g_restarted = false;
+static pthread_mutex_t g_started_mutex;
+
+// Handle state changes from via native app glue.
+static void OnAppCmd(struct android_app* app, int32_t cmd) {
+  g_destroy_requested |= cmd == APP_CMD_DESTROY;
+}
 
 // Process events pending on the main thread.
 // Returns true when the app receives an event requesting exit.
@@ -35,13 +45,16 @@ bool ProcessEvents(int msec) {
   int looperId = ALooper_pollAll(msec, nullptr, &events,
                                  reinterpret_cast<void**>(&source));
   if (looperId >= 0 && source) {
-    source->process(gAppState, source);
+    source->process(g_app_state, source);
   }
-  return gAppState->destroyRequested;
+  return g_destroy_requested | g_restarted;
 }
 
 // Get the activity.
-jobject GetActivity() { return gAppState->activity->clazz; }
+jobject GetActivity() { return g_app_state->activity->clazz; }
+
+// Get the window context. For Android, it's a jobject pointing to the Activity.
+jobject GetWindowContext() { return g_app_state->activity->clazz; }
 
 // Find a class, attempting to load the class if it's not found.
 jclass FindClass(JNIEnv* env, jobject activity_object, const char* class_name) {
@@ -82,7 +95,7 @@ jclass FindClass(JNIEnv* env, jobject activity_object, const char* class_name) {
 class LoggingUtilsData {
  public:
   LoggingUtilsData()
-      : logging_utils_class_(0),
+      : logging_utils_class_(nullptr),
         logging_utils_add_log_text_(0),
         logging_utils_init_log_window_(0) {}
 
@@ -132,7 +145,8 @@ class LoggingUtilsData {
   jmethodID logging_utils_add_log_text_;
   jmethodID logging_utils_init_log_window_;
 };
-LoggingUtilsData logging_utils_data;
+
+LoggingUtilsData* g_logging_utils_data;
 
 // Checks if a JNI exception has happened, and if so, logs it to the console.
 void CheckJNIException() {
@@ -168,12 +182,11 @@ void CheckJNIException() {
 }
 
 // Log a message that can be viewed in "adb logcat".
-int LogMessage(const char* format, ...) {
+void LogMessage(const char* format, ...) {
   static const int kLineBufferSize = 100;
   char buffer[kLineBufferSize + 2];
 
   va_list list;
-  int rc;
   va_start(list, format);
   int string_len = vsnprintf(buffer, kLineBufferSize, format, list);
   string_len = string_len < kLineBufferSize ? string_len : kLineBufferSize;
@@ -181,17 +194,15 @@ int LogMessage(const char* format, ...) {
   buffer[string_len] = '\n';
   buffer[string_len + 1] = '\0';
 
-  rc = __android_log_vprint(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME, format,
-                            list);
-  logging_utils_data.AppendText(buffer);
+  __android_log_vprint(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME, format, list);
+  g_logging_utils_data->AppendText(buffer);
   CheckJNIException();
   va_end(list);
-  return rc;
 }
 
 // Get the JNI environment.
 JNIEnv* GetJniEnv() {
-  JavaVM* vm = gAppState->activity->vm;
+  JavaVM* vm = g_app_state->activity->vm;
   JNIEnv* env;
   jint result = vm->AttachCurrentThread(&env, nullptr);
   return result == JNI_OK ? env : nullptr;
@@ -199,13 +210,46 @@ JNIEnv* GetJniEnv() {
 
 // Execute common_main(), flush pending events and finish the activity.
 extern "C" void android_main(struct android_app* state) {
-  int return_value;
-  gAppState = state;
+  // native_app_glue spawns a new thread, calling android_main() when the
+  // activity onStart() or onRestart() methods are called.  This code handles
+  // the case where we're re-entering this method on a different thread by
+  // signalling the existing thread to exit, waiting for it to complete before
+  // reinitializing the application.
+  if (g_started) {
+    g_restarted = true;
+    // Wait for the existing thread to exit.
+    pthread_mutex_lock(&g_started_mutex);
+    pthread_mutex_unlock(&g_started_mutex);
+  } else {
+    g_started_mutex = PTHREAD_MUTEX_INITIALIZER;
+  }
+  pthread_mutex_lock(&g_started_mutex);
+  g_started = true;
+
+  // Save native app glue state and setup a callback to track the state.
+  g_destroy_requested = false;
+  g_app_state = state;
+  g_app_state->onAppCmd = OnAppCmd;
+
+  // Create the logging display.
+  g_logging_utils_data = new LoggingUtilsData();
+  g_logging_utils_data->Init();
+
+  // Execute cross platform entry point.
   static const char* argv[] = {FIREBASE_TESTAPP_NAME};
-  logging_utils_data.Init();
-  return_value = common_main(1, argv);
+  int return_value = common_main(1, argv);
   (void)return_value;  // Ignore the return value.
   ProcessEvents(10);
-  ANativeActivity_finish(state->activity);
-  gAppState->activity->vm->DetachCurrentThread();
+
+  // Clean up logging display.
+  delete g_logging_utils_data;
+  g_logging_utils_data = nullptr;
+
+  // Finish the activity.
+  if (!g_restarted) ANativeActivity_finish(state->activity);
+
+  g_app_state->activity->vm->DetachCurrentThread();
+  g_started = false;
+  g_restarted = false;
+  pthread_mutex_unlock(&g_started_mutex);
 }

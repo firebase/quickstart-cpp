@@ -10,7 +10,7 @@ Introduction
 ------------
 
 - [Read more about Firebase Invites](https://developers.google.com/app-invites/)
-- [Read more about Firebase Durable Links](https://developers.google.com/firebase/docs/durable-links/)
+- [Read more about Firebase Dynamic Links](https://developers.google.com/firebase/docs/dynamic-links/)
 
 Building and Running the testapp
 --------------------------------
@@ -122,7 +122,7 @@ Building and Running the testapp
   - __Android__: View the logcat output in Android studio or by running
     "adb logcat" from the command line.
 
-- When you first run the app, it will check for an incoming durable link or
+- When you first run the app, it will check for an incoming dynamic link or
   invitation, and report whether it was able to fetch an invite.
 - Afterwards, it will open a screen that allows you to send an invite for the
   current app via e-mail or SMS.

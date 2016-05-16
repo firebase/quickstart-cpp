@@ -23,11 +23,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
- A utility class, encapsulating the data and methods required to log arbitrary
- text to the screen, via a non-editable TextView.
+ * A utility class, encapsulating the data and methods required to log arbitrary
+ * text to the screen, via a non-editable TextView.
  */
 public class LoggingUtils {
-  public static TextView textView = null;
+  public static TextView sTextView = null;
 
   public static void initLogWindow(Activity activity) {
     LinearLayout linearLayout = new LinearLayout(activity);
@@ -38,25 +38,17 @@ public class LoggingUtils {
     Window window = activity.getWindow();
     window.takeSurface(null);
     window.setContentView(linearLayout);
-    LoggingUtils.textView = textView;
+    sTextView = textView;
   }
 
   public static void addLogText(final String text) {
-
-    class RunnableAppendText implements Runnable {
-      public String text;
-
-      @Override
-      public void run() {
-        if (LoggingUtils.textView != null) {
-          LoggingUtils.textView.append(text);
+    new Handler(Looper.getMainLooper()).post(new Runnable() {
+        @Override
+        public void run() {
+          if (sTextView != null) {
+            sTextView.append(text);
+          }
         }
-      }
-    }
-
-    RunnableAppendText appendText = new RunnableAppendText();
-    appendText.text = text;
-
-    new Handler(Looper.getMainLooper()).post(appendText);
+      });
   }
 }
