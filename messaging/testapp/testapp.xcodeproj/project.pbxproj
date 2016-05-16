@@ -27,7 +27,6 @@
 		5292271F1C85FB6A00C89379 /* common_main.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = common_main.cc; path = src/common_main.cc; sourceTree = "<group>"; };
 		529227201C85FB6A00C89379 /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = main.h; path = src/main.h; sourceTree = "<group>"; };
 		529227221C85FB7600C89379 /* ios_main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ios_main.mm; path = src/ios/ios_main.mm; sourceTree = "<group>"; };
-		529227231C85FB7600C89379 /* ios_main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ios_main.h; path = src/ios/ios_main.h; sourceTree = "<group>"; };
 		52B71EBA1C8600B600398745 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = testapp/Images.xcassets; sourceTree = "<group>"; };
 		52FD1FF81C85FFA000BC68E3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = testapp/Info.plist; sourceTree = "<group>"; };
 		D66B16861CE46E8900E5638A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -93,7 +92,6 @@
 			isa = PBXGroup;
 			children = (
 				529227221C85FB7600C89379 /* ios_main.mm */,
-				529227231C85FB7600C89379 /* ios_main.h */,
 			);
 			name = ios;
 			sourceTree = "<group>";
