@@ -3,5 +3,5 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # FCM test application.
 target 'testapp' do
-  pod 'Firebase/Messaging', '3.1.6'
+  pod 'Firebase/Messaging'
 end

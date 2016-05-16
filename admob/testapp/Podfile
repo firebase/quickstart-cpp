@@ -4,5 +4,5 @@ platform :ios, '7.0'
 # AdMob test application.
 target 'testapp' do
   pod 'Firebase/AdMob'
-  pod 'Firebase/Core', '3.1.6'
+  pod 'Firebase/Core'
 end
