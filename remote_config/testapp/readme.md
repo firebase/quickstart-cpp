@@ -9,15 +9,13 @@ to the console.
 Introduction
 ------------
 
-- [Read more about Firebase Remote Config](https://developers.google.com/firebase/)
+- [Read more about Firebase Remote Config](https://firebase.google.com/docs/remote-config)
 
 Building and Running the testapp
 --------------------------------
 
 ### iOS
   - Link your iOS app to the Firebase libraries.
-    - Get access to the Firebase SDK git repo via
-      [git cookie](https://cpdc-eap.googlesource.com/new-password).
     - Get CocoaPods version 1 or later by running,
         ```
         $ sudo gem install CocoaPods --pre
@@ -32,15 +30,19 @@ Building and Running the testapp
         $ open testapp.xcworkspace
         ```
     - For further details please refer to the
-      [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
+      [general instructions for setting up an iOS app with Firebase](https://firebase.google.com/docs/ios/setup).
   - Register your iOS app with Firebase.
-    - Create a new app on the [Firebase console](https://console.firebase.google.com), and attach
+    - Create a new app on the
+      [Firebase console](https://firebase.google.com/console), and attach
       your iOS app to it.
       - You can use "com.google.ios.remoteconfig.testapp" as the iOS Bundle ID
         while you're testing. You can omit App Store ID while testing.
     - Add the GoogleService-Info.plist that you downloaded from Firebase
       console to the testapp root directory. This file identifies your iOS app
       to the Firebase backend.
+  - Download the Firebase C++ SDK linked from
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase\_remote\_config.framework
@@ -63,7 +65,7 @@ Building and Running the testapp
 
 ### Android
   - Register your Android app with Firebase.
-    - Create a new app on the [Firebase console](https://console.firebase.google.com), and attach
+    - Create a new app on the [Firebase console](https://firebase.google.com/console/), and attach
       your Android app to it.
       - You can use "com.google.android.remoteconfig.testapp" as the Package
         Name while you're testing.
@@ -85,7 +87,10 @@ Building and Running the testapp
       console to the root directory of testapp. This file identifies your
       Android app to the Firebase backend.
     - For further details please refer to the
-      [general instructions for setting up an Android app with Firebase](https://developers.google.com/firebase/docs/android/setup).
+      [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
+  - Download the Firebase C++ SDK linked from
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
@@ -120,7 +125,7 @@ out the values again.
 Support
 -------
 
-[https://developers.google.com/firebase/support/]()
+[https://firebase.google.com/support/]()
 
 License
 -------

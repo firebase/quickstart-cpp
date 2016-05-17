@@ -9,16 +9,14 @@ it's performing to the console.
 Introduction
 ------------
 
-- [Read more about Firebase Invites](https://developers.google.com/app-invites/)
-- [Read more about Firebase Dynamic Links](https://developers.google.com/firebase/docs/dynamic-links/)
+- [Read more about Firebase Invites](https://firebase.google.com/docs/invites/)
+- [Read more about Firebase Dynamic Links](https://firebase.google.com/docs/dynamic-links/)
 
 Building and Running the testapp
 --------------------------------
 
 ### iOS
   - Link your iOS app to the Firebase libraries.
-    - Get access to the Firebase SDK git repo via
-      [git cookie](https://cpdc-eap.googlesource.com/new-password).
     - Get CocoaPods version 1 or later by running,
         ```
         $ sudo gem install CocoaPods --pre
@@ -33,10 +31,10 @@ Building and Running the testapp
         $ open testapp.xcworkspace
         ```
     - For further details please refer to the
-      [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
+      [general instructions for setting up an iOS app with Firebase](https://firebase.google.com/docs/ios/setup).
   - Register your iOS app with Firebase.
     - Create a new app on
-      [developers.google.com](https://developers.google.com/mobile/add?platform=ios&cntapi=appinvite&cntapp=Invites%20TestApp&cntpkg=com.google.ios.invites.testapp),
+      [firebase.google.com/console](https://firebase.google.com/console/),
       and attach your iOS app to it.
       - For Invites, you will need an App Store ID. Use something random such
         as 12345678."
@@ -49,6 +47,9 @@ Building and Running the testapp
       Info tab, under the URL Types section, find the URL Schemes box containing
       YOUR\_REVERSED\_CLIENT\_ID. Replace this with the value of the
       REVERSED\_CLIENT\_ID string in GoogleService-Info.plist.
+  - Download the Firebase C++ SDK linked from
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase_invites.framework
@@ -72,7 +73,7 @@ Building and Running the testapp
 ### Android
   - Register your Android app with Firebase.
     - Create a new app on
-      [developers.google.com](https://developers.google.com/mobile/add?platform=android&cntapi=appinvite&cntapp=Invites%20TestApp&cntpkg=com.google.android.invites.testapp),
+      [developers.google.com](https://firebase.google.com/console/),
       and attach your Android app to it.
       - You can use "com.google.android.invites.testapp" as the Package Name
         while you're testing.
@@ -94,7 +95,10 @@ Building and Running the testapp
       console to the root directory of testapp. This file identifies your
       Android app to the Firebase backend.
     - For further details please refer to the
-      [general instructions for setting up an Android app with Firebase](https://developers.google.com/firebase/docs/android/setup).
+      [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
+  - Download the Firebase C++ SDK linked from
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
@@ -137,7 +141,7 @@ Building and Running the testapp
 Support
 -------
 
-[https://developers.google.com/firebase/support/]()
+[https://firebase.google.com/support/]()
 
 License
 -------

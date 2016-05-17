@@ -9,15 +9,13 @@ while displaying the ads.
 Introduction
 ------------
 
-- [Read more about Firebase AdMob](https://developers.google.com/firebase/)
+- [Read more about Firebase AdMob](https://firebase.google.com/docs/admob)
 
 Getting Started
 ---------------
 
 ### iOS
  - Link your iOS app to the Firebase libraries.
-    - Get access to the Firebase SDK git repo via
-      [git cookie](https://cpdc-eap.googlesource.com/new-password).
     - Get CocoaPods version 1 or later by running,
         ```
         $ sudo gem install CocoaPods --pre
@@ -32,12 +30,15 @@ Getting Started
         $ open testapp.xcworkspace
         ```
     - For further details please refer to the
-      [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
+      [general instructions for setting up an iOS app with Firebase](https://firebase.google.com/docs/ios/setup).
   - Register your iOS app with Firebase.
-    - Create a new app on the [Firebase console](https://console.firebase.google.com), and attach
+    - Create a new app on the [Firebase console](https://firebase.google.com/console/), and attach
       your iOS app to it.
       - You can use "com.google.ios.admob.testapp" as the iOS Bundle ID
         while you're testing. You can omit App Store ID while testing.
+  - Download the Firebase C++ SDK linked from
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase_admob.framework
@@ -61,7 +62,7 @@ Getting Started
 
 ### Android
   - Register your Android app with Firebase.
-    - Create a new app on the [Firebase console](https://console.firebase.google.com), and attach
+    - Create a new app on the [Firebase console](https://firebase.google.com/console/), and attach
       your Android app to it.
       - You can use "com.google.android.admob.testapp" as the Package Name
         while you're testing.
@@ -83,7 +84,10 @@ Getting Started
       console to the root directory of testapp. This file identifies your
       Android app to the Firebase backend.
     - For further details please refer to the
-      [general instructions for setting up an Android app with Firebase](https://developers.google.com/firebase/docs/android/setup).
+      [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
+  - Download the Firebase C++ SDK linked from
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
@@ -110,7 +114,7 @@ Getting Started
 Support
 -------
 
-[https://developers.google.com/firebase/support/]()
+[https://firebase.google.com/support/]()
 
 License
 -------

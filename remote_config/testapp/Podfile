@@ -1,4 +1,3 @@
-source 'https://cpdc-eap.googlesource.com/spec.git'
 source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Firebase Remote Config test application.

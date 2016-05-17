@@ -9,14 +9,12 @@ console.
 Introduction
 ------------
 
-- [Read more about Firebase Cloud Messaging](https://developers.google.com/cloud-messaging/)
+- [Read more about Firebase Cloud Messaging](https://firebase.google.com/docs/cloud-messaging/)
 
 Building and Running the testapp
 --------------------------------
 ### iOS
   - Link your iOS app to the Firebase libraries.
-    - Get access to the Firebase SDK git repo via
-    [git cookie](https://cpdc-eap.googlesource.com/new-password).
     - Get CocoaPods version 1 or later by running,
 
     ```
@@ -33,11 +31,11 @@ Building and Running the testapp
     $ open testapp.xcworkspace
     ```
     - For further details please refer to the
-    [general instructions for setting up an iOS app with Firebase](https://developers.google.com/firebase/docs/ios/setup).
+    [general instructions for setting up an iOS app with Firebase](https://firebase.google.com/docs/ios/setup).
 
   - Register your iOS app with Firebase.
     - Create a new app on
-    [developers.google.com](https://developers.google.com/mobile/add?platform=android&cntapi=messaging&cntapp=Cloud%20Messaging%20Test%20App&cntpkg=com.google.android.messaging.testapp)
+    [firebase.google.com/console](https://firebase.google.com/console/)
     , and attach your iOS app to it.
       - For Messaging, you will need an App Store ID. Use something random such
         as 12345678."
@@ -46,6 +44,9 @@ Building and Running the testapp
     - Add the GoogleService-Info.plist that you downloaded from Firebase
       console to the testapp root directory. This file identifies your iOS app
       to the Firebase backend.
+  - Download the Firebase C++ SDK linked from
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase_messaging.framework
@@ -64,7 +65,7 @@ Building and Running the testapp
           - You need a valid
             [APNs](https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/ApplePushService.html)
             certificate. If you don't already have one, see
-            [Provisioning APNs SSL Certificates.](https://developers.google.com/firebase/docs/cloud-messaging/ios/certs)
+            [Provisioning APNs SSL Certificates.](https://firebase.google.com/docs/cloud-messaging/ios/certs)
   - In XCode, build & run the sample on an iOS device or simulator.
   - The testapp has no user interface. The output of the app can be viewed
     via the console.  In Xcode,  select
@@ -74,7 +75,7 @@ Building and Running the testapp
 **Register your Android app with Firebase.**
 
 - Create a new app on
-[developers.google.com](https://developers.google.com/mobile/add?platform=android&cntapi=messaging&cntapp=Cloud%20Messaging%20Test%20App&cntpkg=com.google.android.messaging.testapp)
+[firebase.google.com/console](https://firebase.google.com/console/)
 , and attach your Android app to it.
 - You can use "com.google.android.messaging.testapp" as the Package Name
 while you're testing.
@@ -101,7 +102,11 @@ with:
   console to the root directory of testapp. This file identifies your
   Android app to the Firebase backend.
 - For further details please refer to the
-[general instructions for setting up an Android app with Firebase](https://developers.google.com/firebase/docs/android/setup).
+[general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
+
+- Download the Firebase C++ SDK linked from
+  [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+  directory of your choice.
 
 **Configure your SDK paths**
 
@@ -141,7 +146,8 @@ viewed via the console:
 - When you first run the app, it will print:
 `Recieved Registration Token: <code>`. Copy this code to a text editor.
 - Copy the ServerKey from the firebase console:
-  - Open your project in the [firebase console](https://console.firebase.google.com)
+  - Open your project in the
+    [firebase console](https://firebase.google.com/console/)
   - Click `Notifications` in the menu on the left
   - Select the `Credentials` tab.
   - Copy the `Server Key`
@@ -155,7 +161,7 @@ curl --header "Authorization: key=<Server Key>" --header "Content-Type: applicat
 Support
 -------
 
-[https://developers.google.com/firebase/support/]()
+[https://firebase.google.com/support/]()
 
 License
 -------
