@@ -7,17 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A7C015A1CEAA2480011C504 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4A7C01591CEAA2480011C504 /* Images.xcassets */; };
 		520BC0391C869159008CFBC3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 520BC0381C869159008CFBC3 /* GoogleService-Info.plist */; };
 		529226D61C85F68000C89379 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 529226D51C85F68000C89379 /* Foundation.framework */; };
 		529226D81C85F68000C89379 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 529226D71C85F68000C89379 /* CoreGraphics.framework */; };
 		529226DA1C85F68000C89379 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 529226D91C85F68000C89379 /* UIKit.framework */; };
 		529227211C85FB6A00C89379 /* common_main.cc in Sources */ = {isa = PBXBuildFile; fileRef = 5292271F1C85FB6A00C89379 /* common_main.cc */; };
 		529227241C85FB7600C89379 /* ios_main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 529227221C85FB7600C89379 /* ios_main.mm */; };
-		52B71EBB1C8600B600398745 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 52B71EBA1C8600B600398745 /* Images.xcassets */; };
 		D66B16871CE46E8900E5638A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D66B16861CE46E8900E5638A /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4A7C01591CEAA2480011C504 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = testapp/Images.xcassets; sourceTree = "<group>"; };
 		520BC0381C869159008CFBC3 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		529226D21C85F68000C89379 /* testapp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = testapp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		529226D51C85F68000C89379 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -27,7 +28,6 @@
 		5292271F1C85FB6A00C89379 /* common_main.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = common_main.cc; path = src/common_main.cc; sourceTree = "<group>"; };
 		529227201C85FB6A00C89379 /* main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = main.h; path = src/main.h; sourceTree = "<group>"; };
 		529227221C85FB7600C89379 /* ios_main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ios_main.mm; path = src/ios/ios_main.mm; sourceTree = "<group>"; };
-		52B71EBA1C8600B600398745 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = testapp/Images.xcassets; sourceTree = "<group>"; };
 		52FD1FF81C85FFA000BC68E3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = testapp/Info.plist; sourceTree = "<group>"; };
 		D66B16861CE46E8900E5638A /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -49,9 +49,9 @@
 		529226C91C85F68000C89379 = {
 			isa = PBXGroup;
 			children = (
+				4A7C01591CEAA2480011C504 /* Images.xcassets */,
 				D66B16861CE46E8900E5638A /* LaunchScreen.storyboard */,
 				520BC0381C869159008CFBC3 /* GoogleService-Info.plist */,
-				52B71EBA1C8600B600398745 /* Images.xcassets */,
 				52FD1FF81C85FFA000BC68E3 /* Info.plist */,
 				5292271D1C85FB5500C89379 /* src */,
 				529226D41C85F68000C89379 /* Frameworks */,
@@ -153,7 +153,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D66B16871CE46E8900E5638A /* LaunchScreen.storyboard in Resources */,
-				52B71EBB1C8600B600398745 /* Images.xcassets in Resources */,
+				4A7C015A1CEAA2480011C504 /* Images.xcassets in Resources */,
 				520BC0391C869159008CFBC3 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
