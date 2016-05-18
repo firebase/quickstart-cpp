@@ -13,9 +13,8 @@
 # limitations under the License.
 
 APP_PLATFORM:=android-14
-# NOTE: Users can build against either armeabi-v7a or armeabi-v7a-hard.
-APP_ABI:=armeabi-v7a-hard arm64-v8a x86 x86_64 mips
-# armeabi and mips64 - Are broken when building NDK r11+ at the moment.
+NDK_TOOLCHAIN_VERSION=clang
+APP_ABI:=armeabi armeabi-v7a arm64-v8a x86 x86_64 mips mips64
 APP_STL:=c++_static
 APP_MODULES:=android_main
 APP_CPPFLAGS+=-std=c++11

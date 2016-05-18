@@ -48,7 +48,7 @@ LOCAL_WHOLE_STATIC_LIBRARIES:=\
 LOCAL_C_INCLUDES:=\
 	$(NDK_ROOT)/sources/android/native_app_glue \
 	$(LOCAL_PATH)/src
-LOCAL_LDLIBS:=-llog -landroid
+LOCAL_LDLIBS:=-llog -landroid -latomic
 LOCAL_ARM_MODE:=arm
 LOCAL_LDFLAGS:=-Wl,-z,defs -Wl,--no-undefined
 include $(BUILD_SHARED_LIBRARY)
