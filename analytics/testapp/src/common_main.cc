@@ -27,12 +27,20 @@ extern "C" int common_main(int argc, const char* argv[]) {
   ::firebase::App* app;
 
   LogMessage("Initialize the Analytics library");
+  do {
 #if defined(__ANDROID__)
-  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
-                                GetActivity());
+    app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
+                                  GetActivity());
 #else
-  app = ::firebase::App::Create(::firebase::AppOptions());
+    app = ::firebase::App::Create(::firebase::AppOptions());
 #endif  // defined(__ANDROID__)
+
+    if (app == nullptr) {
+      LogMessage("Couldn't create firebase app, try again.");
+      // Wait a few moments, and try to create app again.
+      ProcessEvents(1000);
+    }
+  } while (app == nullptr);
 
   LogMessage("Created the firebase app %x",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));

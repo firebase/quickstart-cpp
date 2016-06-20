@@ -104,6 +104,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
   app = ::firebase::App::Create(::firebase::AppOptions());
 #endif  // defined(__ANDROID__)
 
+  if (app == nullptr) {
+    LogMessage("Couldn't create firebase app, aborting.");
+    // Wait until the user wants to quit the app.
+    while (!ProcessEvents(1000)) {
+    }
+    return 1;
+  }
+
   LogMessage("Created the Firebase App %x.",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));
 

@@ -204,7 +204,7 @@ class UserLogin {
     user_ = nullptr;
   }
 
-    const char* email() const { return email_.c_str(); }
+  const char* email() const { return email_.c_str(); }
   const char* password() const { return password_.c_str(); }
   User* user() const { return user_; }
   void set_email(const char* email) { email_ = email; }
@@ -228,6 +228,15 @@ extern "C" int common_main(int argc, const char* argv[]) {
 #else
   app = App::Create(AppOptions());
 #endif  // defined(__ANDROID__)
+
+  if (app == nullptr) {
+    LogMessage("Couldn't create firebase app, aborting.");
+    // Wait until the user wants to quit the app.
+    while (!ProcessEvents(1000)) {
+    }
+    return 1;
+  }
+
   LogMessage("Created the Firebase app %x.",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));
   // Create the Auth class for that App.
