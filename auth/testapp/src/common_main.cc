@@ -53,8 +53,6 @@ static const char kTestPasswordBad[] = "badTestPassword";
 static const char kTestIdTokenBad[] = "bad id token for testing";
 static const char kTestAccessTokenBad[] = "bad access token for testing";
 static const char kTestPasswordUpdated[] = "testpasswordupdated";
-static const char kTestDisplayName[] = "my display name";
-static const char kTestPhotoUri[] = "myphotos.example.com";
 
 static const char kFirebaseProviderId[] =
 #if defined(__ANDROID__)
@@ -221,21 +219,20 @@ class UserLogin {
 extern "C" int common_main(int argc, const char* argv[]) {
   App* app;
   LogMessage("Starting Auth tests.");
-
+  do {
 // Create the App wrapper.
 #if defined(__ANDROID__)
-  app = App::Create(AppOptions(), GetJniEnv(), GetActivity());
+    app = App::Create(AppOptions(), GetJniEnv(), GetActivity());
 #else
-  app = App::Create(AppOptions());
+    app = App::Create(AppOptions());
 #endif  // defined(__ANDROID__)
 
-  if (app == nullptr) {
-    LogMessage("Couldn't create firebase app, aborting.");
-    // Wait until the user wants to quit the app.
-    while (!ProcessEvents(1000)) {
+    if (app == nullptr) {
+      LogMessage("Couldn't create firebase app, try again.");
+      // Wait a few moments, and try to create app again.
+      ProcessEvents(1000);
     }
-    return 1;
-  }
+  } while (app == nullptr);
 
   LogMessage("Created the Firebase app %x.",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));

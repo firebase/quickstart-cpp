@@ -26,20 +26,20 @@ extern "C" int common_main(int argc, const char* argv[]) {
   ::firebase::App* app;
 
   LogMessage("Initialize the Firebase Remote Config library");
+  do {
 #if defined(__ANDROID__)
-  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
-                                GetActivity());
+    app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
+                                  GetActivity());
 #else
-  app = ::firebase::App::Create(::firebase::AppOptions());
+    app = ::firebase::App::Create(::firebase::AppOptions());
 #endif  // defined(__ANDROID__)
 
-  if (app == nullptr) {
-    LogMessage("Couldn't create firebase app, aborting.");
-    // Wait until the user wants to quit the app.
-    while (!ProcessEvents(1000)) {
+    if (app == nullptr) {
+      LogMessage("Couldn't create firebase app, try again.");
+      // Wait a few moments, and try to create app again.
+      ProcessEvents(1000);
     }
-    return 1;
-  }
+  } while (app == nullptr);
 
   LogMessage("Created the Firebase app %x",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));

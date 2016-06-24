@@ -13,7 +13,7 @@
 # limitations under the License.
 
 APP_PLATFORM:=android-14
-NDK_TOOLCHAIN_VERSION=4.9
+NDK_TOOLCHAIN_VERSION=clang
 APP_ABI:=armeabi armeabi-v7a arm64-v8a x86 x86_64 mips mips64
 APP_STL:=c++_static
 APP_MODULES:=android_main
