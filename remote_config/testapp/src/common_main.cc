@@ -16,6 +16,7 @@
 
 #include "firebase/app.h"
 #include "firebase/remote_config.h"
+#include "google_play_services/availability.h"
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
@@ -26,24 +27,50 @@ extern "C" int common_main(int argc, const char* argv[]) {
   ::firebase::App* app;
 
   LogMessage("Initialize the Firebase Remote Config library");
-  do {
 #if defined(__ANDROID__)
-    app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
-                                  GetActivity());
+  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
+                                GetActivity());
 #else
-    app = ::firebase::App::Create(::firebase::AppOptions());
+  app = ::firebase::App::Create(::firebase::AppOptions());
 #endif  // defined(__ANDROID__)
-
-    if (app == nullptr) {
-      LogMessage("Couldn't create firebase app, try again.");
-      // Wait a few moments, and try to create app again.
-      ProcessEvents(1000);
-    }
-  } while (app == nullptr);
 
   LogMessage("Created the Firebase app %x",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));
-  remote_config::Initialize(*app);
+
+  ::firebase::InitResult init_result;
+  bool try_again;
+  do {
+    try_again = false;
+    init_result = remote_config::Initialize(*app);
+
+#if defined(__ANDROID__)
+    // On Android, we need to update or activate Google Play services
+    // before we can initialize this Firebase module.
+    if (init_result == firebase::kInitResultFailedMissingDependency) {
+      LogMessage("Google Play services unavailable, trying to fix.");
+      firebase::Future<void> make_available =
+          google_play_services::MakeAvailable(app->GetJNIEnv(),
+                                              app->activity());
+      while (make_available.Status() != ::firebase::kFutureStatusComplete) {
+        if (ProcessEvents(100)) return 1;  // Return if exit was triggered.
+      }
+
+      if (make_available.Error() == 0) {
+        LogMessage("Google Play services now available, continuing.");
+        try_again = true;
+      } else {
+        LogMessage("Google Play services still unavailable.");
+      }
+    }
+#endif  // defined(__ANDROID__)
+  } while (try_again);
+
+  if (init_result != ::firebase::kInitResultSuccess) {
+    LogMessage("Failed to initialized Firebase Remote Config, exiting.");
+    ProcessEvents(2000);
+    return 1;
+  }
+
   LogMessage("Initialized the Firebase Remote Config API");
 
   static const remote_config::ConfigKeyValue defaults[] = {
