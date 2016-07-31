@@ -15,7 +15,9 @@
 #include "firebase/app.h"
 #include "firebase/future.h"
 #include "firebase/invites.h"
+#if defined(__ANDROID__)
 #include "google_play_services/availability.h"
+#endif  // defined(__ANDROID__)
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT

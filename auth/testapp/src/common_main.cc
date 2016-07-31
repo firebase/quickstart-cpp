@@ -19,7 +19,9 @@
 
 #include "firebase/app.h"
 #include "firebase/auth.h"
+#if defined(__ANDROID__)
 #include "google_play_services/availability.h"
+#endif  // defined(__ANDROID__)
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
@@ -220,7 +222,7 @@ class UserLogin {
 extern "C" int common_main(int argc, const char* argv[]) {
   App* app;
   LogMessage("Starting Auth tests.");
-  // Create the App wrapper.
+// Create the App wrapper.
 
 #if defined(__ANDROID__)
   app = App::Create(AppOptions(), GetJniEnv(), GetActivity());
