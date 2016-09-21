@@ -16,9 +16,7 @@
 
 #include "firebase/app.h"
 #include "firebase/remote_config.h"
-#if defined(__ANDROID__)
-#include "google_play_services/availability.h"
-#endif  // defined(__ANDROID__)
+#include "firebase/util.h"
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
@@ -39,36 +37,18 @@ extern "C" int common_main(int argc, const char* argv[]) {
   LogMessage("Created the Firebase app %x",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));
 
-  ::firebase::InitResult init_result;
-  bool try_again;
-  do {
-    try_again = false;
-    init_result = remote_config::Initialize(*app);
-
-#if defined(__ANDROID__)
-    // On Android, we need to update or activate Google Play services
-    // before we can initialize this Firebase module.
-    if (init_result == firebase::kInitResultFailedMissingDependency) {
-      LogMessage("Google Play services unavailable, trying to fix.");
-      firebase::Future<void> make_available =
-          google_play_services::MakeAvailable(app->GetJNIEnv(),
-                                              app->activity());
-      while (make_available.Status() != ::firebase::kFutureStatusComplete) {
-        if (ProcessEvents(100)) return 1;  // Return if exit was triggered.
-      }
-
-      if (make_available.Error() == 0) {
-        LogMessage("Google Play services now available, continuing.");
-        try_again = true;
-      } else {
-        LogMessage("Google Play services still unavailable.");
-      }
-    }
-#endif  // defined(__ANDROID__)
-  } while (try_again);
-
-  if (init_result != ::firebase::kInitResultSuccess) {
-    LogMessage("Failed to initialized Firebase Remote Config, exiting.");
+  ::firebase::ModuleInitializer initializer;
+  initializer.Initialize(app, nullptr, [](::firebase::App* app, void*) {
+    LogMessage("Try to initialize Remote Config");
+    return ::firebase::remote_config::Initialize(*app);
+  });
+  while (initializer.InitializeLastResult().Status() !=
+         firebase::kFutureStatusComplete) {
+    if (ProcessEvents(100)) return 1;  // exit if requested
+  }
+  if (initializer.InitializeLastResult().Error() != 0) {
+    LogMessage("Failed to initialize Firebase Remote Config: %s",
+               initializer.InitializeLastResult().ErrorMessage());
     ProcessEvents(2000);
     return 1;
   }
@@ -159,6 +139,18 @@ extern "C" int common_main(int argc, const char* argv[]) {
         const unsigned char value = result[i];
         LogMessage("TestData[%d] = 0x%02x (%c)", i, value, value);
       }
+    }
+
+    // Print out the keys that are now tied to data
+    std::vector<std::string> keys = remote_config::GetKeys();
+    LogMessage("GetKeys:");
+    for (auto s = keys.begin(); s != keys.end(); ++s) {
+      LogMessage("  %s", s->c_str());
+    }
+    keys = remote_config::GetKeysByPrefix("TestD");
+    LogMessage("GetKeysByPrefix(\"TestD\"):");
+    for (auto s = keys.begin(); s != keys.end(); ++s) {
+      LogMessage("  %s", s->c_str());
     }
   }
   // Release a handle to the future so we can shutdown the Remote Config API

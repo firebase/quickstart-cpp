@@ -15,6 +15,7 @@
 #include "firebase/admob.h"
 #include "firebase/admob/banner_view.h"
 #include "firebase/admob/interstitial_ad.h"
+#include "firebase/admob/rewarded_video.h"
 #include "firebase/admob/types.h"
 #include "firebase/app.h"
 #include "firebase/future.h"
@@ -28,15 +29,15 @@ class LoggingBannerViewListener : public firebase::admob::BannerView::Listener {
   LoggingBannerViewListener() {}
   void OnPresentationStateChanged(
       firebase::admob::BannerView* banner_view,
-      firebase::admob::BannerView::PresentationState new_state) override {
-    ::LogMessage("BannerView PresentationState has changed to %d.", new_state);
+      firebase::admob::BannerView::PresentationState state) override {
+    ::LogMessage("BannerView PresentationState has changed to %d.", state);
   }
   void OnBoundingBoxChanged(firebase::admob::BannerView* banner_view,
-                            firebase::admob::BoundingBox new_box) override {
+                            firebase::admob::BoundingBox box) override {
     ::LogMessage(
         "BannerView BoundingBox has changed to (x: %d, y: %d, width: %d, "
         "height %d).",
-        new_box.x, new_box.y, new_box.width, new_box.height);
+        box.x, box.y, box.width, box.height);
   }
 };
 
@@ -47,19 +48,42 @@ class LoggingInterstitialAdListener
   LoggingInterstitialAdListener() {}
   void OnPresentationStateChanged(
       firebase::admob::InterstitialAd* interstitial_ad,
-      firebase::admob::InterstitialAd::PresentationState new_state) override {
-    ::LogMessage("InterstitialAd PresentationState has changed to %d.",
-                 new_state);
+      firebase::admob::InterstitialAd::PresentationState state) override {
+    ::LogMessage("InterstitialAd PresentationState has changed to %d.", state);
   }
 };
+
+// A simple listener that logs changes to rewarded video state.
+class LoggingRewardedVideoListener
+    : public firebase::admob::rewarded_video::Listener {
+ public:
+  LoggingRewardedVideoListener() {}
+  void OnRewarded(firebase::admob::rewarded_video::RewardItem reward) override {
+    ::LogMessage("Rewarding user with %f %s.", reward.amount,
+                 reward.reward_type.c_str());
+  }
+  void OnPresentationStateChanged(
+      firebase::admob::rewarded_video::PresentationState state) override {
+    ::LogMessage("Rewarded video PresentationState has changed to %d.", state);
+  }
+};
+
+// The AdMob app IDs for the test app.
+#if defined(__ANDROID__)
+const char* kAdMobAppID = "ca-app-pub-3940256099942544~3347511713";
+#else
+const char* kAdMobAppID = "ca-app-pub-3940256099942544~1458002511";
+#endif
 
 // These ad units are configured to always serve test ads.
 #if defined(__ANDROID__)
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/6300978111";
 const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/1033173712";
+const char* kRewardedVideoAdUnit = "YOUR_REWARDED_VIDEO_AD_UNIT_ID";
 #else
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/2934735716";
 const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/4411468910";
+const char* kRewardedVideoAdUnit = "YOUR_REWARDED_VIDEO_AD_UNIT_ID";
 #endif
 
 // Standard mobile banner size is 320x50.
@@ -86,7 +110,7 @@ static void WaitForFutureCompletion(firebase::FutureBase future) {
   }
 
   if (future.Error() != firebase::admob::kAdMobErrorNone) {
-    LogMessage("Action failed with error code %d and message \"%s\".",
+    LogMessage("ERROR: Action failed with error code %d and message \"%s\".",
                future.Error(), future.ErrorMessage());
   }
 }
@@ -107,7 +131,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
              static_cast<int>(reinterpret_cast<intptr_t>(app)));
 
   LogMessage("Initializing the AdMob with Firebase API.");
-  firebase::admob::Initialize(*app);
+  firebase::admob::Initialize(*app, kAdMobAppID);
 
   firebase::admob::AdRequest request;
   // If the app is aware of the user's gender, it can be added to the targeting
@@ -156,12 +180,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
   ad_size.height = kBannerHeight;
 
   LogMessage("Creating the BannerView.");
-  LoggingBannerViewListener banner_listener;
   firebase::admob::BannerView* banner = new firebase::admob::BannerView();
-  banner->SetListener(&banner_listener);
   banner->Initialize(GetWindowContext(), kBannerAdUnit, ad_size);
 
   WaitForFutureCompletion(banner->InitializeLastResult());
+
+  // Set the listener.
+  LoggingBannerViewListener banner_listener;
+  banner->SetListener(&banner_listener);
 
   // Make the BannerView visible.
   LogMessage("Showing the banner ad.");
@@ -246,13 +272,15 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   // Create and test InterstitialAd.
   LogMessage("Creating the InterstitialAd.");
-  LoggingInterstitialAdListener interstitial_listener;
   firebase::admob::InterstitialAd* interstitial =
       new firebase::admob::InterstitialAd();
-  interstitial->SetListener(&interstitial_listener);
   interstitial->Initialize(GetWindowContext(), kInterstitialAdUnit);
 
   WaitForFutureCompletion(interstitial->InitializeLastResult());
+
+  // Set the listener.
+  LoggingInterstitialAdListener interstitial_listener;
+  interstitial->SetListener(&interstitial_listener);
 
   // When the InterstitialAd is initialized, load an ad.
   LogMessage("Loading an interstitial ad.");
@@ -273,6 +301,52 @@ extern "C" int common_main(int argc, const char* argv[]) {
     ProcessEvents(1000);
   }
 
+  // Start up rewarded video ads and associated mediation adapters.
+  LogMessage("Initializing rewarded video.");
+  namespace rewarded_video = firebase::admob::rewarded_video;
+  rewarded_video::Initialize();
+
+  WaitForFutureCompletion(rewarded_video::InitializeLastResult());
+
+  LogMessage("Setting rewarded video listener.");
+  LoggingRewardedVideoListener rewarded_listener;
+  rewarded_video::SetListener(&rewarded_listener);
+
+  LogMessage("Loading a rewarded video ad.");
+  rewarded_video::LoadAd(kRewardedVideoAdUnit, request);
+
+  WaitForFutureCompletion(rewarded_video::LoadAdLastResult());
+
+  // If an ad has loaded, show it. If the user watches all the way through, the
+  // LoggingRewardedVideoListener will log a reward!
+  if (rewarded_video::LoadAdLastResult().Error() ==
+      firebase::admob::kAdMobErrorNone) {
+    LogMessage("Showing a rewarded video ad.");
+    rewarded_video::Show(GetWindowContext());
+
+    WaitForFutureCompletion(rewarded_video::ShowLastResult());
+
+    // Normally Pause and Resume would be called in response to the app pausing
+    // or losing focus. This is just a test.
+    LogMessage("Pausing.");
+    rewarded_video::Pause();
+
+    WaitForFutureCompletion(rewarded_video::PauseLastResult());
+
+    LogMessage("Resuming.");
+    rewarded_video::Resume();
+
+    WaitForFutureCompletion(rewarded_video::ResumeLastResult());
+  } else {
+    // Rewarded Video returned an error. This might be because the
+    // developer did not put their Rewarded Video ad unit into
+    // kRewardedVideoAdUnit above.
+    LogMessage("WARNING: Is your Rewarded Video ad unit ID correct?");
+    LogMessage(
+        "Ensure kRewardedVideoAdUnit is set to your own Rewarded Video ad unit "
+        "ID in src/common_main.cc.");
+  }
+
   LogMessage("Done!");
 
   // Wait until the user kills the app.
@@ -281,6 +355,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   delete banner;
   delete interstitial;
+  rewarded_video::Destroy();
   firebase::admob::Terminate();
   delete app;
 

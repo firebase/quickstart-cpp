@@ -19,9 +19,7 @@
 
 #include "firebase/app.h"
 #include "firebase/auth.h"
-#if defined(__ANDROID__)
-#include "google_play_services/availability.h"
-#endif  // defined(__ANDROID__)
+#include "firebase/util.h"
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
@@ -35,7 +33,6 @@ using ::firebase::auth::Credential;
 using ::firebase::auth::AuthError;
 using ::firebase::auth::kAuthErrorNone;
 using ::firebase::auth::kAuthErrorFailure;
-using ::firebase::auth::kAuthErrorUnimplemented;
 using ::firebase::auth::EmailAuthProvider;
 using ::firebase::auth::FacebookAuthProvider;
 using ::firebase::auth::GitHubAuthProvider;
@@ -68,10 +65,10 @@ static const char kFirebaseProviderId[] =
 // Print a message for whether the result mathes our expectations.
 // Returns true if the application should exit.
 static bool WaitForFuture(FutureBase future, const char* fn,
-                          AuthError expected_error) {
+                          AuthError expected_error, bool log_error = true) {
   // Note if the future has not be started properly.
   if (future.Status() == ::firebase::kFutureStatusInvalid) {
-    LogMessage("ERROR! Future for %s is invalid", fn);
+    LogMessage("ERROR: Future for %s is invalid", fn);
     return false;
   }
 
@@ -82,18 +79,20 @@ static bool WaitForFuture(FutureBase future, const char* fn,
   }
 
   // Log error result.
-  const AuthError error = static_cast<AuthError>(future.Error());
-  if (error == expected_error) {
-    const char* error_message = future.ErrorMessage();
-    if (error_message) {
-      LogMessage("%s completed as expected", fn);
+  if (log_error) {
+    const AuthError error = static_cast<AuthError>(future.Error());
+    if (error == expected_error) {
+      const char* error_message = future.ErrorMessage();
+      if (error_message) {
+        LogMessage("%s completed as expected", fn);
+      } else {
+        LogMessage("%s completed as expected, error: %d '%s'", fn, error,
+                   error_message);
+      }
     } else {
-      LogMessage("%s completed as expected, error: %d '%s'", fn, error,
-                 error_message);
+      LogMessage("ERROR: %s completed with error: %d, `%s`", fn, error,
+                 future.ErrorMessage());
     }
-  } else {
-    LogMessage("ERROR! %s completed with error: %d, `%s`", fn, error,
-               future.ErrorMessage());
   }
   return false;
 }
@@ -132,7 +131,7 @@ static std::string CreateNewEmail() {
 
 static void ExpectFalse(const char* test, bool value) {
   if (value) {
-    LogMessage("ERROR! %s is true instead of false", test);
+    LogMessage("ERROR: %s is true instead of false", test);
   } else {
     LogMessage("%s is false, as expected", test);
   }
@@ -142,7 +141,7 @@ static void ExpectTrue(const char* test, bool value) {
   if (value) {
     LogMessage("%s is true, as expected", test);
   } else {
-    LogMessage("ERROR! %s is false instead of true", test);
+    LogMessage("ERROR: %s is false instead of true", test);
   }
 }
 
@@ -152,7 +151,7 @@ static void ExpectStringsEqual(const char* test, const char* expected,
   if (strcmp(expected, actual) == 0) {
     LogMessage("%s is '%s' as expected", test, actual);
   } else {
-    LogMessage("ERROR! %s is '%s' instead of '%s'", test, actual, expected);
+    LogMessage("ERROR: %s is '%s' instead of '%s'", test, actual, expected);
   }
 }
 
@@ -160,7 +159,8 @@ static void ExpectStringsEqual(const char* test, const char* expected,
 class UserLogin {
  public:
   UserLogin(Auth* auth, const std::string& email, const std::string& password)
-      : auth_(auth), email_(email), password_(password), user_(nullptr) {}
+      : auth_(auth), email_(email), password_(password), user_(nullptr),
+        log_errors_(true) {}
 
   explicit UserLogin(Auth* auth) : auth_(auth) {
     email_ = CreateNewEmail();
@@ -169,6 +169,7 @@ class UserLogin {
 
   ~UserLogin() {
     if (user_ != nullptr) {
+      log_errors_ = false;
       Delete();
     }
   }
@@ -200,7 +201,8 @@ class UserLogin {
         delete_future = user_->Delete();
       }
 
-      WaitForFuture(delete_future, "User::Delete()", kAuthErrorNone);
+      WaitForFuture(delete_future, "User::Delete()", kAuthErrorNone,
+                    log_errors_);
     }
     user_ = nullptr;
   }
@@ -216,6 +218,7 @@ class UserLogin {
   std::string email_;
   std::string password_;
   User* user_;
+  bool log_errors_;
 };
 
 // Execute all methods of the C++ Auth API.
@@ -233,40 +236,26 @@ extern "C" int common_main(int argc, const char* argv[]) {
   LogMessage("Created the Firebase app %x.",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));
   // Create the Auth class for that App.
-  ::firebase::InitResult init_result;
-  bool try_again;
-  Auth* auth;
-  do {
-    try_again = false;
-    auth = Auth::GetAuth(app, &init_result);
 
-#if defined(__ANDROID__)
-    // On Android, we need to update or activate Google Play services
-    // before we can initialize this Firebase module.
-    if (init_result == firebase::kInitResultFailedMissingDependency) {
-      LogMessage("Google Play services unavailable, trying to fix.");
-      firebase::Future<void> make_available =
-          google_play_services::MakeAvailable(app->GetJNIEnv(),
-                                              app->activity());
-      while (make_available.Status() != ::firebase::kFutureStatusComplete) {
-        if (ProcessEvents(100)) return 1;  // Return if exit was triggered.
-      }
+  ::firebase::ModuleInitializer initializer;
+  initializer.Initialize(app, nullptr, [](::firebase::App* app, void*) {
+    ::firebase::InitResult init_result;
+    Auth::GetAuth(app, &init_result);
+    return init_result;
+  });
+  while (initializer.InitializeLastResult().Status() !=
+         firebase::kFutureStatusComplete) {
+    if (ProcessEvents(100)) return 1;  // exit if requested
+  }
 
-      if (make_available.Error() == 0) {
-        LogMessage("Google Play services now available, continuing.");
-        try_again = true;
-      } else {
-        LogMessage("Google Play services still unavailable.");
-      }
-    }
-#endif  // defined(__ANDROID__)
-  } while (try_again);
-
-  if (init_result != firebase::kInitResultSuccess) {
-    LogMessage("Failed to initialize Auth, exiting.");
+  if (initializer.InitializeLastResult().Error() != 0) {
+    LogMessage("Failed to initialize Auth: %s",
+               initializer.InitializeLastResult().ErrorMessage());
     ProcessEvents(2000);
     return 1;
   }
+
+  Auth* auth = Auth::GetAuth(app);
 
   LogMessage("Created the Auth %x class for the Firebase app.",
              static_cast<int>(reinterpret_cast<intptr_t>(auth)));
@@ -490,6 +479,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         ExpectStringsEqual("Anonymous user ProviderId", kFirebaseProviderId,
                            anonymous_user->ProviderId().c_str());
         ExpectTrue("Anonymous email Anonymous()", anonymous_user->Anonymous());
+        ExpectFalse("Email email EmailVerified()",
+                    anonymous_user->EmailVerified());
 
         // Test User::LinkWithCredential().
         const std::string newer_email = CreateNewEmail();
@@ -527,6 +518,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
             ExpectStringsEqual("Email user ProviderId", kFirebaseProviderId,
                                email_user->ProviderId().c_str());
             ExpectFalse("Email email Anonymous()", email_user->Anonymous());
+            ExpectFalse("Email email EmailVerified()",
+                        email_user->EmailVerified());
 
             // Test User::Token().
             // with force_refresh = false.
@@ -618,14 +611,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
             // Test User::SendEmailVerification().
             Future<void> send_email_verification_future =
                 email_user->SendEmailVerification();
-            WaitForFuture(
-                send_email_verification_future, "User::SendEmailVerification()",
-#if defined(__ANDROID__)
-                // Known issue: this method isn't implemented on Android yet.
-                kAuthErrorUnimplemented);
-#else   // !defined(__ANDROID__)
-                kAuthErrorNone);
-#endif  // !defined(__ANDROID__)
+            WaitForFuture(send_email_verification_future,
+                          "User::SendEmailVerification()", kAuthErrorNone);
           }
         }
       }

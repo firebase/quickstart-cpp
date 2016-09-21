@@ -33,6 +33,7 @@ public class LoggingUtils {
     LinearLayout linearLayout = new LinearLayout(activity);
     ScrollView scrollView = new ScrollView(activity);
     TextView textView = new TextView(activity);
+    textView.setTag("Logger");
     linearLayout.addView(scrollView);
     scrollView.addView(textView);
     Window window = activity.getWindow();

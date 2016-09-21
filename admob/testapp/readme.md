@@ -59,6 +59,8 @@ Getting Started
     dismiss the interstitial ad to see the banner ad. The output of the app can
     be viewed via the console. To view the conscole in Xcode, select
     "View --> Debug Area --> Activate Console" from the menu.
+  - For Rewarded Video, you must supply your own ad unit. Learn more in the
+    [Rewarded Video C++ guide](http://firebase.google.com/docs/admob/cpp/rewarded-video).
 
 ### Android
   - Register your Android app with Firebase.
@@ -110,6 +112,8 @@ Getting Started
   - While this is happening, information from the device log will be written
     to an onscreen TextView.
     - Logcat can also be used as normal.
+  - For Rewarded Video, you must supply your own ad unit. Learn more in the
+    [Rewarded Video C++ guide](http://firebase.google.com/docs/admob/cpp/rewarded-video).
 
 Support
 -------

@@ -65,7 +65,11 @@ Building and Running the testapp
             Select the "Build Settings" tab, and click "All" to see all
             the build settings. Scroll down to "Search Paths", and add
             your path to "Framework Search Paths".
-  - In XCode, build & run the sample on an iOS device or simulator.
+  - Firebase Invites uses Google Sign-In to send invites, which requires the
+    Keychain Sharing capability on iOS 10. You can enable this capability on
+    your project in Xcode 8 by going to your project's settings, Capabilities,
+    and turning on Keychain Sharing.
+  - In Xcode, build & run the sample on an iOS device or simulator.
   - The testapp has no user interface. The output of the app can be viewed
     via the console.  In Xcode,  select
     "View --> Debug Area --> Activate Console" from the menu.

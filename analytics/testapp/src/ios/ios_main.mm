@@ -101,6 +101,7 @@ int main(int argc, char* argv[]) {
 
   g_text_view = [[UITextView alloc] initWithFrame:viewController.view.bounds];
 
+  g_text_view.accessibilityIdentifier = @"Logger";
   g_text_view.editable = NO;
   g_text_view.scrollEnabled = YES;
   g_text_view.userInteractionEnabled = YES;

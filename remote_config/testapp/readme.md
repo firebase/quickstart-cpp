@@ -121,6 +121,8 @@ which are set by the call to `SetDefaults()`
 - The app then fetches those parameters from the Firebase Console, and prints
 out the values again.
   - Note that if new values are not set, the same default values are printed.
+- The app also prints all keys associated with data after the fetch, and then
+keys that begin with "TestD".
 
 Support
 -------
