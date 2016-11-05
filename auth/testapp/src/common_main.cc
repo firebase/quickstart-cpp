@@ -155,11 +155,38 @@ static void ExpectStringsEqual(const char* test, const char* expected,
   }
 }
 
+class AuthStateChangeCounter : public firebase::auth::AuthStateListener {
+ public:
+  AuthStateChangeCounter() : num_state_changes_(0) {}
+
+  virtual void OnAuthStateChanged(Auth* auth) { num_state_changes_++; }
+
+  void CompleteTest(const char* test_name, int expected_state_changes) {
+    CompleteTest(test_name, expected_state_changes, expected_state_changes);
+  }
+
+  void CompleteTest(const char* test_name, int min_state_changes,
+                    int max_state_changes) {
+    const bool success = min_state_changes <= num_state_changes_ &&
+                         num_state_changes_ <= max_state_changes;
+    LogMessage("%sAuthStateListener called %d time%s on %s.",
+               success ? "" : "ERROR: ", num_state_changes_,
+               num_state_changes_ == 1 ? "" : "s", test_name);
+    num_state_changes_ = 0;
+  }
+
+ private:
+  int num_state_changes_;
+};
+
 // Utility class for holding a user's login credentials.
 class UserLogin {
  public:
   UserLogin(Auth* auth, const std::string& email, const std::string& password)
-      : auth_(auth), email_(email), password_(password), user_(nullptr),
+      : auth_(auth),
+        email_(email),
+        password_(password),
+        user_(nullptr),
         log_errors_(true) {}
 
   explicit UserLogin(Auth* auth) : auth_(auth) {
@@ -225,12 +252,11 @@ class UserLogin {
 extern "C" int common_main(int argc, const char* argv[]) {
   App* app;
   LogMessage("Starting Auth tests.");
-// Create the App wrapper.
 
 #if defined(__ANDROID__)
-  app = App::Create(AppOptions(), GetJniEnv(), GetActivity());
+  app = App::Create(GetJniEnv(), GetActivity());
 #else
-  app = App::Create(AppOptions());
+  app = App::Create();
 #endif  // defined(__ANDROID__)
 
   LogMessage("Created the Firebase app %x.",
@@ -290,12 +316,39 @@ extern "C" int common_main(int argc, const char* argv[]) {
     }
   }
 
+  // --- StateChange tests -----------------------------------------------------
+  {
+    AuthStateChangeCounter counter;
+
+    // Test notification on registration.
+    auth->AddAuthStateListener(&counter);
+    counter.CompleteTest("registration", 0);
+
+    // Test notification on SignOut(), when already signed-out.
+    auth->SignOut();
+    counter.CompleteTest("SignOut() when already signed-out", 0);
+
+    // Test notification on SignIn().
+    Future<User*> sign_in_future = auth->SignInAnonymously();
+    WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously()",
+                        kAuthErrorNone, auth);
+    counter.CompleteTest("SignInAnonymously()", 1, 4);
+
+    // Test notification on SignOut(), when signed-in.
+    // TODO(jsanmiya): Change the minimum expected callbacks to 1 once
+    // b/32179003 is fixed.
+    auth->SignOut();
+    counter.CompleteTest("SignOut()", 0, 4);
+
+    auth->RemoveAuthStateListener(&counter);
+  }
+
   // --- Auth tests ------------------------------------------------------------
   {
     UserLogin user_login(auth);  // Generate a random name/password
     user_login.Register();
     if (!user_login.user()) {
-      LogMessage("Error - Could not create in with user.");
+      LogMessage("ERROR: Could not register new user.");
     } else {
       // Test Auth::SignInAnonymously().
       {

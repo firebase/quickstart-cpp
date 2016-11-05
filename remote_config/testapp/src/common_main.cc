@@ -28,10 +28,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   LogMessage("Initialize the Firebase Remote Config library");
 #if defined(__ANDROID__)
-  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
-                                GetActivity());
+  app = ::firebase::App::Create(GetJniEnv(), GetActivity());
 #else
-  app = ::firebase::App::Create(::firebase::AppOptions());
+  app = ::firebase::App::Create();
 #endif  // defined(__ANDROID__)
 
   LogMessage("Created the Firebase app %x",
@@ -94,9 +93,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
   // NOTE: Developer mode should not be enabled in production applications.
   remote_config::SetConfigSetting(remote_config::kConfigSettingDeveloperMode,
                                   "1");
-  assert(*remote_config::GetConfigSetting(
-              remote_config::kConfigSettingDeveloperMode)
-              .c_str() == '1');
+  if ((*remote_config::GetConfigSetting(
+            remote_config::kConfigSettingDeveloperMode)
+            .c_str()) != '1') {
+    LogMessage("Failed to enable developer mode");
+  }
 
   LogMessage("Fetch...");
   auto future_result = remote_config::Fetch(0);

@@ -85,10 +85,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
   ::firebase::App* app;
 
 #if defined(__ANDROID__)
-  app = ::firebase::App::Create(::firebase::AppOptions(), GetJniEnv(),
-                                GetActivity());
+  app = ::firebase::App::Create(GetJniEnv(), GetActivity());
 #else
-  app = ::firebase::App::Create(::firebase::AppOptions());
+  app = ::firebase::App::Create();
 #endif  // defined(__ANDROID__)
 
   LogMessage("Initialized Firebase App.");

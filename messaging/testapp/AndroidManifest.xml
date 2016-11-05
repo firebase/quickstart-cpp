@@ -20,7 +20,8 @@
          the background. -->
     <activity android:name="com.google.firebase.example.TestappNativeActivity"
               android:screenOrientation="portrait"
-              android:configChanges="orientation|screenSize">
+              android:configChanges="orientation|screenSize"
+              android:launchMode="singleTop">
       <meta-data android:name="android.app.lib_name"
                  android:value="android_main" />
       <intent-filter>
@@ -44,6 +45,9 @@
     </service>
 
     <service android:name="com.google.firebase.messaging.cpp.RegistrationIntentService"
+             android:exported="false" >
+    </service>
+    <service android:name="com.google.firebase.messaging.MessageForwardingService"
              android:exported="false" >
     </service>
 

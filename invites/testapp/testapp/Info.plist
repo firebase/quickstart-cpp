@@ -52,6 +52,6 @@
     <key>UILaunchStoryboardName</key>
     <string>LaunchScreen</string>
     <key>NSContactsUsageDescription</key>
-    <string>For inviting others to use the app.</string>
+    <string>Invite others to use the app.</string>
   </dict>
 </plist>

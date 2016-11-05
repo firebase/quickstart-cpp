@@ -4,6 +4,7 @@ package com.google.firebase.example;
 
 import android.app.NativeActivity;
 import android.content.Intent;
+import com.google.firebase.messaging.MessageForwardingService;
 
 /**
  * TestappNativeActivity is a NativeActivity that updates its intent when new intents are sent to
@@ -22,11 +23,15 @@ public class TestappNativeActivity extends NativeActivity {
    * message with both a data and notification payload is receieved the data payload is stored on
    * the notification Intent. NativeActivity does not provide native callbacks for onNewIntent, so
    * it cannot route the data payload that is stored in the Intent to the C++ function OnMessage. As
-   * a workaround, we override onNewIntent so that it sets the Activity's intent, allowing the
-   * native C++ code to get access to the data payload in the Intent extras and call OnMessage.
+   * a workaround, we override onNewIntent so that it forwards the intent to the C++ library's
+   * service which in turn forwards the data to the native C++ messaging library.
    */
   @Override
   protected void onNewIntent(Intent intent) {
+    Intent message = new Intent(this, MessageForwardingService.class);
+    message.setAction(MessageForwardingService.ACTION_REMOTE_INTENT);
+    message.putExtras(intent);
+    startService(message);
     setIntent(intent);
   }
 }
