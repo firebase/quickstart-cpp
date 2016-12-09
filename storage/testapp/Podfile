@@ -1,7 +1,7 @@
 source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
-# Firebase Realtime Database test application.
+# Firebase Storage test application.
 target 'testapp' do
-pod 'Firebase/Database'
+pod 'Firebase/Storage'
 pod 'Firebase/Auth'
 end
