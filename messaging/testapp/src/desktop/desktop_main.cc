@@ -15,7 +15,9 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif  // !_WIN32
 
 #ifdef _WIN32
 #include <windows.h>

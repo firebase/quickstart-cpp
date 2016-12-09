@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <unistd.h>
 #include <ctime>
 #include <sstream>
 #include <string>
@@ -216,7 +215,7 @@ class UserLogin {
         EmailAuthProvider::GetCredential(email(), password());
     Future<User*> sign_in_cred = auth_->SignInWithCredential(email_cred);
     WaitForSignInFuture(sign_in_cred,
-                        "Auth::SignInWithCredential() pre-delete signin",
+                        "Auth::SignInWithCredential() for UserLogin",
                         kAuthErrorNone, auth_);
   }
 
@@ -286,10 +285,29 @@ extern "C" int common_main(int argc, const char* argv[]) {
   LogMessage("Created the Auth %x class for the Firebase app.",
              static_cast<int>(reinterpret_cast<intptr_t>(auth)));
 
-  // Test that CurrentUser() returns NULL right after creation.
-  if (auth->CurrentUser() != nullptr) {
-    LogMessage("ERROR: CurrentUser() returning %x instead of NULL",
-               auth->CurrentUser());
+  // It's possible for CurrentUser() to be non-null if the previous run
+  // left us in a signed-in state.
+  if (auth->CurrentUser() == nullptr) {
+    LogMessage("No user signed in at creation time.");
+  } else {
+    LogMessage("Current user %s already signed in, so signing them out.",
+               auth->CurrentUser()->DisplayName().c_str());
+    auth->SignOut();
+  }
+
+  // --- Credential copy tests -------------------------------------------------
+  {
+    Credential email_cred = EmailAuthProvider::GetCredential(kCustomEmail,
+                                                             kCustomPassword);
+    Credential facebook_cred =
+        FacebookAuthProvider::GetCredential(kTestAccessTokenBad);
+
+    // Test copy constructor.
+    Credential cred_copy(email_cred);
+
+    // Test assignment operator.
+    cred_copy = facebook_cred;
+    (void)cred_copy;
   }
 
   // --- Custom Profile tests --------------------------------------------------
@@ -688,6 +706,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
       WaitForFuture(delete_future, "User::Delete()", kAuthErrorNone);
     }
   }
+  {
+    // We end with a login so that we can test if a second run will detect
+    // that we're already logged-in.
+    Future<User*> sign_in_future = auth->SignInAnonymously();
+    WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously() at end",
+                        kAuthErrorNone, auth);
+  }
+
   LogMessage("Completed Auth tests.");
 
   while (!ProcessEvents(1000)) {

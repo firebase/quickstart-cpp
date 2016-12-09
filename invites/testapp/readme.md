@@ -65,6 +65,13 @@ Building and Running the testapp
             Select the "Build Settings" tab, and click "All" to see all
             the build settings. Scroll down to "Search Paths", and add
             your path to "Framework Search Paths".
+  - _Known Issue_: There is an issue where bundles from the FirebaseInvites
+    Cocoapod are not properly copied into the Xcode project. To work around the
+    issue, you can manually copy the bundles into your project. Navigate to the
+    Pods/FirebaseInvites/Frameworks/frameworks/FirebaseInvites.framework/Resources
+    subdirectory of your project's folder, and drag the
+    GINInviteResources.bundle and GPPACLPickerResources.bundle folders into your
+    Xcode project, selecting "Copy items if needed" when adding them.
   - Firebase Invites uses Google Sign-In to send invites, which requires the
     Keychain Sharing capability on iOS 10. You can enable this capability on
     your project in Xcode 8 by going to your project's settings, Capabilities,

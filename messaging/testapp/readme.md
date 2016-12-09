@@ -147,9 +147,9 @@ viewed via the console:
 `Recieved Registration Token: <code>`. Copy this code to a text editor.
 - Copy the ServerKey from the firebase console:
   - Open your project in the
-    [firebase console](https://firebase.google.com/console/)
-  - Click `Notifications` in the menu on the left
-  - Select the `Credentials` tab.
+    [Firebase Console](https://firebase.google.com/console/).
+  - Click the gear icon then `Project settings` in the menu on the left
+  - Select the `Cloud Messaging` tab.
   - Copy the `Server Key`
 - Replace `<Server Key>` and `<Registration Token>` in this command and run it
 from the command line.
