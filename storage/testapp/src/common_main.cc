@@ -156,8 +156,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
   firebase::storage::StorageReference ref =
       storage->GetReference("test_app_data").Child(saved_url);
 
-  LogMessage("Saved url: %s/test_app_data/%s", ref.bucket().c_str(),
-             ref.name().c_str());
+  LogMessage("Storage URL: gs://%s/%s", ref.bucket().c_str(),
+             ref.full_path().c_str());
 
   // Read and write from memory. This will save a small file and then read it
   // back from the storage to confirm that it was uploaded. Then it will remove

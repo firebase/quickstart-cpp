@@ -62,7 +62,9 @@ std::string PathForResource() {
   NSArray<NSString *> *paths =
       NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
   NSString *documentsDirectory = paths.firstObject;
-  return std::string(documentsDirectory.UTF8String);
+  // Force a trailing slash by removing any that exists, then appending another.
+  return std::string(
+      [[documentsDirectory stringByStandardizingPath] stringByAppendingString:@"/"].UTF8String);
 }
 
 WindowContext GetWindowContext() {
