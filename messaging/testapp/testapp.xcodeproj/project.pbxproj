@@ -15,7 +15,7 @@
 		529227241C85FB7600C89379 /* ios_main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 529227221C85FB7600C89379 /* ios_main.mm */; };
 		52B71EBB1C8600B600398745 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 52B71EBA1C8600B600398745 /* Images.xcassets */; };
 		D66B16871CE46E8900E5638A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D66B16861CE46E8900E5638A /* LaunchScreen.storyboard */; };
-		D6E5B5581E29779D00CC1BF8 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6E5B5571E29779D00CC1BF8 /* UserNotifications.framework */; };
+		D6E5B5581E29779D00CC1BF8 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D6E5B5571E29779D00CC1BF8 /* UserNotifications.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
