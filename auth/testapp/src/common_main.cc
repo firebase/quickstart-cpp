@@ -66,22 +66,22 @@ static const char kFirebaseProviderId[] =
 static bool WaitForFuture(FutureBase future, const char* fn,
                           AuthError expected_error, bool log_error = true) {
   // Note if the future has not be started properly.
-  if (future.Status() == ::firebase::kFutureStatusInvalid) {
+  if (future.status() == ::firebase::kFutureStatusInvalid) {
     LogMessage("ERROR: Future for %s is invalid", fn);
     return false;
   }
 
   // Wait for future to complete.
   LogMessage("  Calling %s...", fn);
-  while (future.Status() == ::firebase::kFutureStatusPending) {
+  while (future.status() == ::firebase::kFutureStatusPending) {
     if (ProcessEvents(100)) return true;
   }
 
   // Log error result.
   if (log_error) {
-    const AuthError error = static_cast<AuthError>(future.Error());
+    const AuthError error = static_cast<AuthError>(future.error());
     if (error == expected_error) {
-      const char* error_message = future.ErrorMessage();
+      const char* error_message = future.error_message();
       if (error_message) {
         LogMessage("%s completed as expected", fn);
       } else {
@@ -90,7 +90,7 @@ static bool WaitForFuture(FutureBase future, const char* fn,
       }
     } else {
       LogMessage("ERROR: %s completed with error: %d, `%s`", fn, error,
-                 future.ErrorMessage());
+                 future.error_message());
     }
   }
   return false;
@@ -100,13 +100,13 @@ static bool WaitForSignInFuture(Future<User*> sign_in_future, const char* fn,
                                 AuthError expected_error, Auth* auth) {
   if (WaitForFuture(sign_in_future, fn, expected_error)) return true;
 
-  const User* const* sign_in_user_ptr = sign_in_future.Result();
+  const User* const* sign_in_user_ptr = sign_in_future.result();
   const User* sign_in_user =
       sign_in_user_ptr == nullptr ? nullptr : *sign_in_user_ptr;
-  const User* auth_user = auth->CurrentUser();
+  const User* auth_user = auth->current_user();
 
   if (sign_in_user != auth_user) {
-    LogMessage("ERROR: future's user (%x) and CurrentUser (%x) don't match",
+    LogMessage("ERROR: future's user (%x) and current_user (%x) don't match",
                static_cast<int>(reinterpret_cast<intptr_t>(sign_in_user)),
                static_cast<int>(reinterpret_cast<intptr_t>(auth_user)));
   }
@@ -206,7 +206,7 @@ class UserLogin {
     WaitForSignInFuture(register_test_account,
                         "CreateUserWithEmailAndPassword() to create temp user",
                         kAuthErrorNone, auth_);
-    user_ = register_test_account.Result() ? *register_test_account.Result()
+    user_ = register_test_account.result() ? *register_test_account.result()
                                            : nullptr;
   }
 
@@ -222,7 +222,7 @@ class UserLogin {
   void Delete() {
     if (user_ != nullptr) {
       Future<void> delete_future = user_->Delete();
-      if (delete_future.Status() == ::firebase::kFutureStatusInvalid) {
+      if (delete_future.status() == ::firebase::kFutureStatusInvalid) {
         Login();
         delete_future = user_->Delete();
       }
@@ -268,14 +268,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
     Auth::GetAuth(app, &init_result);
     return init_result;
   });
-  while (initializer.InitializeLastResult().Status() !=
+  while (initializer.InitializeLastResult().status() !=
          firebase::kFutureStatusComplete) {
     if (ProcessEvents(100)) return 1;  // exit if requested
   }
 
-  if (initializer.InitializeLastResult().Error() != 0) {
+  if (initializer.InitializeLastResult().error() != 0) {
     LogMessage("Failed to initialize Auth: %s",
-               initializer.InitializeLastResult().ErrorMessage());
+               initializer.InitializeLastResult().error_message());
     ProcessEvents(2000);
     return 1;
   }
@@ -285,20 +285,20 @@ extern "C" int common_main(int argc, const char* argv[]) {
   LogMessage("Created the Auth %x class for the Firebase app.",
              static_cast<int>(reinterpret_cast<intptr_t>(auth)));
 
-  // It's possible for CurrentUser() to be non-null if the previous run
+  // It's possible for current_user() to be non-null if the previous run
   // left us in a signed-in state.
-  if (auth->CurrentUser() == nullptr) {
+  if (auth->current_user() == nullptr) {
     LogMessage("No user signed in at creation time.");
   } else {
     LogMessage("Current user %s already signed in, so signing them out.",
-               auth->CurrentUser()->DisplayName().c_str());
+               auth->current_user()->display_name().c_str());
     auth->SignOut();
   }
 
   // --- Credential copy tests -------------------------------------------------
   {
-    Credential email_cred = EmailAuthProvider::GetCredential(kCustomEmail,
-                                                             kCustomPassword);
+    Credential email_cred =
+        EmailAuthProvider::GetCredential(kCustomEmail, kCustomPassword);
     Credential facebook_cred =
         FacebookAuthProvider::GetCredential(kTestAccessTokenBad);
 
@@ -322,13 +322,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
                           "(custom) email and password",
                           kAuthErrorNone, auth);
       // Test SignOut() after signed in with email and password.
-      if (sign_in_future.Status() == ::firebase::kFutureStatusComplete) {
+      if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
         auth->SignOut();
-        if (auth->CurrentUser() != nullptr) {
+        if (auth->current_user() != nullptr) {
           LogMessage(
-              "ERROR: CurrentUser() returning %x instead of NULL after "
+              "ERROR: current_user() returning %x instead of NULL after "
               "SignOut()",
-              auth->CurrentUser());
+              auth->current_user());
         }
       }
     }
@@ -374,13 +374,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously()",
                             kAuthErrorNone, auth);
         // Test SignOut() after signed in anonymously.
-        if (sign_in_future.Status() == ::firebase::kFutureStatusComplete) {
+        if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
           auth->SignOut();
-          if (auth->CurrentUser() != nullptr) {
+          if (auth->current_user() != nullptr) {
             LogMessage(
-                "ERROR: CurrentUser() returning %x instead of NULL after "
+                "ERROR: current_user() returning %x instead of NULL after "
                 "SignOut()",
-                auth->CurrentUser());
+                auth->current_user());
           }
         }
       }
@@ -391,7 +391,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->FetchProvidersForEmail(user_login.email());
         WaitForFuture(providers_future, "Auth::FetchProvidersForEmail()",
                       kAuthErrorNone);
-        const Auth::FetchProvidersResult* pro = providers_future.Result();
+        const Auth::FetchProvidersResult* pro = providers_future.result();
         if (pro) {
           LogMessage("  email %s, num providers %d", user_login.email(),
                      pro->providers.size());
@@ -412,13 +412,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
             "Auth::SignInWithEmailAndPassword() existing email and password",
             kAuthErrorNone, auth);
         // Test SignOut() after signed in with email and password.
-        if (sign_in_future.Status() == ::firebase::kFutureStatusComplete) {
+        if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
           auth->SignOut();
-          if (auth->CurrentUser() != nullptr) {
+          if (auth->current_user() != nullptr) {
             LogMessage(
-                "ERROR: CurrentUser() returning %x instead of NULL after "
+                "ERROR: current_user() returning %x instead of NULL after "
                 "SignOut()",
-                auth->CurrentUser());
+                auth->current_user());
           }
         }
       }
@@ -535,23 +535,24 @@ extern "C" int common_main(int argc, const char* argv[]) {
     WaitForSignInFuture(anon_sign_in_for_user,
                         "Auth::SignInAnonymously() for User", kAuthErrorNone,
                         auth);
-    if (anon_sign_in_for_user.Status() == ::firebase::kFutureStatusComplete) {
-      User* anonymous_user = anon_sign_in_for_user.Result()
-                                 ? *anon_sign_in_for_user.Result()
+    if (anon_sign_in_for_user.status() == ::firebase::kFutureStatusComplete) {
+      User* anonymous_user = anon_sign_in_for_user.result()
+                                 ? *anon_sign_in_for_user.result()
                                  : nullptr;
       if (anonymous_user != nullptr) {
-        LogMessage("Anonymous UID is %s", anonymous_user->UID().c_str());
-        ExpectStringsEqual("Anonymous user Email", "",
-                           anonymous_user->Email().c_str());
-        ExpectStringsEqual("Anonymous user DisplayName", "",
-                           anonymous_user->DisplayName().c_str());
-        ExpectStringsEqual("Anonymous user PhotoUrl", "",
-                           anonymous_user->PhotoUrl().c_str());
-        ExpectStringsEqual("Anonymous user ProviderId", kFirebaseProviderId,
-                           anonymous_user->ProviderId().c_str());
-        ExpectTrue("Anonymous email Anonymous()", anonymous_user->Anonymous());
-        ExpectFalse("Email email EmailVerified()",
-                    anonymous_user->EmailVerified());
+        LogMessage("Anonymous uid is %s", anonymous_user->uid().c_str());
+        ExpectStringsEqual("Anonymous user email", "",
+                           anonymous_user->email().c_str());
+        ExpectStringsEqual("Anonymous user display_name", "",
+                           anonymous_user->display_name().c_str());
+        ExpectStringsEqual("Anonymous user photo_url", "",
+                           anonymous_user->photo_url().c_str());
+        ExpectStringsEqual("Anonymous user provider_id", kFirebaseProviderId,
+                           anonymous_user->provider_id().c_str());
+        ExpectTrue("Anonymous email is_anonymous()",
+                   anonymous_user->is_anonymous());
+        ExpectFalse("Email email is_email_verified()",
+                    anonymous_user->is_email_verified());
 
         // Test User::LinkWithCredential().
         const std::string newer_email = CreateNewEmail();
@@ -575,49 +576,51 @@ extern "C" int common_main(int argc, const char* argv[]) {
           WaitForSignInFuture(email_sign_in_for_user,
                               "Auth::SignInWithEmailAndPassword() for User",
                               kAuthErrorNone, auth);
-          User* email_user = email_sign_in_for_user.Result()
-                                 ? *email_sign_in_for_user.Result()
+          User* email_user = email_sign_in_for_user.result()
+                                 ? *email_sign_in_for_user.result()
                                  : nullptr;
           if (email_user != nullptr) {
-            LogMessage("Email UID is %s", email_user->UID().c_str());
-            ExpectStringsEqual("Email user Email", user_login.email(),
-                               email_user->Email().c_str());
-            ExpectStringsEqual("Email user DisplayName", "",
-                               email_user->DisplayName().c_str());
-            ExpectStringsEqual("Email user PhotoUrl", "",
-                               email_user->PhotoUrl().c_str());
-            ExpectStringsEqual("Email user ProviderId", kFirebaseProviderId,
-                               email_user->ProviderId().c_str());
-            ExpectFalse("Email email Anonymous()", email_user->Anonymous());
-            ExpectFalse("Email email EmailVerified()",
-                        email_user->EmailVerified());
+            LogMessage("Email uid is %s", email_user->uid().c_str());
+            ExpectStringsEqual("Email user email", user_login.email(),
+                               email_user->email().c_str());
+            ExpectStringsEqual("Email user display_name", "",
+                               email_user->display_name().c_str());
+            ExpectStringsEqual("Email user photo_url", "",
+                               email_user->photo_url().c_str());
+            ExpectStringsEqual("Email user provider_id", kFirebaseProviderId,
+                               email_user->provider_id().c_str());
+            ExpectFalse("Email email is_anonymous()",
+                        email_user->is_anonymous());
+            ExpectFalse("Email email is_email_verified()",
+                        email_user->is_email_verified());
 
-            // Test User::Token().
+            // Test User::GetToken().
             // with force_refresh = false.
-            Future<std::string> token_no_refresh = email_user->Token(false);
-            WaitForFuture(token_no_refresh, "User::Token(false)",
+            Future<std::string> token_no_refresh = email_user->GetToken(false);
+            WaitForFuture(token_no_refresh, "User::GetToken(false)",
                           kAuthErrorNone);
-            LogMessage("User::Token(false) = %s",
-                       token_no_refresh.Result()
-                           ? token_no_refresh.Result()->c_str()
+            LogMessage("User::GetToken(false) = %s",
+                       token_no_refresh.result()
+                           ? token_no_refresh.result()->c_str()
                            : "");
 
             // with force_refresh = true.
-            Future<std::string> token_force_refresh = email_user->Token(true);
-            WaitForFuture(token_force_refresh, "User::Token(true)",
+            Future<std::string> token_force_refresh =
+                email_user->GetToken(true);
+            WaitForFuture(token_force_refresh, "User::GetToken(true)",
                           kAuthErrorNone);
-            LogMessage("User::Token(true) = %s",
-                       token_force_refresh.Result()
-                           ? token_force_refresh.Result()->c_str()
+            LogMessage("User::GetToken(true) = %s",
+                       token_force_refresh.result()
+                           ? token_force_refresh.result()->c_str()
                            : "");
 
             // Test Reload().
             Future<void> reload_future = email_user->Reload();
             WaitForFuture(reload_future, "User::Reload()", kAuthErrorNone);
 
-            // Test User::RefreshToken().
-            const std::string refresh_token = email_user->RefreshToken();
-            LogMessage("User::RefreshToken() = %s", refresh_token.c_str());
+            // Test User::refresh_token().
+            const std::string refresh_token = email_user->refresh_token();
+            LogMessage("User::refresh_token() = %s", refresh_token.c_str());
 
             // Test User::Unlink().
             Future<User*> unlink_future = email_user->Unlink("firebase");
@@ -625,23 +628,23 @@ extern "C" int common_main(int argc, const char* argv[]) {
                                 kAuthErrorFailure, auth);
 
             // Sign in again if user is now invalid.
-            if (auth->CurrentUser() == nullptr) {
+            if (auth->current_user() == nullptr) {
               Future<User*> email_sign_in_again =
                   auth->SignInWithEmailAndPassword(user_login.email(),
                                                    user_login.password());
               WaitForSignInFuture(email_sign_in_again,
                                   "Auth::SignInWithEmailAndPassword() again",
                                   kAuthErrorNone, auth);
-              email_user = email_sign_in_again.Result()
-                               ? *email_sign_in_again.Result()
+              email_user = email_sign_in_again.result()
+                               ? *email_sign_in_again.result()
                                : nullptr;
             }
           }
           if (email_user != nullptr) {
-            // Test User::ProviderData().
+            // Test User::provider_data().
             const std::vector<UserInfoInterface*>& provider_data =
-                email_user->ProviderData();
-            LogMessage("User::ProviderData() returned %d interface%s",
+                email_user->provider_data();
+            LogMessage("User::provider_data() returned %d interface%s",
                        provider_data.size(),
                        provider_data.size() == 1 ? "" : "s");
             for (size_t i = 0; i < provider_data.size(); ++i) {
@@ -652,10 +655,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
                   "    DisplayName() = %s\n"
                   "    PhotoUrl() = %s\n"
                   "    ProviderId() = %s",
-                  user_info->UID().c_str(), user_info->Email().c_str(),
-                  user_info->DisplayName().c_str(),
-                  user_info->PhotoUrl().c_str(),
-                  user_info->ProviderId().c_str());
+                  user_info->uid().c_str(), user_info->email().c_str(),
+                  user_info->display_name().c_str(),
+                  user_info->photo_url().c_str(),
+                  user_info->provider_id().c_str());
             }
 
             // Test User::UpdateEmail().
@@ -698,8 +701,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         create_future_for_delete,
         "Auth::CreateUserWithEmailAndPassword() new email for delete",
         kAuthErrorNone, auth);
-    User* email_user_for_delete = create_future_for_delete.Result()
-                                      ? *create_future_for_delete.Result()
+    User* email_user_for_delete = create_future_for_delete.result()
+                                      ? *create_future_for_delete.result()
                                       : nullptr;
     if (email_user_for_delete != nullptr) {
       Future<void> delete_future = email_user_for_delete->Delete();

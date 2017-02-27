@@ -132,14 +132,14 @@ static const int kBirthdayYear = 1976;
 
 static void WaitForFutureCompletion(firebase::FutureBase future) {
   while (!ProcessEvents(1000)) {
-    if (future.Status() != firebase::kFutureStatusPending) {
+    if (future.status() != firebase::kFutureStatusPending) {
       break;
     }
   }
 
-  if (future.Error() != firebase::admob::kAdMobErrorNone) {
+  if (future.error() != firebase::admob::kAdMobErrorNone) {
     LogMessage("ERROR: Action failed with error code %d and message \"%s\".",
-               future.Error(), future.ErrorMessage());
+               future.error(), future.error_message());
   }
 }
 
@@ -322,7 +322,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   WaitForFutureCompletion(interstitial->ShowLastResult());
 
   // Wait for the user to close the interstitial.
-  while (interstitial->GetPresentationState() !=
+  while (interstitial->presentation_state() !=
          firebase::admob::InterstitialAd::PresentationState::
              kPresentationStateHidden) {
     ProcessEvents(1000);
@@ -450,7 +450,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   // If an ad has loaded, show it. If the user watches all the way through, the
   // LoggingRewardedVideoListener will log a reward!
-  if (rewarded_video::LoadAdLastResult().Error() ==
+  if (rewarded_video::LoadAdLastResult().error() ==
       firebase::admob::kAdMobErrorNone) {
     LogMessage("Showing a rewarded video ad.");
     rewarded_video::Show(GetWindowContext());

@@ -41,25 +41,28 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("Try to initialize Remote Config");
     return ::firebase::remote_config::Initialize(*app);
   });
-  while (initializer.InitializeLastResult().Status() !=
+  while (initializer.InitializeLastResult().status() !=
          firebase::kFutureStatusComplete) {
     if (ProcessEvents(100)) return 1;  // exit if requested
   }
-  if (initializer.InitializeLastResult().Error() != 0) {
+  if (initializer.InitializeLastResult().error() != 0) {
     LogMessage("Failed to initialize Firebase Remote Config: %s",
-               initializer.InitializeLastResult().ErrorMessage());
+               initializer.InitializeLastResult().error_message());
     ProcessEvents(2000);
     return 1;
   }
 
   LogMessage("Initialized the Firebase Remote Config API");
 
-  static const remote_config::ConfigKeyValue defaults[] = {
+  static const unsigned char kBinaryDefaults[] = {6, 0, 0, 6, 7, 3};
+
+  static const remote_config::ConfigKeyValueVariant defaults[] = {
       {"TestBoolean", "True"},
-      {"TestLong", "42"},
-      {"TestDouble", "3.14"},
+      {"TestLong", 42},
+      {"TestDouble", 3.14},
       {"TestString", "Hello World"},
-      {"TestData", "abcde"}};
+      {"TestData", firebase::Variant::FromStaticBlob(kBinaryDefaults,
+                                                     sizeof(kBinaryDefaults))}};
   size_t default_count = sizeof(defaults) / sizeof(defaults[0]);
   remote_config::SetDefaults(defaults, default_count);
 
@@ -85,7 +88,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     std::vector<unsigned char> result = remote_config::GetData("TestData");
     for (size_t i = 0; i < result.size(); ++i) {
       const unsigned char value = result[i];
-      LogMessage("TestData[%d] = 0x%02x (%c)", i, value, value);
+      LogMessage("TestData[%d] = 0x%02x", i, value);
     }
   }
 
@@ -101,13 +104,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   LogMessage("Fetch...");
   auto future_result = remote_config::Fetch(0);
-  while (future_result.Status() == firebase::kFutureStatusPending) {
+  while (future_result.status() == firebase::kFutureStatusPending) {
     if (ProcessEvents(1000)) {
       break;
     }
   }
 
-  if (future_result.Status() == firebase::kFutureStatusComplete) {
+  if (future_result.status() == firebase::kFutureStatusComplete) {
     LogMessage("Fetch Complete");
     bool activate_result = remote_config::ActivateFetched();
     LogMessage("ActivateFetched %s", activate_result ? "succeeded" : "failed");
@@ -138,7 +141,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       std::vector<unsigned char> result = remote_config::GetData("TestData");
       for (size_t i = 0; i < result.size(); ++i) {
         const unsigned char value = result[i];
-        LogMessage("TestData[%d] = 0x%02x (%c)", i, value, value);
+        LogMessage("TestData[%d] = 0x%02x", i, value);
       }
     }
 

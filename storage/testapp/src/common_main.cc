@@ -59,14 +59,14 @@ class StorageListener : public firebase::storage::Listener {
 // Wait for a Future to be completed. If the Future returns an error, it will
 // be logged.
 void WaitForCompletion(const firebase::FutureBase& future, const char* name) {
-  while (future.Status() == firebase::kFutureStatusPending) {
+  while (future.status() == firebase::kFutureStatusPending) {
     ProcessEvents(100);
   }
-  if (future.Status() != firebase::kFutureStatusComplete) {
+  if (future.status() != firebase::kFutureStatusComplete) {
     LogMessage("ERROR: %s returned an invalid result.", name);
-  } else if (future.Error() != 0) {
-    LogMessage("ERROR: %s returned error %d: %s", name, future.Error(),
-               future.ErrorMessage());
+  } else if (future.error() != 0) {
+    LogMessage("ERROR: %s returned error %d: %s", name, future.error(),
+               future.error_message());
   }
 }
 
@@ -113,9 +113,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   WaitForCompletion(initializer.InitializeLastResult(), "Initialize");
 
-  if (initializer.InitializeLastResult().Error() != 0) {
+  if (initializer.InitializeLastResult().error() != 0) {
     LogMessage("Failed to initialize Firebase libraries: %s",
-               initializer.InitializeLastResult().ErrorMessage());
+               initializer.InitializeLastResult().error_message());
     ProcessEvents(2000);
     return 1;
   }
@@ -129,11 +129,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
     firebase::Future<firebase::auth::User*> sign_in_future =
         auth->SignInAnonymously();
     WaitForCompletion(sign_in_future, "SignInAnonymously");
-    if (sign_in_future.Error() == firebase::auth::kAuthErrorNone) {
+    if (sign_in_future.error() == firebase::auth::kAuthErrorNone) {
       LogMessage("Auth: Signed in anonymously.");
     } else {
       LogMessage("ERROR: Could not sign in anonymously. Error %d: %s",
-                 sign_in_future.Error(), sign_in_future.ErrorMessage());
+                 sign_in_future.error(), sign_in_future.error_message());
       LogMessage(
           "  Ensure your application has the Anonymous sign-in provider "
           "enabled in Firebase Console.");
@@ -178,13 +178,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
               .Child("File1.txt")
               .PutBytes(kSimpleTestFile.data(), kSimpleTestFile.size());
       WaitForCompletion(future, "Write Bytes");
-      if (future.Error() != firebase::storage::kErrorNone) {
+      if (future.error() != firebase::storage::kErrorNone) {
         LogMessage("ERROR: Write sample file failed.");
-        LogMessage("  File1.txt: Error %d: %s", future.Error(),
-                   future.ErrorMessage());
+        LogMessage("  File1.txt: Error %d: %s", future.error(),
+                   future.error_message());
       } else {
         LogMessage("SUCCESS: Wrote file with PutBytes.");
-        auto metadata = future.Result();
+        auto metadata = future.result();
         if (metadata->size_bytes() == kSimpleTestFile.size()) {
           LogMessage("SUCCESS: Metadata reports correct size.");
         } else {
@@ -210,13 +210,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
       firebase::Future<firebase::storage::Metadata> future =
           ref.Child("TestFile").Child("File2.txt").PutFile(file_path.c_str());
       WaitForCompletion(future, "Write File");
-      if (future.Error() != firebase::storage::kErrorNone) {
+      if (future.error() != firebase::storage::kErrorNone) {
         LogMessage("ERROR: Write file failed.");
-        LogMessage("  File1.txt: Error %d: %s", future.Error(),
-                   future.ErrorMessage());
+        LogMessage("  File1.txt: Error %d: %s", future.error(),
+                   future.error_message());
       } else {
         LogMessage("SUCCESS: Wrote file with PutFile.");
-        auto metadata = future.Result();
+        auto metadata = future.result();
         if (metadata->size_bytes() == kSimpleTestFile.size()) {
           LogMessage("SUCCESS: Metadata reports correct size.");
         } else {
@@ -243,12 +243,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForCompletion(future, "Read Bytes");
 
         // Check if the file contents is correct.
-        if (future.Error() == firebase::storage::kErrorNone) {
-          if (*future.Result() != kSimpleTestFile.size()) {
+        if (future.error() == firebase::storage::kErrorNone) {
+          if (*future.result() != kSimpleTestFile.size()) {
             LogMessage(
                 "ERROR: Read file failed, read incorrect number of bytes (read "
                 "%z, expected %z)",
-                *future.Result(), kSimpleTestFile.size());
+                *future.result(), kSimpleTestFile.size());
           } else if (memcmp(kSimpleTestFile.data(), buffer,
                             kSimpleTestFile.size()) == 0) {
             LogMessage("SUCCESS: Read file succeeded.");
@@ -281,12 +281,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
         fclose(file);
 
         // Check if the file contents is correct.
-        if (future.Error() == firebase::storage::kErrorNone) {
-          if (*future.Result() != kSimpleTestFile.size()) {
+        if (future.error() == firebase::storage::kErrorNone) {
+          if (*future.result() != kSimpleTestFile.size()) {
             LogMessage(
                 "ERROR: Read file failed, read incorrect number of bytes (read "
                 "%z, expected %z)",
-                *future.Result(), kSimpleTestFile.size());
+                *future.result(), kSimpleTestFile.size());
           } else if (memcmp(kSimpleTestFile.data(), buffer,
                             kSimpleTestFile.size()) == 0) {
             LogMessage("SUCCESS: Read file succeeded.");
@@ -305,8 +305,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         firebase::Future<firebase::storage::Metadata> future =
             ref.Child("TestFile").Child("File1.txt").GetMetadata();
         WaitForCompletion(future, "GetFileMetadata");
-        const firebase::storage::Metadata* metadata = future.Result();
-        if (future.Error() == firebase::storage::kErrorNone) {
+        const firebase::storage::Metadata* metadata = future.result();
+        if (future.error() == firebase::storage::kErrorNone) {
           // Get the current time to compare to the Timestamp.
           int64_t current_time_seconds = static_cast<int64_t>(time(nullptr));
           int64_t updated_time = metadata->updated_time();
@@ -339,14 +339,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
         firebase::Future<firebase::storage::Metadata> custom_metadata_future =
             ref.Child("TestFile").Child("File1.txt").UpdateMetadata(metadata);
         WaitForCompletion(custom_metadata_future, "UpdateMetadata");
-        if (future.Error() != firebase::storage::kErrorNone) {
+        if (future.error() != firebase::storage::kErrorNone) {
           LogMessage("ERROR: UpdateMetadata failed.");
-          LogMessage("  File1.txt: Error %d: %s", future.Error(),
-                     future.ErrorMessage());
+          LogMessage("  File1.txt: Error %d: %s", future.error(),
+                     future.error_message());
         } else {
           LogMessage("SUCCESS: Updated Metadata.");
           const firebase::storage::Metadata* new_metadata =
-              custom_metadata_future.Result();
+              custom_metadata_future.result();
           auto new_custom_metadata = new_metadata->custom_metadata();
           auto pair1 = new_custom_metadata->find("Key");
           auto pair2 = new_custom_metadata->find("Foo");
@@ -368,13 +368,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
             ref.Child("TestFile").Child("File1.txt").GetDownloadUrl();
 
         WaitForCompletion(future, "GetDownloadUrl");
-        if (future.Error() != firebase::storage::kErrorNone) {
+        if (future.error() != firebase::storage::kErrorNone) {
           LogMessage("ERROR: Couldn't get download URL.");
-          LogMessage("  File1.txt: Error %d: %s", future.Error(),
-                     future.ErrorMessage());
+          LogMessage("  File1.txt: Error %d: %s", future.error(),
+                     future.error_message());
         } else {
           LogMessage("SUCCESS: Got URL: ");
-          const std::string* download_url = future.Result();
+          const std::string* download_url = future.result();
           LogMessage("  %s", download_url->c_str());
         }
       }
@@ -386,7 +386,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         firebase::Future<void> delete_future =
             ref.Child("TestFile").Child("File1.txt").Delete();
         WaitForCompletion(delete_future, "DeleteFile");
-        if (delete_future.Error() == firebase::storage::kErrorNone) {
+        if (delete_future.error() == firebase::storage::kErrorNone) {
           LogMessage("SUCCESS: File was removed.");
         } else {
           LogMessage("ERROR: File was not removed.");
@@ -399,14 +399,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
             ref.Child("TestFile")
                 .Child("File1.txt")
                 .GetBytes(buffer, kBufferSize);
-        while (read_future.Status() == firebase::kFutureStatusPending) {
+        while (read_future.status() == firebase::kFutureStatusPending) {
           ProcessEvents(100);
         }
-        if (read_future.Error() == firebase::storage::kErrorObjectNotFound) {
+        if (read_future.error() == firebase::storage::kErrorObjectNotFound) {
           LogMessage("SUCCESS: File could not be read, as expected.");
         } else {
           LogMessage("ERROR: File could be read after removal. Status = %d: %s",
-                     read_future.Error(), read_future.ErrorMessage());
+                     read_future.error(), read_future.error_message());
         }
       }
     }
@@ -465,14 +465,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage("ERROR: Listener OnProgress callback was not called.");
       }
 
-      if (future.Error() != firebase::storage::kErrorNone) {
+      if (future.error() != firebase::storage::kErrorNone) {
         LogMessage("ERROR: Write file failed.");
-        LogMessage("  TestFile: Error %d: %s", future.Error(),
-                   future.ErrorMessage());
+        LogMessage("  TestFile: Error %d: %s", future.error(),
+                   future.error_message());
       } else {
         LogMessage("SUCCESS: Wrote large file.");
         wrote_file = true;
-        auto metadata = future.Result();
+        auto metadata = future.result();
         if (metadata->size_bytes() == kLargeFileSize) {
           LogMessage("SUCCESS: Metadata reports correct size.");
         } else {
@@ -509,12 +509,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
       }
 
       // Check if the file contents is correct.
-      if (future.Error() == firebase::storage::kErrorNone) {
-        if (*future.Result() != kLargeFileSize) {
+      if (future.error() == firebase::storage::kErrorNone) {
+        if (*future.result() != kLargeFileSize) {
           LogMessage(
               "ERROR: Read file failed, read incorrect number of bytes (read "
               "%z, expected %z)",
-              *future.Result(), kLargeFileSize);
+              *future.result(), kLargeFileSize);
         } else if (std::memcmp(kLargeTestFile.data(), buffer.data(),
                                kLargeFileSize) == 0) {
           LogMessage("SUCCESS: Read file succeeded.");
@@ -544,13 +544,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
       // Cancel the operation and verify it was successfully canceled.
       controller.Cancel();
 
-      while (future.Status() == firebase::kFutureStatusPending) {
+      while (future.status() == firebase::kFutureStatusPending) {
         ProcessEvents(100);
       }
-      if (future.Error() != firebase::storage::kErrorCancelled) {
+      if (future.error() != firebase::storage::kErrorCancelled) {
         LogMessage("ERROR: Write cancellation failed.");
-        LogMessage("  TestFile: Error %d: %s", future.Error(),
-                   future.ErrorMessage());
+        LogMessage("  TestFile: Error %d: %s", future.error(),
+                   future.error_message());
       } else {
         LogMessage("SUCCESS: Canceled file upload.");
       }

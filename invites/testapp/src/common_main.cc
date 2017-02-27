@@ -22,13 +22,13 @@
 
 void ConversionFinished(const firebase::Future<void>& future_result,
                         void* user_data) {
-  if (future_result.Status() == firebase::kFutureStatusInvalid) {
+  if (future_result.status() == firebase::kFutureStatusInvalid) {
     LogMessage("ConvertInvitation: Invalid, sorry!");
-  } else if (future_result.Status() == firebase::kFutureStatusComplete) {
+  } else if (future_result.status() == firebase::kFutureStatusComplete) {
     LogMessage("ConvertInvitation: Complete!");
-    if (future_result.Error() != 0) {
-      LogMessage("ConvertInvitation: Error %d: %s", future_result.Error(),
-                 future_result.ErrorMessage());
+    if (future_result.error() != 0) {
+      LogMessage("ConvertInvitation: Error %d: %s", future_result.error(),
+                 future_result.error_message());
     } else {
       LogMessage("ConvertInvitation: Successfully converted invitation");
     }
@@ -84,13 +84,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("Try to initialize Invites");
     return ::firebase::invites::Initialize(*app);
   });
-  while (initializer.InitializeLastResult().Status() !=
+  while (initializer.InitializeLastResult().status() !=
          firebase::kFutureStatusComplete) {
     if (ProcessEvents(100)) return 1;  // exit if requested
   }
-  if (initializer.InitializeLastResult().Error() != 0) {
+  if (initializer.InitializeLastResult().error() != 0) {
     LogMessage("Failed to initialize Firebase Invites: %s",
-               initializer.InitializeLastResult().ErrorMessage());
+               initializer.InitializeLastResult().error_message());
     ProcessEvents(2000);
     return 1;
   }
@@ -105,19 +105,19 @@ extern "C" int common_main(int argc, const char* argv[]) {
     invite.call_to_action_text = "Download it for FREE";
     invite.deep_link_url = "http://google.com/abc";
     auto future_result = ::firebase::invites::SendInvite(invite);
-    while (future_result.Status() == firebase::kFutureStatusPending) {
+    while (future_result.status() == firebase::kFutureStatusPending) {
       if (ProcessEvents(10)) break;
     }
 
-    if (future_result.Status() == firebase::kFutureStatusInvalid) {
+    if (future_result.status() == firebase::kFutureStatusInvalid) {
       LogMessage("SendInvite: Invalid, sorry!");
-    } else if (future_result.Status() == firebase::kFutureStatusComplete) {
+    } else if (future_result.status() == firebase::kFutureStatusComplete) {
       LogMessage("SendInvite: Complete!");
-      if (future_result.Error() != 0) {
-        LogMessage("SendInvite: Error %d: %s", future_result.Error(),
-                   future_result.ErrorMessage());
+      if (future_result.error() != 0) {
+        LogMessage("SendInvite: Error %d: %s", future_result.error(),
+                   future_result.error_message());
       } else {
-        auto result = *future_result.Result();
+        auto result = *future_result.result();
         // error == 0
         if (result.invitation_ids.size() == 0) {
           LogMessage("SendInvite: Nothing sent, user must have canceled.");

@@ -26,6 +26,8 @@ class MessageListener : public firebase::messaging::Listener {
     // internal queue, waiting to be consumed. When ProcessMessages is called,
     // this OnMessage function is called once for each queued message.
     LogMessage("Recieved a new message");
+    LogMessage("This message was %s by the user",
+               message.notification_opened ? "opened" : "not opened");
     if (!message.from.empty()) LogMessage("from: %s", message.from.c_str());
     if (!message.error.empty()) LogMessage("error: %s", message.error.c_str());
     if (!message.message_id.empty()) {
@@ -99,13 +101,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("Try to initialize Firebase Messaging");
     return ::firebase::messaging::Initialize(*app, &g_listener);
   });
-  while (initializer.InitializeLastResult().Status() !=
+  while (initializer.InitializeLastResult().status() !=
          firebase::kFutureStatusComplete) {
     if (ProcessEvents(100)) return 1;  // exit if requested
   }
-  if (initializer.InitializeLastResult().Error() != 0) {
+  if (initializer.InitializeLastResult().error() != 0) {
     LogMessage("Failed to initialize Firebase Messaging: %s",
-               initializer.InitializeLastResult().ErrorMessage());
+               initializer.InitializeLastResult().error_message());
     ProcessEvents(2000);
     return 1;
   }

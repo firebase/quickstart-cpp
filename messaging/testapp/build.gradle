@@ -88,10 +88,16 @@ android {
     }
 }
 
+repositories {
+  flatDir {
+    dirs project.ext.firebase_cpp_sdk_dir + "/libs/android"
+  }
+}
+
 dependencies {
-  compile fileTree(dir: 'libs', include: ['*.jar'])
-  compile 'com.google.firebase:firebase-messaging:10.0.1'
-  compile 'com.google.android.gms:play-services-base:10.0.1'
+  compile 'com.google.firebase.messaging.cpp:firebase_messaging_cpp@aar'
+  compile 'com.google.firebase:firebase-messaging:10.2.0'
+  compile 'com.google.android.gms:play-services-base:10.2.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
@@ -116,8 +122,4 @@ task ndkBuildClean(type:Exec) {
 project.afterEvaluate {
   preBuild.dependsOn(ndkBuildCompile)
   clean.dependsOn(ndkBuildClean)
-}
-
-dependencies {
-    compile files(new File(firebase_cpp_sdk_dir, 'libs/android/libmessaging_java.jar'))
 }
