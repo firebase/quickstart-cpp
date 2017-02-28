@@ -37,7 +37,7 @@ Getting Started
       - You can use "com.google.ios.admob.testapp" as the iOS Bundle ID
         while you're testing. You can omit App Store ID while testing.
   - Download the Firebase C++ SDK linked from
-    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    https://firebase.google.com/docs/cpp/setup and unzip it to a
     directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
@@ -88,7 +88,7 @@ Getting Started
     - For further details please refer to the
       [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
   - Download the Firebase C++ SDK linked from
-    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    https://firebase.google.com/docs/cpp/setup and unzip it to a
     directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
@@ -118,7 +118,7 @@ Getting Started
 Support
 -------
 
-[https://firebase.google.com/support/]()
+https://firebase.google.com/support/
 
 License
 -------
