@@ -469,14 +469,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
     rewarded_video::Resume();
 
     WaitForFutureCompletion(rewarded_video::ResumeLastResult());
-  } else {
-    // Rewarded Video returned an error. This might be because the
-    // developer did not put their Rewarded Video ad unit into
-    // kRewardedVideoAdUnit above.
-    LogMessage("WARNING: Is your Rewarded Video ad unit ID correct?");
-    LogMessage(
-        "Ensure kRewardedVideoAdUnit is set to your own Rewarded Video ad unit "
-        "ID in src/common_main.cc.");
   }
 
   LogMessage("Done!");
