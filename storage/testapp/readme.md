@@ -1,17 +1,18 @@
-Firebase Storage Quickstart
+Cloud Storage for Firebase Quickstart
 ========================
 
-The Firebase Storage Test Application (testapp) demonstrates Firebase Storage
-operations with the Firebase Storage C++ SDK. The application has no user
-interface and simply logs actions it's performing to the console.
+The Cloud Storage for Firebase Test Application (testapp) demonstrates
+Cloud Storage operations with the Firebase C++ SDK for Cloud Storage.
+The application has no user interface and simply logs actions it's performing
+to the console.
 
 The testapp performs the following:
   - Creates a firebase::App in a platform-specific way. The App holds
     platform-specific context that's used by other Firebase APIs, and is a
-    central point for communication between the Firebase Storage C++ and
+    central point for communication between the Cloud Storage C++ and
     Firebase Auth C++ libraries.
   - Gets a pointer to firebase::Auth, and signs in anonymously. This allows the
-    testapp to access a Firebase Storage instance with authentication rules
+    testapp to access a Cloud Storage instance with authentication rules
     enabled, which is the default setting in Firebase Console.
   - Gets a StorageReference to the root node's "test_app_data" child, uses
     StorageReference::Child() to create a child with a unique key based on the
@@ -23,12 +24,12 @@ The testapp performs the following:
     return the expected values for things like size and date modified.
   - Disconnects and then reconnects and verifies it still has access to the
     files uploaded.
-  - Shuts down the Firebase Storage, Firebase Auth, and Firebase App systems.
+  - Shuts down the Cloud Storage, Firebase Auth, and Firebase App systems.
 
 Introduction
 ------------
 
-- [Read more about Firebase Storage](https://firebase.google.com/docs/storage/)
+- [Read more about Cloud Storage for Firebase](https://firebase.google.com/docs/storage/)
 
 Building and Running the testapp
 --------------------------------
@@ -60,10 +61,10 @@ Building and Running the testapp
       to the Firebase backend.
     - In the Firebase console for your app, select "Auth", then enable
       "Anonymous". This will allow the testapp to use anonymous sign-in to
-      authenticate with Firebase Storage, which requires a signed-in user by
+      authenticate with Cloud Storage, which requires a signed-in user by
       default (an anonymous user will suffice).
   - Download the Firebase C++ SDK linked from
-    https://firebase.google.com/docs/cpp/setup and unzip it to a
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
     directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
@@ -113,12 +114,12 @@ Building and Running the testapp
       Android app to the Firebase backend.
     - In the Firebase console for your app, select "Auth", then enable
       "Anonymous". This will allow the testapp to use anonymous sign-in to
-      authenticate with Firebase Storage, which requires a signed-in user by
+      authenticate with Cloud Storage, which requires a signed-in user by
       default (an anonymous user will suffice).
     - For further details please refer to the
       [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
   - Download the Firebase C++ SDK linked from
-    https://firebase.google.com/docs/cpp/setup and unzip it to a
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
     directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
@@ -142,7 +143,7 @@ Building and Running the testapp
 Support
 -------
 
-https://firebase.google.com/support/
+[https://firebase.google.com/support/]()
 
 License
 -------

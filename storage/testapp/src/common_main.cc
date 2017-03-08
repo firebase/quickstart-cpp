@@ -32,6 +32,10 @@
 const char* kPutFileTestFile = "PutFileTest.txt";
 const char* kGetFileTestFile = "GetFileTest.txt";
 
+// Optionally set this to your Cloud Storage URL (gs://...) to test
+// in a specific Cloud Storage bucket.
+const char* kStorageUrl = nullptr;
+
 class StorageListener : public firebase::storage::Listener {
  public:
   StorageListener()
@@ -81,7 +85,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   LogMessage("Initialized Firebase App.");
 
-  LogMessage("Initialize Firebase Auth and Firebase Storage.");
+  LogMessage("Initialize Firebase Auth and Cloud Storage.");
 
   // Use ModuleInitializer to initialize both Auth and Storage, ensuring no
   // dependencies are missing.
@@ -99,11 +103,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
         return result;
       },
       [](::firebase::App* app, void* data) {
-        LogMessage("Attempt to initialize Firebase Storage.");
+        LogMessage("Attempt to initialize Cloud Storage.");
         void** targets = reinterpret_cast<void**>(data);
         ::firebase::InitResult result;
         *reinterpret_cast<::firebase::storage::Storage**>(targets[1]) =
-            ::firebase::storage::Storage::GetInstance(app, &result);
+            ::firebase::storage::Storage::GetInstance(app, kStorageUrl,
+                                                      &result);
         return result;
       }};
 
@@ -119,7 +124,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     ProcessEvents(2000);
     return 1;
   }
-  LogMessage("Successfully initialized Firebase Auth and Firebase Storage.");
+  LogMessage("Successfully initialized Firebase Auth and Cloud Storage.");
 
   // Sign in using Auth before accessing Storage.
   // The default Storage permissions allow anonymous users access. This will
@@ -138,7 +143,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
           "  Ensure your application has the Anonymous sign-in provider "
           "enabled in Firebase Console.");
       LogMessage(
-          "  Attempting to connect to Firebase Storage anyway. This may fail "
+          "  Attempting to connect to Cloud Storage anyway. This may fail "
           "depending on the security settings.");
     }
   }
@@ -176,7 +181,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       firebase::Future<firebase::storage::Metadata> future =
           ref.Child("TestFile")
               .Child("File1.txt")
-              .PutBytes(kSimpleTestFile.data(), kSimpleTestFile.size());
+              .PutBytes(&kSimpleTestFile[0], kSimpleTestFile.size());
       WaitForCompletion(future, "Write Bytes");
       if (future.error() != firebase::storage::kErrorNone) {
         LogMessage("ERROR: Write sample file failed.");
@@ -200,7 +205,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
       // Write file that we're going to upload.
       std::string path = PathForResource() + kPutFileTestFile;
-      // Firebase Storage expects file:// in front of local paths.
+      // Cloud Storage expects file:// in front of local paths.
       std::string file_path = "file://" + path;
 
       FILE* file = fopen(path.c_str(), "w");
@@ -249,7 +254,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
                 "ERROR: Read file failed, read incorrect number of bytes (read "
                 "%z, expected %z)",
                 *future.result(), kSimpleTestFile.size());
-          } else if (memcmp(kSimpleTestFile.data(), buffer,
+          } else if (memcmp(&kSimpleTestFile[0], buffer,
                             kSimpleTestFile.size()) == 0) {
             LogMessage("SUCCESS: Read file succeeded.");
           } else {
@@ -269,7 +274,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
         // Write file that we're going to upload.
         std::string path = PathForResource() + kGetFileTestFile;
-        // Firebase Storage expects file:// in front of local paths.
+        // Cloud Storage expects file:// in front of local paths.
         std::string file_path = "file://" + path;
 
         firebase::Future<size_t> future =
@@ -287,7 +292,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
                 "ERROR: Read file failed, read incorrect number of bytes (read "
                 "%z, expected %z)",
                 *future.result(), kSimpleTestFile.size());
-          } else if (memcmp(kSimpleTestFile.data(), buffer,
+          } else if (memcmp(&kSimpleTestFile[0], buffer,
                             kSimpleTestFile.size()) == 0) {
             LogMessage("SUCCESS: Read file succeeded.");
           } else {
@@ -430,7 +435,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       firebase::Future<firebase::storage::Metadata> future =
           ref.Child("TestFile")
               .Child("File3.txt")
-              .PutBytes(kLargeTestFile.data(), kLargeFileSize, &listener,
+              .PutBytes(&kLargeTestFile[0], kLargeFileSize, &listener,
                         &controller);
 
       // Ensure the Controller is valid now that we have associated it with an
@@ -493,7 +498,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       firebase::Future<size_t> future =
           ref.Child("TestFile")
               .Child("File3.txt")
-              .GetBytes(buffer.data(), buffer.size(), &listener, &controller);
+              .GetBytes(&buffer[0], buffer.size(), &listener, &controller);
 
       // Ensure the Controller is valid now that we have associated it with an
       // operation.
@@ -515,7 +520,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               "ERROR: Read file failed, read incorrect number of bytes (read "
               "%z, expected %z)",
               *future.result(), kLargeFileSize);
-        } else if (std::memcmp(kLargeTestFile.data(), buffer.data(),
+        } else if (std::memcmp(&kLargeTestFile[0], &buffer[0],
                                kLargeFileSize) == 0) {
           LogMessage("SUCCESS: Read file succeeded.");
         } else {
@@ -532,7 +537,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       firebase::Future<firebase::storage::Metadata> future =
           ref.Child("TestFile")
               .Child("File4.txt")
-              .PutBytes(kLargeTestFile.data(), kLargeFileSize, nullptr,
+              .PutBytes(&kLargeTestFile[0], kLargeFileSize, nullptr,
                         &controller);
 
       // Ensure the Controller is valid now that we have associated it with an

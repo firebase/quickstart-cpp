@@ -97,17 +97,18 @@ const char* kAdMobAppID = "ca-app-pub-3940256099942544~3347511713";
 const char* kAdMobAppID = "ca-app-pub-3940256099942544~1458002511";
 #endif
 
-// These ad units are configured to always serve test ads.
+// These ad units IDs have been created specifically for testing, and will
+// always return test ads.
 #if defined(__ANDROID__)
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/6300978111";
 const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/1033173712";
 const char* kNativeExpressAdUnit = "ca-app-pub-3940256099942544/1072772517";
-const char* kRewardedVideoAdUnit = "YOUR_REWARDED_VIDEO_AD_UNIT_ID";
+const char* kRewardedVideoAdUnit = "ca-app-pub-3940256099942544/2888167318";
 #else
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/2934735716";
 const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/4411468910";
 const char* kNativeExpressAdUnit = "ca-app-pub-3940256099942544/2562852117";
-const char* kRewardedVideoAdUnit = "YOUR_REWARDED_VIDEO_AD_UNIT_ID";
+const char* kRewardedVideoAdUnit = "ca-app-pub-3940256099942544/6386090517";
 #endif
 
 // Standard mobile banner size is 320x50.

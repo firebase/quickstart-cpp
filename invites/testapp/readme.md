@@ -48,7 +48,7 @@ Building and Running the testapp
       YOUR\_REVERSED\_CLIENT\_ID. Replace this with the value of the
       REVERSED\_CLIENT\_ID string in GoogleService-Info.plist.
   - Download the Firebase C++ SDK linked from
-    https://firebase.google.com/docs/cpp/setup and unzip it to a
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
     directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
@@ -108,7 +108,7 @@ Building and Running the testapp
     - For further details please refer to the
       [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
   - Download the Firebase C++ SDK linked from
-    https://firebase.google.com/docs/cpp/setup and unzip it to a
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
     directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
@@ -152,7 +152,7 @@ Building and Running the testapp
 Support
 -------
 
-https://firebase.google.com/support/
+[https://firebase.google.com/support/]()
 
 License
 -------

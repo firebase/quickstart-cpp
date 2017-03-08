@@ -32,12 +32,12 @@ Getting Started
     - For further details please refer to the
       [general instructions for setting up an iOS app with Firebase](https://firebase.google.com/docs/ios/setup).
   - Register your iOS app with Firebase.
-    - Create a new app on the [Firebase console](https://firebase.google.com/console/), and attach
-      your iOS app to it.
+    - Create a new app on the [Firebase console](https://firebase.google.com/console/),
+      and attach your iOS app to it.
       - You can use "com.google.ios.admob.testapp" as the iOS Bundle ID
         while you're testing. You can omit App Store ID while testing.
   - Download the Firebase C++ SDK linked from
-    https://firebase.google.com/docs/cpp/setup and unzip it to a
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
     directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
@@ -55,17 +55,18 @@ Getting Started
             the build settings. Scroll down to "Search Paths", and add
             your path to "Framework Search Paths".
   - In Xcode, build & run the sample on an iOS device or simulator.
-  - The testapp displays a banner ad and an interstitial ad. You can
-    dismiss the interstitial ad to see the banner ad. The output of the app can
-    be viewed via the console. To view the conscole in Xcode, select
-    "View --> Debug Area --> Activate Console" from the menu.
-  - For Rewarded Video, you must supply your own ad unit. Learn more in the
-    [Rewarded Video C++ guide](http://firebase.google.com/docs/admob/cpp/rewarded-video).
+  - The testapp displays a banner ad and an interstitial ad. You can dismiss
+    the interstitial ad to see the banner ad.
+  - Afterwards, the testapp will display a Native Express test ad and a
+    Rewarded Video test ad.
+  - The output of the app can be viewed onscreen or via the console. To view
+    the console in Xcode, select "View --> Debug Area --> Activate Console"
+    from the menu.
 
 ### Android
   - Register your Android app with Firebase.
-    - Create a new app on the [Firebase console](https://firebase.google.com/console/), and attach
-      your Android app to it.
+    - Create a new app on the [Firebase console](https://firebase.google.com/console/),
+      and attach your Android app to it.
       - You can use "com.google.android.admob.testapp" as the Package Name
         while you're testing.
       - To [generate a SHA1](https://developers.google.com/android/guides/client-auth)
@@ -88,7 +89,7 @@ Getting Started
     - For further details please refer to the
       [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
   - Download the Firebase C++ SDK linked from
-    https://firebase.google.com/docs/cpp/setup and unzip it to a
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
     directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
@@ -109,16 +110,16 @@ Getting Started
     a test interstitial.
   - Tapping on an ad to verify the clickthrough process is possible, and the
     interstitial will wait to be closed by the user.
+  - Afterwards, the testapp will display a Native Express test ad and a
+    Rewarded Video test ad.
   - While this is happening, information from the device log will be written
     to an onscreen TextView.
     - Logcat can also be used as normal.
-  - For Rewarded Video, you must supply your own ad unit. Learn more in the
-    [Rewarded Video C++ guide](http://firebase.google.com/docs/admob/cpp/rewarded-video).
 
 Support
 -------
 
-https://firebase.google.com/support/
+[https://firebase.google.com/support/]()
 
 License
 -------
