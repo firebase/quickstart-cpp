@@ -214,8 +214,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
   std::string saved_url;  // persists across connections
 
   // Create a unique child in the database that we can run our tests in.
-  firebase::database::DatabaseReference ref =
-      database->GetReference("test_app_data").PushChild();
+  firebase::database::DatabaseReference ref;
+  ref = database->GetReference("test_app_data").PushChild();
 
   saved_url = ref.url();
   LogMessage("URL: %s", saved_url.c_str());
@@ -900,6 +900,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("ERROR: Couldn't read OnDisconnect changes, error %d: %s.",
                future.error(), future.error_message());
   }
+
+  // Clean up the DatabaseReference before deleting the Database instance.
+  ref = firebase::database::DatabaseReference();
 
   LogMessage("Shutdown the Database library.");
   delete database;

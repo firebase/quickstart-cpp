@@ -158,8 +158,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
   std::string saved_url = buffer;
 
   // Create a unique child in the storage that we can run our tests in.
-  firebase::storage::StorageReference ref =
-      storage->GetReference("test_app_data").Child(saved_url);
+  firebase::storage::StorageReference ref;
+  ref = storage->GetReference("test_app_data").Child(saved_url);
 
   LogMessage("Storage URL: gs://%s/%s", ref.bucket().c_str(),
              ref.full_path().c_str());
@@ -212,12 +212,18 @@ extern "C" int common_main(int argc, const char* argv[]) {
       std::fwrite(kSimpleTestFile.c_str(), 1, kSimpleTestFile.size(), file);
       fclose(file);
 
+      firebase::storage::Metadata new_metadata;
+      new_metadata.set_content_type("text/html");
+      new_metadata.custom_metadata()->insert(std::make_pair("hello", "world"));
+
       firebase::Future<firebase::storage::Metadata> future =
-          ref.Child("TestFile").Child("File2.txt").PutFile(file_path.c_str());
+          ref.Child("TestFile")
+              .Child("File2.txt")
+              .PutFile(file_path.c_str(), new_metadata);
       WaitForCompletion(future, "Write File");
       if (future.error() != firebase::storage::kErrorNone) {
         LogMessage("ERROR: Write file failed.");
-        LogMessage("  File1.txt: Error %d: %s", future.error(),
+        LogMessage("  File2.txt: Error %d: %s", future.error(),
                    future.error_message());
       } else {
         LogMessage("SUCCESS: Wrote file with PutFile.");
@@ -228,6 +234,25 @@ extern "C" int common_main(int argc, const char* argv[]) {
           LogMessage("ERROR: Metadata reports incorrect size.");
           LogMessage("  Got %i bytes, expected %i bytes.",
                      metadata->size_bytes(), kSimpleTestFile.size());
+        }
+        if (strcmp(metadata->content_type(), new_metadata.content_type()) ==
+            0) {
+          LogMessage(
+              "SUCCESS: Metadata has correct content type set at upload.");
+        } else {
+          LogMessage(
+              "ERROR: Metadata has incorrect content type set at upload.");
+          LogMessage("  Got %s, expected %s.", metadata->content_type(),
+                     new_metadata.content_type());
+        }
+        auto pair1 = metadata->custom_metadata()->find("hello");
+        if (pair1 != metadata->custom_metadata()->end() &&
+            pair1->second == "world") {
+          LogMessage(
+              "SUCCESS: Metadata has correct custom metadata set at upload.");
+        } else {
+          LogMessage(
+              "SUCCESS: Metadata has incorrect custom metadata set at upload.");
         }
       }
     }
@@ -342,7 +367,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         custom_metadata->insert(std::make_pair("Key", "Value"));
         custom_metadata->insert(std::make_pair("Foo", "Bar"));
         firebase::Future<firebase::storage::Metadata> custom_metadata_future =
-            ref.Child("TestFile").Child("File1.txt").UpdateMetadata(metadata);
+            ref.Child("TestFile").Child("File1.txt").UpdateMetadata(*metadata);
         WaitForCompletion(custom_metadata_future, "UpdateMetadata");
         if (future.error() != firebase::storage::kErrorNone) {
           LogMessage("ERROR: UpdateMetadata failed.");
@@ -561,6 +586,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
       }
     }
   }
+
+  // Clean up the StorageReference before deleting the Storage instance.
+  ref = firebase::storage::StorageReference();
 
   LogMessage("Shutdown the Storage library.");
   delete storage;

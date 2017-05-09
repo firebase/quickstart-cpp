@@ -111,12 +111,6 @@ static bool WaitForSignInFuture(Future<User*> sign_in_future, const char* fn,
                static_cast<int>(reinterpret_cast<intptr_t>(auth_user)));
   }
 
-  const bool should_be_null = expected_error != kAuthErrorNone;
-  const bool is_null = sign_in_user == nullptr;
-  if (should_be_null != is_null) {
-    LogMessage("ERROR: user pointer (%x) is incorrect",
-               static_cast<int>(reinterpret_cast<intptr_t>(auth_user)));
-  }
   return false;
 }
 
@@ -326,7 +320,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         auth->SignOut();
         if (auth->current_user() != nullptr) {
           LogMessage(
-              "ERROR: current_user() returning %x instead of NULL after "
+              "ERROR: current_user() returning %x instead of nullptr after "
               "SignOut()",
               auth->current_user());
         }
@@ -373,12 +367,15 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> sign_in_future = auth->SignInAnonymously();
         WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously()",
                             kAuthErrorNone, auth);
+        ExpectTrue("SignInAnonymouslyLastResult matches returned Future",
+                   sign_in_future == auth->SignInAnonymouslyLastResult());
+
         // Test SignOut() after signed in anonymously.
         if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
           auth->SignOut();
           if (auth->current_user() != nullptr) {
             LogMessage(
-                "ERROR: current_user() returning %x instead of NULL after "
+                "ERROR: current_user() returning %x instead of nullptr after "
                 "SignOut()",
                 auth->current_user());
           }
@@ -391,6 +388,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->FetchProvidersForEmail(user_login.email());
         WaitForFuture(providers_future, "Auth::FetchProvidersForEmail()",
                       kAuthErrorNone);
+        ExpectTrue(
+            "FetchProvidersForEmailLastResult matches returned Future",
+            providers_future == auth->FetchProvidersForEmailLastResult());
+
         const Auth::FetchProvidersResult* pro = providers_future.result();
         if (pro) {
           LogMessage("  email %s, num providers %d", user_login.email(),
@@ -411,12 +412,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
             sign_in_future,
             "Auth::SignInWithEmailAndPassword() existing email and password",
             kAuthErrorNone, auth);
+        ExpectTrue(
+            "SignInWithEmailAndPasswordLastResult matches returned Future",
+            sign_in_future == auth->SignInWithEmailAndPasswordLastResult());
+
         // Test SignOut() after signed in with email and password.
         if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
           auth->SignOut();
           if (auth->current_user() != nullptr) {
             LogMessage(
-                "ERROR: current_user() returning %x instead of NULL after "
+                "ERROR: current_user() returning %x instead of nullptr after "
                 "SignOut()",
                 auth->current_user());
           }
@@ -450,6 +455,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
             create_future_bad,
             "Auth::CreateUserWithEmailAndPassword() existing email",
             kAuthErrorFailure, auth);
+        ExpectTrue(
+            "CreateUserWithEmailAndPasswordLastResult matches returned Future",
+            create_future_bad ==
+                auth->CreateUserWithEmailAndPasswordLastResult());
       }
 
       // Test Auth::SignInWithCredential() using email&password.
@@ -462,6 +471,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(sign_in_cred_ok,
                             "Auth::SignInWithCredential() existing email",
                             kAuthErrorNone, auth);
+        ExpectTrue("SignInWithCredentialLastResult matches returned Future",
+                   sign_in_cred_ok == auth->SignInWithCredentialLastResult());
       }
 
       // Use bad Facebook credentials. Should fail.
@@ -516,6 +527,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForFuture(send_password_reset_ok,
                       "Auth::SendPasswordResetEmail() existing email",
                       kAuthErrorNone);
+        ExpectTrue(
+            "SendPasswordResetEmailLastResult matches returned Future",
+            send_password_reset_ok == auth->SendPasswordResetEmailLastResult());
       }
 
       // Use bad email. Should fail.
@@ -554,14 +568,42 @@ extern "C" int common_main(int argc, const char* argv[]) {
         ExpectFalse("Email email is_email_verified()",
                     anonymous_user->is_email_verified());
 
-        // Test User::LinkWithCredential().
+        // Test User::LinkWithCredential(), linking with email & password.
         const std::string newer_email = CreateNewEmail();
         Credential user_cred = EmailAuthProvider::GetCredential(
             newer_email.c_str(), kTestPassword);
-        Future<User*> link_future =
-            anonymous_user->LinkWithCredential(user_cred);
-        WaitForSignInFuture(link_future, "User::LinkWithCredential()",
-                            kAuthErrorNone, auth);
+        {
+          Future<User*> link_future =
+              anonymous_user->LinkWithCredential(user_cred);
+          WaitForSignInFuture(link_future, "User::LinkWithCredential()",
+                              kAuthErrorNone, auth);
+        }
+
+        // Test User::LinkWithCredential(), linking with same email & password.
+        {
+          Future<User*> link_future =
+              anonymous_user->LinkWithCredential(user_cred);
+          WaitForSignInFuture(link_future, "User::LinkWithCredential() again",
+                              kAuthErrorNone, auth);
+        }
+
+        // Test User::LinkWithCredential(), linking with bad credential.
+        // Call should fail and Auth's current user should be maintained.
+        {
+          const User* pre_link_user = auth->current_user();
+          ExpectTrue("Test precondition requires active user",
+                     pre_link_user != nullptr);
+
+          Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
+              kTestIdTokenBad, kTestAccessTokenBad);
+          Future<User*> link_bad_future =
+              anonymous_user->LinkWithCredential(twitter_cred_bad);
+          WaitForFuture(link_bad_future,
+                        "User::LinkWithCredential() with bad credential",
+                        kAuthErrorFailure);
+          ExpectTrue("Linking maintains user",
+                     auth->current_user() == pre_link_user);
+        }
 
         UserLogin user_login(auth);
         user_login.Register();

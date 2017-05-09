@@ -116,9 +116,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("ActivateFetched %s", activate_result ? "succeeded" : "failed");
 
     const remote_config::ConfigInfo& info = remote_config::GetInfo();
-    LogMessage("Info last_fetch_time_ms=%d fetch_status=%d failure_reason=%d",
-               static_cast<int>(info.fetch_time), info.last_fetch_status,
-               info.last_fetch_failure_reason);
+    LogMessage(
+        "Info last_fetch_time_ms=%d (year=%.2f) fetch_status=%d "
+        "failure_reason=%d throttled_end_time=%d",
+        static_cast<int>(info.fetch_time),
+        1970.0f + static_cast<float>(info.fetch_time) /
+                      (1000.0f * 60.0f * 60.0f * 24.0f * 365.0f),
+        info.last_fetch_status, info.last_fetch_failure_reason,
+        info.throttled_end_time);
 
     // Print out the new values, which may be updated from the Fetch.
     {
