@@ -367,6 +367,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> sign_in_future = auth->SignInAnonymously();
         WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously()",
                             kAuthErrorNone, auth);
+        ExpectTrue("SignInAnonymouslyLastResult matches returned Future",
+                   sign_in_future == auth->SignInAnonymouslyLastResult());
 
         // Test SignOut() after signed in anonymously.
         if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
@@ -386,6 +388,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->FetchProvidersForEmail(user_login.email());
         WaitForFuture(providers_future, "Auth::FetchProvidersForEmail()",
                       kAuthErrorNone);
+        ExpectTrue(
+            "FetchProvidersForEmailLastResult matches returned Future",
+            providers_future == auth->FetchProvidersForEmailLastResult());
 
         const Auth::FetchProvidersResult* pro = providers_future.result();
         if (pro) {
@@ -407,6 +412,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
             sign_in_future,
             "Auth::SignInWithEmailAndPassword() existing email and password",
             kAuthErrorNone, auth);
+        ExpectTrue(
+            "SignInWithEmailAndPasswordLastResult matches returned Future",
+            sign_in_future == auth->SignInWithEmailAndPasswordLastResult());
 
         // Test SignOut() after signed in with email and password.
         if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
@@ -447,6 +455,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
             create_future_bad,
             "Auth::CreateUserWithEmailAndPassword() existing email",
             kAuthErrorFailure, auth);
+        ExpectTrue(
+            "CreateUserWithEmailAndPasswordLastResult matches returned Future",
+            create_future_bad ==
+                auth->CreateUserWithEmailAndPasswordLastResult());
       }
 
       // Test Auth::SignInWithCredential() using email&password.
@@ -459,6 +471,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(sign_in_cred_ok,
                             "Auth::SignInWithCredential() existing email",
                             kAuthErrorNone, auth);
+        ExpectTrue("SignInWithCredentialLastResult matches returned Future",
+                   sign_in_cred_ok == auth->SignInWithCredentialLastResult());
       }
 
       // Use bad Facebook credentials. Should fail.
@@ -513,6 +527,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForFuture(send_password_reset_ok,
                       "Auth::SendPasswordResetEmail() existing email",
                       kAuthErrorNone);
+        ExpectTrue(
+            "SendPasswordResetEmailLastResult matches returned Future",
+            send_password_reset_ok == auth->SendPasswordResetEmailLastResult());
       }
 
       // Use bad email. Should fail.
