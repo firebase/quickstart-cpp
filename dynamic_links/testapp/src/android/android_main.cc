@@ -148,85 +148,6 @@ class LoggingUtilsData {
 
 LoggingUtilsData* g_logging_utils_data;
 
-// Vars that we need available for reading text from the user.
-class TextEntryFieldData {
- public:
-  TextEntryFieldData()
-      : text_entry_field_class_(nullptr), text_entry_field_read_text_(0) {}
-
-  ~TextEntryFieldData() {
-    JNIEnv* env = GetJniEnv();
-    assert(env);
-    if (text_entry_field_class_) {
-      env->DeleteGlobalRef(text_entry_field_class_);
-    }
-  }
-
-  void Init() {
-    JNIEnv* env = GetJniEnv();
-    assert(env);
-
-    jclass text_entry_field_class = FindClass(
-        env, GetActivity(), "com/google/firebase/example/TextEntryField");
-    assert(text_entry_field_class != 0);
-
-    // Need to store as global references so it don't get moved during garbage
-    // collection.
-    text_entry_field_class_ =
-        static_cast<jclass>(env->NewGlobalRef(text_entry_field_class));
-    env->DeleteLocalRef(text_entry_field_class);
-
-    static const JNINativeMethod kNativeMethods[] = {
-        {"nativeSleep", "(I)Z", reinterpret_cast<void*>(ProcessEvents)}};
-    env->RegisterNatives(text_entry_field_class_, kNativeMethods,
-                         sizeof(kNativeMethods) / sizeof(kNativeMethods[0]));
-    text_entry_field_read_text_ = env->GetStaticMethodID(
-        text_entry_field_class_, "readText",
-        "(Landroid/app/Activity;Ljava/lang/String;Ljava/lang/String;"
-        "Ljava/lang/String;)Ljava/lang/String;");
-  }
-
-  // Call TextEntryField.readText(), which shows a text entry dialog and spins
-  // until the user enters some text (or cancels). If the user cancels, returns
-  // an empty string.
-  std::string ReadText(const char* title, const char* message,
-                       const char* placeholder) {
-    if (text_entry_field_class_ == 0) return "";  // haven't been initted yet
-    JNIEnv* env = GetJniEnv();
-    assert(env);
-    jstring title_string = env->NewStringUTF(title);
-    jstring message_string = env->NewStringUTF(message);
-    jstring placeholder_string = env->NewStringUTF(placeholder);
-    jobject result_string = env->CallStaticObjectMethod(
-        text_entry_field_class_, text_entry_field_read_text_, GetActivity(),
-        title_string, message_string, placeholder_string);
-    env->DeleteLocalRef(title_string);
-    env->DeleteLocalRef(message_string);
-    env->DeleteLocalRef(placeholder_string);
-    if (env->ExceptionCheck()) {
-      env->ExceptionDescribe();
-      env->ExceptionClear();
-    }
-    if (result_string == nullptr) {
-      // Check if readText() returned null, which will be the case if an
-      // exception occurred or if TextEntryField returned null for some reason.
-      return "";
-    }
-    const char* result_buffer =
-        env->GetStringUTFChars(static_cast<jstring>(result_string), 0);
-    std::string result(result_buffer);
-    env->ReleaseStringUTFChars(static_cast<jstring>(result_string),
-                               result_buffer);
-    return result;
-  }
-
- private:
-  jclass text_entry_field_class_;
-  jmethodID text_entry_field_read_text_;
-};
-
-TextEntryFieldData* g_text_entry_field_data;
-
 // Checks if a JNI exception has happened, and if so, logs it to the console.
 void CheckJNIException() {
   JNIEnv* env = GetJniEnv();
@@ -262,7 +183,7 @@ void CheckJNIException() {
 
 // Log a message that can be viewed in "adb logcat".
 void LogMessage(const char* format, ...) {
-  static const int kLineBufferSize = 100;
+  static const int kLineBufferSize = 1000;
   char buffer[kLineBufferSize + 2];
 
   va_list list;
@@ -285,15 +206,6 @@ JNIEnv* GetJniEnv() {
   JNIEnv* env;
   jint result = vm->AttachCurrentThread(&env, nullptr);
   return result == JNI_OK ? env : nullptr;
-}
-
-// Use a Java class, TextEntryField, to prompt the user to enter some text.
-// This function blocks until text was entered or the dialog was canceled.
-// If the user cancels, returns an empty string.
-std::string ReadTextInput(const char* title, const char* message,
-                          const char* placeholder) {
-  assert(g_text_entry_field_data);
-  return g_text_entry_field_data->ReadText(title, message, placeholder);
 }
 
 // Execute common_main(), flush pending events and finish the activity.
@@ -322,10 +234,6 @@ extern "C" void android_main(struct android_app* state) {
   // Create the logging display.
   g_logging_utils_data = new LoggingUtilsData();
   g_logging_utils_data->Init();
-
-  // Create the text entry dialog.
-  g_text_entry_field_data = new TextEntryFieldData();
-  g_text_entry_field_data->Init();
 
   // Execute cross platform entry point.
   static const char* argv[] = {FIREBASE_TESTAPP_NAME};

@@ -71,7 +71,7 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.google.android.remoteconfig.testapp'
+        applicationId 'com.google.android.dynamiclinks.testapp'
         minSdkVersion 14
         targetSdkVersion 23
         versionCode 1
@@ -82,14 +82,14 @@ android {
             minifyEnabled true
             proguardFile getDefaultProguardFile('proguard-android.txt')
             proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/app.pro")
-            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/remote_config.pro")
+            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/dynamic_links.pro")
             proguardFile file('proguard.pro')
       }
     }
 }
 
 dependencies {
-  compile 'com.google.firebase:firebase-config:11.0.0'
+  compile 'com.google.firebase:firebase-invites:11.0.0'
   compile 'com.google.android.gms:play-services-base:11.0.0'
 }
 

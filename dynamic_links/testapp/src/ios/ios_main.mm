@@ -28,8 +28,6 @@ extern "C" int common_main(int argc, const char* argv[]);
 
 @interface FTAViewController : UIViewController
 
-@property(atomic, strong) NSString *textEntryResult;
-
 @end
 
 static int g_exit_status = 0;
@@ -38,7 +36,6 @@ static NSCondition *g_shutdown_complete;
 static NSCondition *g_shutdown_signal;
 static UITextView *g_text_view;
 static UIView *g_parent_view;
-static FTAViewController *g_view_controller;
 
 @implementation FTAViewController
 
@@ -89,56 +86,6 @@ int main(int argc, char* argv[]) {
   return g_exit_status;
 }
 
-// Create an alert dialog via UIAlertController, and prompt the user to enter a line of text.
-// This function spins until the text has been entered (or the alert dialog was canceled).
-// If the user cancels, returns an empty string.
-std::string ReadTextInput(const char *title, const char *message, const char *placeholder) {
-  assert(g_view_controller);
-  // This should only be called from a background thread, as it blocks, which will mess up the main
-  // thread.
-  assert(![NSThread isMainThread]);
-
-  g_view_controller.textEntryResult = nil;
-
-  dispatch_async(dispatch_get_main_queue(), ^{
-    UIAlertController *alertController =
-        [UIAlertController alertControllerWithTitle:@(title)
-                                            message:@(message)
-                                     preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addTextFieldWithConfigurationHandler:^(UITextField *_Nonnull textField) {
-      textField.placeholder = @(placeholder);
-    }];
-    UIAlertAction *confirmAction = [UIAlertAction
-        actionWithTitle:@"OK"
-                  style:UIAlertActionStyleDefault
-                handler:^(UIAlertAction *_Nonnull action) {
-                  g_view_controller.textEntryResult = alertController.textFields.firstObject.text;
-                }];
-    [alertController addAction:confirmAction];
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"Cancel"
-                                                           style:UIAlertActionStyleCancel
-                                                         handler:^(UIAlertAction *_Nonnull action) {
-                                                           g_view_controller.textEntryResult = @"";
-                                                         }];
-    [alertController addAction:cancelAction];
-    [g_view_controller presentViewController:alertController animated:YES completion:nil];
-  });
-
-  while (true) {
-    // Pause a second, waiting for the user to enter text.
-    if (ProcessEvents(1000)) {
-      // If this returns true, an exit was requested.
-      return "";
-    }
-    if (g_view_controller.textEntryResult != nil) {
-      // textEntryResult will be set to non-nil when a dialog button is clicked.
-      std::string result = g_view_controller.textEntryResult.UTF8String;
-      g_view_controller.textEntryResult = nil;  // Consume the result.
-      return result;
-    }
-  }
-}
-
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication*)application
@@ -148,23 +95,23 @@ std::string ReadTextInput(const char *title, const char *message, const char *pl
   [g_shutdown_complete lock];
 
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
-  g_view_controller = [[FTAViewController alloc] init];
-  self.window.rootViewController = g_view_controller;
+  FTAViewController *viewController = [[FTAViewController alloc] init];
+  self.window.rootViewController = viewController;
   [self.window makeKeyAndVisible];
 
-  g_text_view = [[UITextView alloc] initWithFrame:g_view_controller.view.bounds];
+  g_text_view = [[UITextView alloc] initWithFrame:viewController.view.bounds];
 
+  g_text_view.accessibilityIdentifier = @"Logger";
   g_text_view.editable = NO;
   g_text_view.scrollEnabled = YES;
   g_text_view.userInteractionEnabled = YES;
 
-  [g_view_controller.view addSubview:g_text_view];
+  [viewController.view addSubview:g_text_view];
 
   return YES;
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application {
-  g_view_controller = nil;
   g_shutdown = true;
   [g_shutdown_signal signal];
   [g_shutdown_complete wait];

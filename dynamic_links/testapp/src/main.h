@@ -15,8 +15,6 @@
 #ifndef FIREBASE_TESTAPP_MAIN_H_  // NOLINT
 #define FIREBASE_TESTAPP_MAIN_H_  // NOLINT
 
-#include <string>
-
 #if defined(__ANDROID__)
 #include <android/native_activity.h>
 #include <jni.h>
@@ -61,12 +59,5 @@ jobject GetActivity();
 // this will be a jobject pointing to the Activity. On iOS, it's an id pointing
 // to the root view of the view controller.
 WindowContext GetWindowContext();
-
-// Prompt the user with a dialog box to enter a line of text, blocking
-// until the user enters the text or the dialog box is canceled.
-// Returns the text that was entered, or an empty string if the user
-// canceled.
-std::string ReadTextInput(const char* title, const char* message,
-                          const char* placeholder);
 
 #endif  // FIREBASE_TESTAPP_MAIN_H_  // NOLINT

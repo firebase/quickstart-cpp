@@ -36,6 +36,8 @@ using ::firebase::auth::EmailAuthProvider;
 using ::firebase::auth::FacebookAuthProvider;
 using ::firebase::auth::GitHubAuthProvider;
 using ::firebase::auth::GoogleAuthProvider;
+using ::firebase::auth::OAuthProvider;
+using ::firebase::auth::PhoneAuthProvider;
 using ::firebase::auth::TwitterAuthProvider;
 using ::firebase::auth::User;
 using ::firebase::auth::UserInfoInterface;
@@ -52,6 +54,12 @@ static const char kTestPasswordBad[] = "badTestPassword";
 static const char kTestIdTokenBad[] = "bad id token for testing";
 static const char kTestAccessTokenBad[] = "bad access token for testing";
 static const char kTestPasswordUpdated[] = "testpasswordupdated";
+static const char kTestIdProviderIdBad[] = "bad provider id for testing";
+
+static const int kWaitIntervalMs = 300;
+static const int kPhoneAuthCodeSendWaitMs = 6000;
+static const int kPhoneAuthCompletionWaitMs = 8000;
+static const int kPhoneAuthTimeoutMs = 0;
 
 static const char kFirebaseProviderId[] =
 #if defined(__ANDROID__)
@@ -114,6 +122,17 @@ static bool WaitForSignInFuture(Future<User*> sign_in_future, const char* fn,
   return false;
 }
 
+// Wait for the current user to sign out.  Typically you should use the
+// state listener to determine whether the user has signed out.
+static bool WaitForSignOut(firebase::auth::Auth* auth) {
+  while (auth->current_user() != nullptr) {
+    if (ProcessEvents(100)) return true;
+  }
+  // Wait - hopefully - long enough for listeners to be signalled.
+  ProcessEvents(1000);
+  return false;
+}
+
 // Create an email that will be different from previous runs.
 // Useful for testing creating new accounts.
 static std::string CreateNewEmail() {
@@ -152,7 +171,11 @@ class AuthStateChangeCounter : public firebase::auth::AuthStateListener {
  public:
   AuthStateChangeCounter() : num_state_changes_(0) {}
 
-  virtual void OnAuthStateChanged(Auth* auth) { num_state_changes_++; }
+  virtual void OnAuthStateChanged(Auth* auth) {  // NOLINT
+    num_state_changes_++;
+    LogMessage("OnAuthStateChanged User %p (state changes %d)",
+               auth->current_user(), num_state_changes_);
+  }
 
   void CompleteTest(const char* test_name, int expected_state_changes) {
     CompleteTest(test_name, expected_state_changes, expected_state_changes);
@@ -170,6 +193,34 @@ class AuthStateChangeCounter : public firebase::auth::AuthStateListener {
 
  private:
   int num_state_changes_;
+};
+
+class IdTokenChangeCounter : public firebase::auth::IdTokenListener {
+ public:
+  IdTokenChangeCounter() : num_token_changes_(0) {}
+
+  virtual void OnIdTokenChanged(Auth* auth) {  // NOLINT
+    num_token_changes_++;
+    LogMessage("OnIdTokenChanged User %p (token changes %d)",
+               auth->current_user(), num_token_changes_);
+  }
+
+  void CompleteTest(const char* test_name, int token_changes) {
+    CompleteTest(test_name, token_changes, token_changes);
+  }
+
+  void CompleteTest(const char* test_name, int min_token_changes,
+                    int max_token_changes) {
+    const bool success = min_token_changes <= num_token_changes_ &&
+                         num_token_changes_ <= max_token_changes;
+    LogMessage("%sIdTokenListener called %d time%s on %s.",
+               success ? "" : "ERROR: ", num_token_changes_,
+               num_token_changes_ == 1 ? "" : "s", test_name);
+    num_token_changes_ = 0;
+  }
+
+ private:
+  int num_token_changes_;
 };
 
 // Utility class for holding a user's login credentials.
@@ -239,6 +290,66 @@ class UserLogin {
   std::string password_;
   User* user_;
   bool log_errors_;
+};
+
+class PhoneListener : public PhoneAuthProvider::Listener {
+ public:
+  PhoneListener()
+      : num_calls_on_verification_complete_(0),
+        num_calls_on_verification_failed_(0),
+        num_calls_on_code_sent_(0),
+        num_calls_on_code_auto_retrieval_time_out_(0) {}
+
+  void OnVerificationCompleted(Credential /*credential*/) override {
+    LogMessage("PhoneListener: successful automatic verification.");
+    num_calls_on_verification_complete_++;
+  }
+
+  void OnVerificationFailed(const std::string& error) override {
+    LogMessage("ERROR: PhoneListener verification failed with error, %s",
+               error.c_str());
+    num_calls_on_verification_failed_++;
+  }
+
+  void OnCodeSent(const std::string& verification_id,
+                  const PhoneAuthProvider::ForceResendingToken&
+                      force_resending_token) override {
+    LogMessage("PhoneListener: code sent. verification_id=%s",
+               verification_id.c_str());
+    verification_id_ = verification_id;
+    force_resending_token_ = force_resending_token;
+    num_calls_on_code_sent_++;
+  }
+
+  void OnCodeAutoRetrievalTimeOut(const std::string& verification_id) override {
+    LogMessage("PhoneListener: auto retrieval timeout. verification_id=%s",
+               verification_id.c_str());
+    verification_id_ = verification_id;
+    num_calls_on_code_auto_retrieval_time_out_++;
+  }
+
+  const std::string& verification_id() const { return verification_id_; }
+  const PhoneAuthProvider::ForceResendingToken& force_resending_token() const {
+    return force_resending_token_;
+  }
+  int num_calls_on_verification_complete() const {
+    return num_calls_on_verification_complete_;
+  }
+  int num_calls_on_verification_failed() const {
+    return num_calls_on_verification_failed_;
+  }
+  int num_calls_on_code_sent() const { return num_calls_on_code_sent_; }
+  int num_calls_on_code_auto_retrieval_time_out() const {
+    return num_calls_on_code_auto_retrieval_time_out_;
+  }
+
+ private:
+  std::string verification_id_;
+  PhoneAuthProvider::ForceResendingToken force_resending_token_;
+  int num_calls_on_verification_complete_;
+  int num_calls_on_verification_failed_;
+  int num_calls_on_code_sent_;
+  int num_calls_on_code_auto_retrieval_time_out_;
 };
 
 // Execute all methods of the C++ Auth API.
@@ -331,28 +442,104 @@ extern "C" int common_main(int argc, const char* argv[]) {
   // --- StateChange tests -----------------------------------------------------
   {
     AuthStateChangeCounter counter;
+    IdTokenChangeCounter token_counter;
 
     // Test notification on registration.
     auth->AddAuthStateListener(&counter);
+    auth->AddIdTokenListener(&token_counter);
     counter.CompleteTest("registration", 0);
+    token_counter.CompleteTest("registration", 0);
 
     // Test notification on SignOut(), when already signed-out.
     auth->SignOut();
     counter.CompleteTest("SignOut() when already signed-out", 0);
+    token_counter.CompleteTest("SignOut() when already signed-out", 0);
 
     // Test notification on SignIn().
     Future<User*> sign_in_future = auth->SignInAnonymously();
     WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously()",
                         kAuthErrorNone, auth);
-    counter.CompleteTest("SignInAnonymously()", 1, 4);
+    // Notified when the user is about to change and after the user has
+    // changed.
+    counter.CompleteTest("SignInAnonymously()", 2, 4);
+    token_counter.CompleteTest("SignInAnonymously()", 2, 5);
+
+    // Refresh the token.
+    if (auth->current_user() != nullptr) {
+      Future<std::string> token_future = auth->current_user()->GetToken(true);
+      WaitForFuture(token_future, "GetToken()", kAuthErrorNone);
+      counter.CompleteTest("GetToken()", 0);
+      token_counter.CompleteTest("GetToken()", 1);
+    }
 
     // Test notification on SignOut(), when signed-in.
-    // TODO(jsanmiya): Change the minimum expected callbacks to 1 once
-    // b/32179003 is fixed.
+    LogMessage("Current user %p", auth->current_user());  // DEBUG
     auth->SignOut();
-    counter.CompleteTest("SignOut()", 0, 4);
+    // Wait for the sign out to complete.
+    WaitForSignOut(auth);
+    counter.CompleteTest("SignOut()", 1);
+    token_counter.CompleteTest("SignOut()", 1);
+    LogMessage("Current user %p", auth->current_user());  // DEBUG
 
     auth->RemoveAuthStateListener(&counter);
+    auth->RemoveIdTokenListener(&token_counter);
+  }
+
+  // --- PhoneListener tests ---------------------------------------------------
+  {
+    UserLogin user_login(auth);  // Generate a random name/password
+    user_login.Register();
+
+    LogMessage("Verifying phone number");
+
+    const std::string phone_number = ReadTextInput(
+        "Phone Number", "Please enter your phone number", "+12345678900");
+    PhoneListener listener;
+    PhoneAuthProvider& phone_provider = PhoneAuthProvider::GetInstance(auth);
+    phone_provider.VerifyPhoneNumber(phone_number.c_str(), kPhoneAuthTimeoutMs,
+                                     nullptr, &listener);
+
+    // Wait for OnCodeSent() callback.
+    int wait_ms = 0;
+    while (listener.num_calls_on_verification_complete() == 0 &&
+           listener.num_calls_on_verification_failed() == 0 &&
+           listener.num_calls_on_code_sent() == 0) {
+      if (wait_ms > kPhoneAuthCodeSendWaitMs) break;
+      ProcessEvents(kWaitIntervalMs);
+      wait_ms += kWaitIntervalMs;
+      LogMessage(".");
+    }
+    if (wait_ms > kPhoneAuthCodeSendWaitMs) {
+      LogMessage("ERROR: SMS with verification code not sent.");
+    } else {
+      LogMessage("SMS verification code sent.");
+
+      const std::string verification_code = ReadTextInput(
+          "Verification Code",
+          "Please enter the verification code sent to you via SMS", "123456");
+
+      // Wait for one of the other callbacks.
+      while (listener.num_calls_on_verification_complete() == 0 &&
+             listener.num_calls_on_verification_failed() == 0 &&
+             listener.num_calls_on_code_auto_retrieval_time_out() == 0) {
+        if (wait_ms > kPhoneAuthCompletionWaitMs) break;
+        ProcessEvents(kWaitIntervalMs);
+        wait_ms += kWaitIntervalMs;
+        LogMessage(".");
+      }
+      if (listener.num_calls_on_code_auto_retrieval_time_out() > 0) {
+        const Credential phone_credential = phone_provider.GetCredential(
+            listener.verification_id().c_str(), verification_code.c_str());
+
+        Future<User*> phone_future =
+            auth->SignInWithCredential(phone_credential);
+        WaitForSignInFuture(phone_future,
+                            "Auth::SignInWithCredential() phone credential",
+                            kAuthErrorNone, auth);
+      } else {
+        LogMessage("ERROR: SMS auto-detect time out did not occur.");
+      }
+    }
   }
 
   // --- Auth tests ------------------------------------------------------------
@@ -508,6 +695,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
             kAuthErrorFailure, auth);
       }
 
+      // Use bad Google credentials, missing an optional parameter. Should fail.
+      {
+        Credential google_cred_bad =
+            GoogleAuthProvider::GetCredential(kTestIdTokenBad, nullptr);
+        Future<User*> google_bad = auth->SignInWithCredential(google_cred_bad);
+        WaitForSignInFuture(
+            google_bad, "Auth::SignInWithCredential() bad Google credentials",
+            kAuthErrorFailure, auth);
+      }
+
       // Use bad Twitter credentials. Should fail.
       {
         Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
@@ -516,6 +713,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(twitter_cred_bad);
         WaitForSignInFuture(
             twitter_bad, "Auth::SignInWithCredential() bad Twitter credentials",
+            kAuthErrorFailure, auth);
+      }
+
+      // Use bad OAuth credentials. Should fail.
+      {
+        Credential oauth_cred_bad = OAuthProvider::GetCredential(
+            kTestIdProviderIdBad, kTestIdTokenBad, kTestAccessTokenBad);
+        Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
+        WaitForSignInFuture(
+            oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
             kAuthErrorFailure, auth);
       }
 
@@ -659,10 +866,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
             // Test Reload().
             Future<void> reload_future = email_user->Reload();
             WaitForFuture(reload_future, "User::Reload()", kAuthErrorNone);
-
-            // Test User::refresh_token().
-            const std::string refresh_token = email_user->refresh_token();
-            LogMessage("User::refresh_token() = %s", refresh_token.c_str());
 
             // Test User::Unlink().
             Future<User*> unlink_future = email_user->Unlink("firebase");

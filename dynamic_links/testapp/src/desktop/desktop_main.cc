@@ -61,20 +61,6 @@ void LogMessage(const char* format, ...) {
 
 WindowContext GetWindowContext() { return nullptr; }
 
-std::string ReadTextInput(const char* title, const char* message,
-                          const char* placeholder) {
-  char buf[64];
-  printf("%s\n%s (for example: %s) ", title, message, placeholder);
-  fgets(buf, sizeof(buf), stdin);
-  // Remove trailing CR/LF.
-  int end = static_cast<int>(strlen(buf)) - 1;  // index of the last character
-  while (end >= 0 && (buf[end] == '\r' || buf[end] == '\n')) {
-    buf[end] = '\0';
-    end--;
-  }
-  return std::string(buf);
-}
-
 int main(int argc, const char* argv[]) {
 #ifdef _WIN32
   SetConsoleCtrlHandler((PHANDLER_ROUTINE)SignalHandler, TRUE);

@@ -1,15 +1,13 @@
-Firebase Invites Quickstart
-==============================
+Firebase Dynamic Links Quickstart
+=================================
 
-The Firebase Invites Test Application (testapp) demonstrates both
-sending and receiving Firebase Invites using the Firebase Invites C++
-SDK. This application has no user interface and simply logs actions
-it's performing to the console.
+The Firebase Dynamic Links Quickstart demonstrates logging a range
+of different events using the Firebase Dynamic Links C++ SDK.  The application
+has no user interface and simply logs actions it's performing to the console.
 
 Introduction
 ------------
 
-- [Read more about Firebase Invites](https://firebase.google.com/docs/invites/)
 - [Read more about Firebase Dynamic Links](https://firebase.google.com/docs/dynamic-links/)
 
 Building and Running the testapp
@@ -33,25 +31,13 @@ Building and Running the testapp
     - For further details please refer to the
       [general instructions for setting up an iOS app with Firebase](https://firebase.google.com/docs/ios/setup).
   - Register your iOS app with Firebase.
-    - Create a new app on
-      [firebase.google.com/console](https://firebase.google.com/console/),
-      and attach your iOS app to it.
-      - For Invites, you will need an App Store ID. Use something random such
-        as 12345678."
-      - You can use "com.google.ios.invites.testapp" as the iOS Bundle ID
-        while you're testing.
+    - Create a new app on the [Firebase console](https://firebase.google.com/console/), and attach
+      your iOS app to it.
+      - You can use "com.google.ios.dynamiclinks.testapp" as the iOS Bundle ID
+        while you're testing. You can omit App Store ID while testing.
     - Add the GoogleService-Info.plist that you downloaded from Firebase
       console to the testapp root directory. This file identifies your iOS app
       to the Firebase backend.
-    - Firebase Invites uses Google Sign-In to send invites needs to be
-      configured.
-      - Enable the Keychain Sharing capability on iOS 10 or above.
-        You can enable this capability on your project in Xcode 8 by going to
-        your project's settings, Capabilities, and turning on Keychain Sharing.
-      - Configure a URL type to handle the Google Sign-In callback.
-        In your project's Info tab, under the URL Types section, find the URL
-        Schemes box containing YOUR\_REVERSED\_CLIENT\_ID. Replace this with the
-        value of the REVERSED\_CLIENT\_ID string in GoogleService-Info.plist.
     - Configure the app to handle dynamic links / app invites.
       - In your project's Info tab, under the URL Types section, find the URL
         Schemes box and add your app's bundle ID (the default scheme used
@@ -68,7 +54,7 @@ Building and Running the testapp
     directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
-    - frameworks/ios/universal/firebase_invites.framework
+    - frameworks/ios/universal/firebase\_dynamic_links.framework
     - You will need to either,
        1. Check "Copy items if needed" when adding the frameworks, or
        2. Add the framework path in "Framework Search Paths"
@@ -81,24 +67,22 @@ Building and Running the testapp
             Select the "Build Settings" tab, and click "All" to see all
             the build settings. Scroll down to "Search Paths", and add
             your path to "Framework Search Paths".
-  - _Known Issue_: There is an issue where bundles from the FirebaseInvites
-    Cocoapod are not properly copied into the Xcode project. To work around the
-    issue, you can manually copy the bundles into your project. Navigate to the
-    Pods/FirebaseInvites/Frameworks/frameworks/FirebaseInvites.framework/Resources
-    subdirectory of your project's folder, and drag the
-    GINInviteResources.bundle and GPPACLPickerResources.bundle folders into your
-    Xcode project, selecting "Copy items if needed" when adding them.
-  - In Xcode, build & run the sample on an iOS device or simulator.
+  - In XCode, build & run the sample on an iOS device or simulator.
   - The testapp has no user interface. The output of the app can be viewed
     via the console.  In Xcode,  select
     "View --> Debug Area --> Activate Console" from the menu.
+  - When running the application you should see:
+    - The dynamic link - if any - recevied by the application on startup.
+    - A dynamically generated long link.
+    - A dynamically generated short link.
+  - Leaving the application and opening a link (e.g via an email) for the app
+    should reopen the app and display the dynamic link.
 
 ### Android
   - Register your Android app with Firebase.
-    - Create a new app on
-      [developers.google.com](https://firebase.google.com/console/),
-      and attach your Android app to it.
-      - You can use "com.google.android.invites.testapp" as the Package Name
+    - Create a new app on the [Firebase console](https://firebase.google.com/console/), and attach
+      your Android app to it.
+      - You can use "com.google.android.dynamiclinks.testapp" as the Package Name
         while you're testing.
       - To [generate a SHA1](https://developers.google.com/android/guides/client-auth)
         run this command on Mac and Linux,
@@ -137,29 +121,15 @@ Building and Running the testapp
       project", and select `build.gradle`.
   - Install the SDK Platforms that Android Studio reports missing.
   - Build the testapp and run it on an Android device or emulator.
-  - See [below](#using_the_test_app) for usage instructions.
-
-# Using the Test App
-
-- Install and run the test app on your iOS or Android device or emulator.
-- The application has minimal user interface. The output of the app can be viewed
-  via the console:
-  - __iOS__: Open select "View --> Debug Area --> Activate Console" from the menu
-    in Xcode.
-  - __Android__: View the logcat output in Android studio or by running
-    "adb logcat" from the command line.
-
-- When you first run the app, it will check for an incoming dynamic link or
-  invitation, and report whether it was able to fetch an invite.
-- Afterwards, it will open a screen that allows you to send an invite for the
-  current app via e-mail or SMS.
-  - You may have to log in to Google first.
-- To simulate receiving an invitation from a friend, you can send yourself an
-  invite, uninstall the test app, then click the link in your e-mail.
-  - This would normally send you to the Play Store or App Store to download the
-    app. Because this is a test app, it will link to a nonexistent store page.
-- After clicking the invite link, re-install and run the app on your device or
-  emulator, and see the invitation fetched on the receiving side.
+  - The testapp has no user interface. The output of the app can be viewed
+    in the logcat output of Android studio or by running "adb logcat" from
+    the command line.
+  - When running the application you should see:
+    - The dynamic link - if any - recevied by the application on startup.
+    - A dynamically generated long link.
+    - A dynamically generated short link.
+  - Leaving the application and opening a link (e.g via an email) for the app
+    should reopen the app and display the dynamic link.
 
 Support
 -------
@@ -169,7 +139,7 @@ Support
 License
 -------
 
-Copyright 2016 Google, Inc.
+Copyright 2017 Google, Inc.
 
 Licensed to the Apache Software Foundation (ASF) under one or more contributor
 license agreements.  See the NOTICE file distributed with this work for
