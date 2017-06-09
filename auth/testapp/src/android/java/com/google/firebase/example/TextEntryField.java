@@ -32,7 +32,7 @@ public class TextEntryField {
    * they entered. If the user cancels, returns an empty string.
    */
   public static String readText(
-      Activity activity, String title, String message, String placeholder) {
+      final Activity activity, final String title, final String message, final String placeholder) {
     resultText = null;
     // Show the alert dialog on the main thread.
     activity.runOnUiThread(

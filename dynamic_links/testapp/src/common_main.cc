@@ -22,6 +22,21 @@
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
 
+// Invalid domain, used to make sure the user sets a valid domain.
+#define INVALID_DYNAMIC_LINKS_DOMAIN "THIS_IS_AN_INVALID_DOMAIN"
+
+static const char* kDynamicLinksDomainInvalidError =
+    "kDynamicLinksDomain is not valid, link shortening will fail.\n"
+    "To resolve this:\n"
+    "* Goto the Firebase console https://firebase.google.com/console/\n"
+    "* Click on the Dynamic Links tab\n"
+    "* Copy the domain e.g x20yz.app.goo.gl\n"
+    "* Replace the value of kDynamicLinksDomain with the copied domain.\n";
+
+// IMPORTANT: You need to set this to a valid domain from the Firebase
+// console (see kDynamicLinksDomainInvalidError for the details).
+static const char* kDynamicLinksDomain = INVALID_DYNAMIC_LINKS_DOMAIN;
+
 // Displays a received dynamic link.
 class Listener : public firebase::dynamic_links::Listener {
  public:
@@ -111,7 +126,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   LogMessage("Initialized the Firebase Dynamic Links API");
 
-  // TODO(butterfield): Do Dynamic Links Tests here.
   firebase::dynamic_links::GoogleAnalyticsParameters analytics_parameters;
   analytics_parameters.source = "mysource";
   analytics_parameters.medium = "mymedium";
@@ -143,26 +157,30 @@ extern "C" int common_main(int argc, const char* argv[]) {
   social_parameters.image_url = "https://mysite.com/someimage.jpg";
 
   firebase::dynamic_links::DynamicLinkComponents components(
-      "https://google.com/abc", "zx93d.app.goo.gl");
+      "https://google.com/abc", kDynamicLinksDomain);
   components.google_analytics_parameters = &analytics_parameters;
   components.ios_parameters = &ios_parameters;
   components.itunes_connect_analytics_parameters = &app_store_parameters;
   components.android_parameters = &android_parameters;
   components.social_meta_tag_parameters = &social_parameters;
 
-  {
-    firebase::Future<dynamic_links::GeneratedDynamicLink> link_future =
-        dynamic_links::GetShortLink(components);
-    WaitForAndShowGeneratedLink(link_future,
-                                "Generate short link from components");
-  }
-
+  dynamic_links::GeneratedDynamicLink long_link;
   {
     const char* description = "Generate long link from components";
-    dynamic_links::GeneratedDynamicLink long_link =
-        dynamic_links::GetLongLink(components);
+    long_link = dynamic_links::GetLongLink(components);
     LogMessage("%s...", description);
     ShowGeneratedLink(long_link, description);
+  }
+
+  if (strcmp(kDynamicLinksDomain, INVALID_DYNAMIC_LINKS_DOMAIN) == 0) {
+    LogMessage(kDynamicLinksDomainInvalidError);
+  } else {
+    {
+      firebase::Future<dynamic_links::GeneratedDynamicLink> link_future =
+          dynamic_links::GetShortLink(components);
+      WaitForAndShowGeneratedLink(link_future,
+                                  "Generate short link from components");
+    }
     if (!long_link.url.empty()) {
       dynamic_links::DynamicLinkOptions options;
       options.path_length = firebase::dynamic_links::kPathLengthShort;

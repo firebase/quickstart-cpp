@@ -48,7 +48,10 @@ Building and Running the testapp
         - Enable the Associated Domains capability.
         - Add applinks:YOUR_DYNAMIC_LINKS_DOMAIN
           For example "applinks:xyz.app.goo.gl".
-
+  - Copy the dynamic links domain for your project under the Dynamic Links
+    tab of the [Firebase console](https://firebase.google.com/console/)
+    e.g xyz.app.goo.gl and assign to the string kDynamicLinksDomain in
+    src/common_main.cc .
   - Download the Firebase C++ SDK linked from
     [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
     directory of your choice.
@@ -103,6 +106,10 @@ Building and Running the testapp
       Android app to the Firebase backend.
     - For further details please refer to the
       [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
+  - Copy the dynamic links domain for your project under the Dynamic Links
+    tab of the [Firebase console](https://firebase.google.com/console/)
+    e.g xyz.app.goo.gl and assign to the string kDynamicLinksDomain in
+    src/common_main.cc .
   - Download the Firebase C++ SDK linked from
     [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
     directory of your choice.
