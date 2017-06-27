@@ -812,6 +812,23 @@ extern "C" int common_main(int argc, const char* argv[]) {
                      auth->current_user() == pre_link_user);
         }
 
+        // Test Auth::SignInWithCredential(), signing in with bad credential.
+        // Call should fail, and Auth's current user should be maintained.
+        {
+          const User* pre_signin_user = auth->current_user();
+          ExpectTrue("Test precondition requires active user",
+                     pre_signin_user != nullptr);
+          Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
+              kTestIdTokenBad, kTestAccessTokenBad);
+          Future<User*> signin_bad_future =
+              auth->SignInWithCredential(twitter_cred_bad);
+          WaitForFuture(signin_bad_future,
+                        "Auth::SignInWithCredential() with bad credential",
+                        kAuthErrorFailure, auth);
+          ExpectTrue("Failed sign in maintains user",
+                     auth->current_user() == pre_signin_user);
+        }
+
         UserLogin user_login(auth);
         user_login.Register();
 
