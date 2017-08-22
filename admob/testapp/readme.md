@@ -98,9 +98,10 @@ Getting Started
       > echo "systemProp.firebase\_cpp\_sdk.dir=/User/$USER/firebase\_cpp\_sdk" >> gradle.properties
       ```
   - Ensure the Android SDK and NDK locations are set in Android Studio.
-    - From the Android Studio launch menu, go to
-      Configure/Project Defaults/Project Structure and download the SDK and NDK if
-      the locations are not yet set.
+    - From the Android Studio launch menu, go to `File/Project Structure...` or
+      `Configure/Project Defaults/Project Structure...`
+      (Shortcut: Control + Alt + Shift + S on windows,  Command + ";" on a mac)
+      and download the SDK and NDK if the locations are not yet set.
   - Open *build.gradle* in Android Studio.
     - From the Android Studio launch menu, "Open an existing Android Studio
       project", and select `build.gradle`.

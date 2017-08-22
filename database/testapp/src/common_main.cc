@@ -358,18 +358,26 @@ extern "C" int common_main(int argc, const char* argv[]) {
                       "SetInitialScoreValue");
     // The transaction will set the player's item and class, and increment
     // their score by 100 points.
+    int score_delta = 100;
     transaction_future =
         ref.Child("TransactionResult")
-            .RunTransaction([](firebase::database::MutableData* data) {
-              LogMessage("  Transaction function executing.");
-              data->Child("player_item").set_value("Fire sword");
-              data->Child("player_class").set_value("Warrior");
-              // Increment the current score by 100.
-              int64_t score =
-                  data->Child("player_score").value().AsInt64().int64_value();
-              data->Child("player_score").set_value(score + kAddedScore);
-              return firebase::database::kTransactionResultSuccess;
-            });
+            .RunTransaction(
+                [](firebase::database::MutableData* data,
+                   void* score_delta_void) {
+                  LogMessage("  Transaction function executing.");
+                  data->Child("player_item").set_value("Fire sword");
+                  data->Child("player_class").set_value("Warrior");
+                  // Increment the current score by 100.
+                  int64_t score = data->Child("player_score")
+                                      .value()
+                                      .AsInt64()
+                                      .int64_value();
+                  data->Child("player_score")
+                      .set_value(score +
+                                 *reinterpret_cast<int*>(score_delta_void));
+                  return firebase::database::kTransactionResultSuccess;
+                },
+                &score_delta);
     WaitForCompletion(transaction_future, "RunTransaction");
 
     // Check whether the transaction succeeded, was aborted, or failed with an
@@ -627,7 +635,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   // Test a ChildListener, which sits on a Query and listens for changes in
-  // the child heirarchy at the location.
+  // the child hierarchy at the location.
   {
     LogMessage("TEST: ChildListener");
     SampleChildListener* listener = new SampleChildListener();
@@ -847,6 +855,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       ref.Child("OnDisconnectTests").GetValue();
   WaitForCompletion(future, "ReadOnDisconnectChanges");
   bool failed = false;
+
   if (future.error() == firebase::database::kErrorNone) {
     const firebase::database::DataSnapshot& result = *future.result();
     if (!result.HasChild("SetValueTo1") ||
@@ -901,12 +910,30 @@ extern "C" int common_main(int argc, const char* argv[]) {
                future.error(), future.error_message());
   }
 
-  // Clean up the DatabaseReference before deleting the Database instance.
-  ref = firebase::database::DatabaseReference();
+  firebase::database::DataSnapshot test_snapshot = *future.result();
+  bool test_snapshot_was_valid = test_snapshot.is_valid();
 
   LogMessage("Shutdown the Database library.");
   delete database;
   database = nullptr;
+
+  // Ensure that the ref we had is now invalid.
+  if (!ref.is_valid()) {
+    LogMessage("SUCCESS: Reference was invalidated on library shutdown.");
+  } else {
+    LogMessage("ERROR: Reference is still valid after library shutdown.");
+  }
+
+  if (test_snapshot_was_valid) {
+    if (!test_snapshot.is_valid()) {
+      LogMessage("SUCCESS: Snapshot was invalidated on library shutdown.");
+    } else {
+      LogMessage("ERROR: Snapshot is still valid after library shutdown.");
+    }
+  } else {
+    LogMessage(
+        "WARNING: Snapshot was already invalid at shutdown, couldn't check.");
+  }
 
   LogMessage("Signing out from anonymous account.");
   auth->SignOut();

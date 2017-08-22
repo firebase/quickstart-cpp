@@ -19,72 +19,10 @@
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
 
-class MessageListener : public firebase::messaging::Listener {
- public:
-  virtual void OnMessage(const ::firebase::messaging::Message& message) {
-    // When messages are received by the server, they are placed into an
-    // internal queue, waiting to be consumed. When ProcessMessages is called,
-    // this OnMessage function is called once for each queued message.
-    LogMessage("Recieved a new message");
-    LogMessage("This message was %s by the user",
-               message.notification_opened ? "opened" : "not opened");
-    if (!message.from.empty()) LogMessage("from: %s", message.from.c_str());
-    if (!message.error.empty()) LogMessage("error: %s", message.error.c_str());
-    if (!message.message_id.empty()) {
-      LogMessage("message_id: %s", message.message_id.c_str());
-    }
-    if (!message.data.empty()) {
-      LogMessage("data:");
-      for (const auto& field : message.data) {
-        LogMessage("  %s: %s", field.first.c_str(), field.second.c_str());
-      }
-    }
-    if (message.notification) {
-      LogMessage("notification:");
-      if (!message.notification->title.empty()) {
-        LogMessage("  title: %s", message.notification->title.c_str());
-      }
-      if (!message.notification->body.empty()) {
-        LogMessage("  body: %s", message.notification->body.c_str());
-      }
-      if (!message.notification->icon.empty()) {
-        LogMessage("  icon: %s", message.notification->icon.c_str());
-      }
-      if (!message.notification->tag.empty()) {
-        LogMessage("  tag: %s", message.notification->tag.c_str());
-      }
-      if (!message.notification->color.empty()) {
-        LogMessage("  color: %s", message.notification->color.c_str());
-      }
-      if (!message.notification->sound.empty()) {
-        LogMessage("  sound: %s", message.notification->sound.c_str());
-      }
-      if (!message.notification->click_action.empty()) {
-        LogMessage("  click_action: %s",
-                   message.notification->click_action.c_str());
-      }
-    }
-  }
-
-  virtual void OnTokenReceived(const char* token) {
-    // To send a message to a specific instance of your app a registration token
-    // is required. These tokens are unique for each instance of the app. When
-    // messaging::Initialize is called, a request is sent to the Firebase Cloud
-    // Messaging server to generate a token. When that token is ready,
-    // OnTokenReceived will be called. The token should be cached locally so
-    // that a request doesn't need to be generated each time the app is started.
-    //
-    // Once a token is generated is should be sent to your app server, which can
-    // then use it to send messages to users.
-    LogMessage("Recieved Registration Token: %s", token);
-  }
-};
-
-MessageListener g_listener;
-
 // Execute all methods of the C++ Firebase Cloud Messaging API.
 extern "C" int common_main(int argc, const char* argv[]) {
   ::firebase::App* app;
+  ::firebase::messaging::PollableListener listener;
 
 #if defined(__ANDROID__)
   app = ::firebase::App::Create(GetJniEnv(), GetActivity());
@@ -97,10 +35,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
   LogMessage("Initialize the Messaging library");
 
   ::firebase::ModuleInitializer initializer;
-  initializer.Initialize(app, nullptr, [](::firebase::App* app, void*) {
-    LogMessage("Try to initialize Firebase Messaging");
-    return ::firebase::messaging::Initialize(*app, &g_listener);
-  });
+  initializer.Initialize(
+      app, &listener, [](::firebase::App* app, void* userdata) {
+        LogMessage("Try to initialize Firebase Messaging");
+        ::firebase::messaging::PollableListener* listener =
+            static_cast<::firebase::messaging::PollableListener*>(userdata);
+        return ::firebase::messaging::Initialize(*app, listener);
+      });
+
   while (initializer.InitializeLastResult().status() !=
          firebase::kFutureStatusComplete) {
     if (ProcessEvents(100)) return 1;  // exit if requested
@@ -119,9 +61,58 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   bool done = false;
   while (!done) {
+    std::string token;
+    if (listener.PollRegistrationToken(&token)) {
+      LogMessage("Recieved Registration Token: %s", token.c_str());
+    }
+
+    ::firebase::messaging::Message message;
+    while (listener.PollMessage(&message)) {
+      LogMessage("Recieved a new message");
+      LogMessage("This message was %s by the user",
+                 message.notification_opened ? "opened" : "not opened");
+      if (!message.from.empty()) LogMessage("from: %s", message.from.c_str());
+      if (!message.error.empty())
+        LogMessage("error: %s", message.error.c_str());
+      if (!message.message_id.empty()) {
+        LogMessage("message_id: %s", message.message_id.c_str());
+      }
+      if (!message.data.empty()) {
+        LogMessage("data:");
+        for (const auto& field : message.data) {
+          LogMessage("  %s: %s", field.first.c_str(), field.second.c_str());
+        }
+      }
+      if (message.notification) {
+        LogMessage("notification:");
+        if (!message.notification->title.empty()) {
+          LogMessage("  title: %s", message.notification->title.c_str());
+        }
+        if (!message.notification->body.empty()) {
+          LogMessage("  body: %s", message.notification->body.c_str());
+        }
+        if (!message.notification->icon.empty()) {
+          LogMessage("  icon: %s", message.notification->icon.c_str());
+        }
+        if (!message.notification->tag.empty()) {
+          LogMessage("  tag: %s", message.notification->tag.c_str());
+        }
+        if (!message.notification->color.empty()) {
+          LogMessage("  color: %s", message.notification->color.c_str());
+        }
+        if (!message.notification->sound.empty()) {
+          LogMessage("  sound: %s", message.notification->sound.c_str());
+        }
+        if (!message.notification->click_action.empty()) {
+          LogMessage("  click_action: %s",
+                     message.notification->click_action.c_str());
+        }
+      }
+    }
     // Process events so that the client doesn't hang.
     done = ProcessEvents(1000);
   }
+
   ::firebase::messaging::Terminate();
   delete app;
 

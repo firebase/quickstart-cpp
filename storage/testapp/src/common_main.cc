@@ -161,6 +161,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
   firebase::storage::StorageReference ref;
   ref = storage->GetReference("test_app_data").Child(saved_url);
 
+  firebase::storage::Metadata test_metadata;
+
   LogMessage("Storage URL: gs://%s/%s", ref.bucket().c_str(),
              ref.full_path().c_str());
 
@@ -337,6 +339,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForCompletion(future, "GetFileMetadata");
         const firebase::storage::Metadata* metadata = future.result();
         if (future.error() == firebase::storage::kErrorNone) {
+          test_metadata = *metadata;  // Save a copy of the metadata for later.
+
           // Get the current time to compare to the Timestamp.
           int64_t current_time_seconds = static_cast<int64_t>(time(nullptr));
           int64_t updated_time = metadata->updated_time();
@@ -602,12 +606,30 @@ extern "C" int common_main(int argc, const char* argv[]) {
     }
   }
 
-  // Clean up the StorageReference before deleting the Storage instance.
-  ref = firebase::storage::StorageReference();
+  // Check if test_metadata started valid and was then invalidated.
+  bool test_metadata_was_valid = test_metadata.is_valid();
 
   LogMessage("Shutdown the Storage library.");
   delete storage;
   storage = nullptr;
+
+  // Ensure that the ref we had is now invalid.
+  if (!ref.is_valid()) {
+    LogMessage("SUCCESS: Reference was invalidated on library shutdown.");
+  } else {
+    LogMessage("ERROR: Reference is still valid after library shutdown.");
+  }
+
+  if (test_metadata_was_valid) {
+    if (!test_metadata.is_valid()) {
+      LogMessage("SUCCESS: Metadata was invalidated on library shutdown.");
+    } else {
+      LogMessage("ERROR: Metadata is still valid after library shutdown.");
+    }
+  } else {
+    LogMessage(
+        "WARNING: Metadata was already invalid at shutdown, couldn't check.");
+  }
 
   LogMessage("Signing out from anonymous account.");
   auth->SignOut();

@@ -62,7 +62,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {"TestDouble", 3.14},
       {"TestString", "Hello World"},
       {"TestData", firebase::Variant::FromStaticBlob(kBinaryDefaults,
-                                                     sizeof(kBinaryDefaults))}};
+                                                     sizeof(kBinaryDefaults))},
+      {"TestDefaultOnly", "Default value that won't be overridden"}};
   size_t default_count = sizeof(defaults) / sizeof(defaults[0]);
   remote_config::SetDefaults(defaults, default_count);
 
@@ -91,7 +92,24 @@ extern "C" int common_main(int argc, const char* argv[]) {
       LogMessage("TestData[%d] = 0x%02x", i, value);
     }
   }
+  {
+    std::string result = remote_config::GetString("TestDefaultOnly");
+    LogMessage("Get TestDefaultOnly %s", result.c_str());
+  }
 
+  {
+    // Print out the keys with default values.
+    std::vector<std::string> keys = remote_config::GetKeys();
+    LogMessage("GetKeys:");
+    for (auto s = keys.begin(); s != keys.end(); ++s) {
+      LogMessage("  %s", s->c_str());
+    }
+    keys = remote_config::GetKeysByPrefix("TestD");
+    LogMessage("GetKeysByPrefix(\"TestD\"):");
+    for (auto s = keys.begin(); s != keys.end(); ++s) {
+      LogMessage("  %s", s->c_str());
+    }
+  }
   // Enable developer mode and verified it's enabled.
   // NOTE: Developer mode should not be enabled in production applications.
   remote_config::SetConfigSetting(remote_config::kConfigSettingDeveloperMode,
@@ -149,17 +167,22 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage("TestData[%d] = 0x%02x", i, value);
       }
     }
-
-    // Print out the keys that are now tied to data
-    std::vector<std::string> keys = remote_config::GetKeys();
-    LogMessage("GetKeys:");
-    for (auto s = keys.begin(); s != keys.end(); ++s) {
-      LogMessage("  %s", s->c_str());
+    {
+      std::string result = remote_config::GetString("TestDefaultOnly");
+      LogMessage("Get TestDefaultOnly %s", result.c_str());
     }
-    keys = remote_config::GetKeysByPrefix("TestD");
-    LogMessage("GetKeysByPrefix(\"TestD\"):");
-    for (auto s = keys.begin(); s != keys.end(); ++s) {
-      LogMessage("  %s", s->c_str());
+    {
+      // Print out the keys that are now tied to data
+      std::vector<std::string> keys = remote_config::GetKeys();
+      LogMessage("GetKeys:");
+      for (auto s = keys.begin(); s != keys.end(); ++s) {
+        LogMessage("  %s", s->c_str());
+      }
+      keys = remote_config::GetKeysByPrefix("TestD");
+      LogMessage("GetKeysByPrefix(\"TestD\"):");
+      for (auto s = keys.begin(); s != keys.end(); ++s) {
+        LogMessage("  %s", s->c_str());
+      }
     }
   }
   // Release a handle to the future so we can shutdown the Remote Config API
