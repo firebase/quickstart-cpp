@@ -2,6 +2,7 @@
 buildscript {
   repositories {
     mavenLocal()
+    maven { url 'https://maven.google.com'  }
     jcenter()
   }
   dependencies {
@@ -13,6 +14,7 @@ buildscript {
 allprojects {
   repositories {
     mavenLocal()
+    maven { url 'https://maven.google.com'  }
     jcenter()
   }
 }
@@ -83,6 +85,7 @@ android {
             proguardFile getDefaultProguardFile('proguard-android.txt')
             proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/app.pro")
             proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/admob.pro")
+            proguardFile file('proguard.pro')
       }
     }
 }
