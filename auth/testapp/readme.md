@@ -33,7 +33,7 @@ Building and Running the testapp
   - Link your iOS app to the Firebase libraries.
     - Get CocoaPods version 1 or later by running,
         ```
-        $ sudo gem install CocoaPods --pre
+        $ sudo gem install cocoapods --pre
         ```
     - From the testapp directory, install the CocoaPods listed in the Podfile
       by running,
@@ -76,6 +76,12 @@ Building and Running the testapp
             the build settings. Scroll down to "Search Paths", and add
             your path to "Framework Search Paths".
   - In XCode, build & run the sample on an iOS device or simulator.
+  - Phone authentication needs to launch a webview and return the results to the
+    application.  To do this it requires you configure a URL type to handle the
+    callback.  In your project's Info tab, under the URL Types section, find
+    the URL Schemes box containing YOUR\_REVERSED\_CLIENT\_ID. Replace this
+    with the value of the REVERSED\_CLIENT\_ID string in
+    GoogleService-Info.plist.
   - The testapp has no user interface. The output of the app can be viewed
     via the console.  In Xcode,  select
     "View --> Debug Area --> Activate Console" from the menu.
@@ -131,34 +137,6 @@ Building and Running the testapp
   - The testapp has no user interface. The output of the app can be viewed
     in the logcat output of Android studio or by running
     "adb logcat *:W android_main firebase" from the command line.
-
-Known issues
-------------
-
-  - Auth::SignInAnonymously() and Auth::CreateUserWithEmailAndPassword() are
-    temporarily broken. For the moment, they will always return
-    kAuthError_GeneralBackendError.
-  - User::UpdateUserProfile() currently fails to set the photo URL on both
-    Android and iOS, and also fails to set the display name on Android.
-  - The iOS testapp generates benign asserts of the form:
-         ```
-         assertion failed: 15D21 13C75: assertiond + 12188
-         [8CF1968D-3466-38B7-B225-3F6F5B64C552]: 0x1
-         ```
-  - Several API function are pending competion and will return status
-    `firebase::kAuthError_Unimplemented` or empty data.
-      - `Auth::ConfirmPasswordReset()`
-      - `Auth::CheckActionCode()`
-      - `Auth::ApplyActionCode()`
-      - `User::Reauthenticate()`
-      - `User::SendEmailVerification()`
-      - `User::Delete()`
-      - `User::ProviderData()`
-  - Several API functions return different error codes on iOS and Android.
-    The disparities will be eliminated in a subsequent release.
-  - When given invalid parameters, several API functions return
-    kAuthError_GeneralBackendError instead of kAuthError_InvalidEmail or
-    kAuthError_EmailNotFound.
 
 Support
 -------

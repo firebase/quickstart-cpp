@@ -20,11 +20,12 @@
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
-
 // Execute all methods of the C++ Remote Config API.
 extern "C" int common_main(int argc, const char* argv[]) {
   namespace remote_config = ::firebase::remote_config;
   ::firebase::App* app;
+
+  // Initialization
 
   LogMessage("Initialize the Firebase Remote Config library");
 #if defined(__ANDROID__)
@@ -54,6 +55,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   LogMessage("Initialized the Firebase Remote Config API");
 
+  // Initialization Complete
+  // Set Defaults, and test them
   static const unsigned char kBinaryDefaults[] = {6, 0, 0, 6, 7, 3};
 
   static const remote_config::ConfigKeyValueVariant defaults[] = {
@@ -97,6 +100,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("Get TestDefaultOnly %s", result.c_str());
   }
 
+  // Test the existence of the keys by name.
   {
     // Print out the keys with default values.
     std::vector<std::string> keys = remote_config::GetKeys();
@@ -120,6 +124,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("Failed to enable developer mode");
   }
 
+  // Test Fetch...
   LogMessage("Fetch...");
   auto future_result = remote_config::Fetch(0);
   while (future_result.status() == firebase::kFutureStatusPending) {
@@ -184,6 +189,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage("  %s", s->c_str());
       }
     }
+  } else {
+    LogMessage("Fetch Incomplete");
   }
   // Release a handle to the future so we can shutdown the Remote Config API
   // when exiting the app.  Alternatively we could have placed future_result

@@ -18,7 +18,7 @@ Building and Running the testapp
     - Get CocoaPods version 1 or later by running,
 
     ```
-    $ sudo gem install CocoaPods --pre
+    $ sudo gem install cocoapods --pre
     ```
     - From the testapp directory, install the CocoaPods listed in the Podfile by
     running,

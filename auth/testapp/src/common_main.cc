@@ -57,7 +57,7 @@ static const char kTestPasswordUpdated[] = "testpasswordupdated";
 static const char kTestIdProviderIdBad[] = "bad provider id for testing";
 
 static const int kWaitIntervalMs = 300;
-static const int kPhoneAuthCodeSendWaitMs = 6000;
+static const int kPhoneAuthCodeSendWaitMs = 600000;
 static const int kPhoneAuthCompletionWaitMs = 8000;
 static const int kPhoneAuthTimeoutMs = 0;
 
@@ -621,7 +621,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithEmailAndPassword(kTestEmailBad, kTestPassword);
         WaitForSignInFuture(sign_in_future_bad_email,
                             "Auth::SignInWithEmailAndPassword() bad email",
-                            kAuthErrorFailure, auth);
+                            ::firebase::auth::kAuthErrorUserNotFound, auth);
       }
 
       // Sign in user with correct email but bad password. Should fail.
@@ -631,7 +631,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
                                              kTestPasswordBad);
         WaitForSignInFuture(sign_in_future_bad_password,
                             "Auth::SignInWithEmailAndPassword() bad password",
-                            kAuthErrorFailure, auth);
+                            ::firebase::auth::kAuthErrorWrongPassword, auth);
       }
 
       // Try to create with existing email. Should fail.
@@ -641,7 +641,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(
             create_future_bad,
             "Auth::CreateUserWithEmailAndPassword() existing email",
-            kAuthErrorFailure, auth);
+            ::firebase::auth::kAuthErrorEmailAlreadyInUse, auth);
         ExpectTrue(
             "CreateUserWithEmailAndPasswordLastResult matches returned Future",
             create_future_bad ==
@@ -671,7 +671,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(
             facebook_bad,
             "Auth::SignInWithCredential() bad Facebook credentials",
-            kAuthErrorFailure, auth);
+            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
       }
 
       // Use bad GitHub credentials. Should fail.
@@ -682,7 +682,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(git_hub_cred_bad);
         WaitForSignInFuture(
             git_hub_bad, "Auth::SignInWithCredential() bad GitHub credentials",
-            kAuthErrorFailure, auth);
+            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
       }
 
       // Use bad Google credentials. Should fail.
@@ -713,7 +713,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(twitter_cred_bad);
         WaitForSignInFuture(
             twitter_bad, "Auth::SignInWithCredential() bad Twitter credentials",
-            kAuthErrorFailure, auth);
+            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
       }
 
       // Use bad OAuth credentials. Should fail.
@@ -745,7 +745,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SendPasswordResetEmail(kTestEmailBad);
         WaitForFuture(send_password_reset_bad,
                       "Auth::SendPasswordResetEmail() bad email",
-                      kAuthErrorFailure);
+                      ::firebase::auth::kAuthErrorUserNotFound);
       }
     }
   }
@@ -807,7 +807,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               anonymous_user->LinkWithCredential(twitter_cred_bad);
           WaitForFuture(link_bad_future,
                         "User::LinkWithCredential() with bad credential",
-                        kAuthErrorFailure);
+                        ::firebase::auth::kAuthErrorOperationNotAllowed);
           ExpectTrue("Linking maintains user",
                      auth->current_user() == pre_link_user);
         }
@@ -824,7 +824,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               auth->SignInWithCredential(twitter_cred_bad);
           WaitForFuture(signin_bad_future,
                         "Auth::SignInWithCredential() with bad credential",
-                        kAuthErrorFailure, auth);
+                        ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
           ExpectTrue("Failed sign in maintains user",
                      auth->current_user() == pre_signin_user);
         }
@@ -887,7 +887,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
             // Test User::Unlink().
             Future<User*> unlink_future = email_user->Unlink("firebase");
             WaitForSignInFuture(unlink_future, "User::Unlink()",
-                                kAuthErrorFailure, auth);
+                                ::firebase::auth::kAuthErrorNoSuchProvider,
+                                auth);
 
             // Sign in again if user is now invalid.
             if (auth->current_user() == nullptr) {
