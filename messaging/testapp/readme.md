@@ -125,6 +125,22 @@ with:
       and download the SDK and NDK if the locations are not yet set.
     * Android Studio will write these paths to `local.properties`.
 
+**Optional: Configure your deep link URL**
+
+- To enable your app to receive deep links via FCM, you will need to add an
+  intent filter to your AndroidManifest.xml in the native activity that
+  associates your domain with your app.
+
+```
+<intent-filter>
+  <action android:name="android.intent.action.VIEW"/>
+  <category android:name="android.intent.category.DEFAULT"/>
+  <category android:name="android.intent.category.BROWSABLE"/>
+  <data android:host="your-domain-here.example.com" android:scheme="http"/>
+  <data android:host="your-domain-here.example.com" android:scheme="https"/>
+</intent-filter>
+```
+
 **Build & Run**
 
 - Open `build.gradle` in Android Studio.

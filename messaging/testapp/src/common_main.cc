@@ -77,6 +77,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
       if (!message.message_id.empty()) {
         LogMessage("message_id: %s", message.message_id.c_str());
       }
+      if (!message.link.empty()) {
+        LogMessage("  link: %s", message.link.c_str());
+      }
       if (!message.data.empty()) {
         LogMessage("data:");
         for (const auto& field : message.data) {

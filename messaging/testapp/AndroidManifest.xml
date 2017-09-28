@@ -28,6 +28,17 @@
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />
       </intent-filter>
+
+      <!-- To take advantage of deep links in Firebase Messages on Android, your
+           app must be configured to listen for links to your domain. Update the
+           URLs in the following intent-filter to enable links for your app. -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <category android:name="android.intent.category.BROWSABLE"/>
+        <data android:host="CHANGE_THIS_DOMAIN.example.com" android:scheme="http"/>
+        <data android:host="CHANGE_THIS_DOMAIN.example.com" android:scheme="https"/>
+      </intent-filter>
     </activity>
 
     <service android:name="com.google.firebase.messaging.cpp.ListenerService"
