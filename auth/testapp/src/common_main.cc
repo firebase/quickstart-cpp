@@ -770,10 +770,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
                            anonymous_user->photo_url().c_str());
         ExpectStringsEqual("Anonymous user provider_id", kFirebaseProviderId,
                            anonymous_user->provider_id().c_str());
-        ExpectTrue("Anonymous email is_anonymous()",
+        ExpectTrue("Anonymous user is_anonymous()",
                    anonymous_user->is_anonymous());
-        ExpectFalse("Email email is_email_verified()",
+        ExpectFalse("Anonymous user is_email_verified()",
                     anonymous_user->is_email_verified());
+        ExpectTrue("Anonymous user metadata().last_sign_in_timestamp != 0",
+                   anonymous_user->metadata().last_sign_in_timestamp != 0);
+        ExpectTrue("Anonymous user metadata().creation_timestamp != 0",
+                   anonymous_user->metadata().creation_timestamp != 0);
 
         // Test User::LinkWithCredential(), linking with email & password.
         const std::string newer_email = CreateNewEmail();
@@ -855,10 +859,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
                                email_user->photo_url().c_str());
             ExpectStringsEqual("Email user provider_id", kFirebaseProviderId,
                                email_user->provider_id().c_str());
-            ExpectFalse("Email email is_anonymous()",
+            ExpectFalse("Email user is_anonymous()",
                         email_user->is_anonymous());
-            ExpectFalse("Email email is_email_verified()",
+            ExpectFalse("Email user is_email_verified()",
                         email_user->is_email_verified());
+            ExpectTrue("Email user metadata().last_sign_in_timestamp != 0",
+                       email_user->metadata().last_sign_in_timestamp != 0);
+            ExpectTrue("Email user metadata().creation_timestamp  != 0",
+                       email_user->metadata().creation_timestamp != 0);
 
             // Test User::GetToken().
             // with force_refresh = false.

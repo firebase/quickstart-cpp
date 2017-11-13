@@ -6,7 +6,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:2.1.2'
+    classpath 'com.android.tools.build:gradle:2.3.1'
     classpath 'com.google.gms:google-services:3.0.0'
   }
 }
@@ -60,8 +60,8 @@ project.ext {
 }
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '23.0.3'
+    compileSdkVersion 26
+    buildToolsVersion '26.0.3'
 
     sourceSets {
       main {
@@ -75,7 +75,7 @@ android {
     defaultConfig {
         applicationId 'com.google.firebase.cpp.database.testapp'
         minSdkVersion 14
-        targetSdkVersion 23
+        targetSdkVersion 26
         versionCode 1
         versionName '1.0'
     }
@@ -92,8 +92,8 @@ android {
 }
 
 dependencies {
-    compile 'com.google.firebase:firebase-auth:11.4.0'
-    compile 'com.google.firebase:firebase-database:11.4.0'
+    compile 'com.google.firebase:firebase-auth:11.6.0'
+    compile 'com.google.firebase:firebase-database:11.6.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

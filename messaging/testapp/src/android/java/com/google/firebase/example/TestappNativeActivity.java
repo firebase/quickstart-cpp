@@ -53,6 +53,7 @@ public class TestappNativeActivity extends NativeActivity {
       Intent message = new Intent(this, MessageForwardingService.class);
       message.setAction(MessageForwardingService.ACTION_REMOTE_INTENT);
       message.putExtras(intent);
+      message.setData(intent.getData());
       startService(message);
     }
     setIntent(intent);
