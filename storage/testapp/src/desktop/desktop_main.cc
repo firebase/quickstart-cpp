@@ -73,3 +73,19 @@ int main(int argc, const char* argv[]) {
 #endif  // _WIN32
   return common_main(argc, argv);
 }
+
+#if defined(_WIN32)
+// Returns the number of microseconds since the epoch.
+int64_t WinGetCurrentTimeInMicroseconds() {
+  FILETIME file_time;
+  GetSystemTimeAsFileTime(&file_time);
+
+  ULARGE_INTEGER now;
+  now.LowPart = file_time.dwLowDateTime;
+  now.HighPart = file_time.dwHighDateTime;
+
+  // Windows file time is expressed in 100s of nanoseconds.
+  // To convert to microseconds, multiply x10.
+  return now.QuadPart * 10LL;
+}
+#endif

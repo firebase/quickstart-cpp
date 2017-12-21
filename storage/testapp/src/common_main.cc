@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <inttypes.h>
-#include <sys/time.h>
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -149,9 +148,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   // Generate a folder for the test data based on the time in milliseconds.
-  struct timeval now;
-  gettimeofday(&now, nullptr);
-  int64_t time_in_microseconds = now.tv_sec * 1000000LL + now.tv_usec;
+  int64_t time_in_microseconds = GetCurrentTimeInMicroseconds();
+
   char buffer[21] = {0};
   snprintf(buffer, sizeof(buffer), "%lld",
            static_cast<long long>(time_in_microseconds));  // NOLINT
@@ -562,8 +560,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
         if (*future.result() != kLargeFileSize) {
           LogMessage(
               "ERROR: Read file failed, read incorrect number of bytes (read "
-              "%z, expected %z)",
-              *future.result(), kLargeFileSize);
+              "%d, expected %d)",
+              static_cast<int>(*future.result()),
+              static_cast<int>(kLargeFileSize));
         } else if (std::memcmp(&kLargeTestFile[0], &buffer[0],
                                kLargeFileSize) == 0) {
           LogMessage("SUCCESS: Read file succeeded.");
@@ -574,7 +573,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage("ERROR: Read file failed.");
       }
     }
-
     {
       LogMessage("TEST: Write a large file and cancel mid-way.");
       firebase::storage::Controller controller;

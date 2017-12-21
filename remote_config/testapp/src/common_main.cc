@@ -20,6 +20,17 @@
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
+
+// Convert remote_config::ValueSource to a string.
+const char* ValueSourceToString(firebase::remote_config::ValueSource source) {
+  static const char* kSourceToString[] = {
+    "Static",   // kValueSourceStaticValue
+    "Remote",   // kValueSourceRemoteValue
+    "Default",  // kValueSourceDefaultValue
+  };
+  return kSourceToString[source];
+}
+
 // Execute all methods of the C++ Remote Config API.
 extern "C" int common_main(int argc, const char* argv[]) {
   namespace remote_config = ::firebase::remote_config;
@@ -72,21 +83,26 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   // The return values may not be the set defaults, if a fetch was previously
   // completed for the app that set them.
+  remote_config::ValueInfo value_info;
   {
-    bool result = remote_config::GetBoolean("TestBoolean");
-    LogMessage("Get TestBoolean %d", result ? 1 : 0);
+    bool result = remote_config::GetBoolean("TestBoolean", &value_info);
+    LogMessage("Get TestBoolean %d %s", result ? 1 : 0,
+               ValueSourceToString(value_info.source));
   }
   {
-    int64_t result = remote_config::GetLong("TestLong");
-    LogMessage("Get TestLong %lld", result);
+    int64_t result = remote_config::GetLong("TestLong", &value_info);
+    LogMessage("Get TestLong %lld %s", result,
+               ValueSourceToString(value_info.source));
   }
   {
-    double result = remote_config::GetDouble("TestDouble");
-    LogMessage("Get TestDouble %f", result);
+    double result = remote_config::GetDouble("TestDouble", &value_info);
+    LogMessage("Get TestDouble %f %s", result,
+               ValueSourceToString(value_info.source));
   }
   {
-    std::string result = remote_config::GetString("TestString");
-    LogMessage("Get TestString %s", result.c_str());
+    std::string result = remote_config::GetString("TestString", &value_info);
+    LogMessage("Get TestString \"%s\" %s", result.c_str(),
+               ValueSourceToString(value_info.source));
   }
   {
     std::vector<unsigned char> result = remote_config::GetData("TestData");
@@ -96,8 +112,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
     }
   }
   {
-    std::string result = remote_config::GetString("TestDefaultOnly");
-    LogMessage("Get TestDefaultOnly %s", result.c_str());
+    std::string result = remote_config::GetString("TestDefaultOnly",
+                                                  &value_info);
+    LogMessage("Get TestDefaultOnly \"%s\" %s", result.c_str(),
+               ValueSourceToString(value_info.source));
+  }
+  {
+    std::string result = remote_config::GetString("TestNotSet",
+                                                  &value_info);
+    LogMessage("Get TestNotSet \"%s\" %s", result.c_str(),
+               ValueSourceToString(value_info.source));
   }
 
   // Test the existence of the keys by name.
@@ -150,20 +174,24 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
     // Print out the new values, which may be updated from the Fetch.
     {
-      bool result = remote_config::GetBoolean("TestBoolean");
-      LogMessage("Updated TestBoolean %d", result ? 1 : 0);
+      bool result = remote_config::GetBoolean("TestBoolean", &value_info);
+      LogMessage("Updated TestBoolean %d %s", result ? 1 : 0,
+                 ValueSourceToString(value_info.source));
     }
     {
-      int64_t result = remote_config::GetLong("TestLong");
-      LogMessage("Updated TestLong %lld", result);
+      int64_t result = remote_config::GetLong("TestLong", &value_info);
+      LogMessage("Updated TestLong %lld %s", result,
+                 ValueSourceToString(value_info.source));
     }
     {
-      double result = remote_config::GetDouble("TestDouble");
-      LogMessage("Updated TestDouble %f", result);
+      double result = remote_config::GetDouble("TestDouble", &value_info);
+      LogMessage("Updated TestDouble %f %s", result,
+                 ValueSourceToString(value_info.source));
     }
     {
-      std::string result = remote_config::GetString("TestString");
-      LogMessage("Updated TestString %s", result.c_str());
+      std::string result = remote_config::GetString("TestString", &value_info);
+      LogMessage("Updated TestString \"%s\" %s", result.c_str(),
+                 ValueSourceToString(value_info.source));
     }
     {
       std::vector<unsigned char> result = remote_config::GetData("TestData");
@@ -173,8 +201,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
       }
     }
     {
-      std::string result = remote_config::GetString("TestDefaultOnly");
-      LogMessage("Get TestDefaultOnly %s", result.c_str());
+      std::string result = remote_config::GetString("TestDefaultOnly",
+                                                    &value_info);
+      LogMessage("Get TestDefaultOnly \"%s\" %s", result.c_str(),
+                 ValueSourceToString(value_info.source));
+    }
+    {
+      std::string result = remote_config::GetString("TestNotSet",
+                                                    &value_info);
+      LogMessage("Get TestNotSet \"%s\" %s", result.c_str(),
+                 ValueSourceToString(value_info.source));
     }
     {
       // Print out the keys that are now tied to data

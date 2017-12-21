@@ -16,6 +16,9 @@
 #define FIREBASE_TESTAPP_MAIN_H_  // NOLINT
 
 #include <string>
+#if !defined(_WIN32)
+#include <sys/time.h>
+#endif
 #if defined(__ANDROID__)
 #include <android/native_activity.h>
 #include <jni.h>
@@ -41,6 +44,22 @@ bool ProcessEvents(int msec);
 
 // Returns a path to a file suitable for the given platform.
 std::string PathForResource();
+
+#if defined(_WIN32)
+// Windows requires its own version of time-handling code.
+int64_t WinGetCurrentTimeInMicroseconds();
+#endif
+
+// Returns the number of microseconds since the epoch.
+static int64_t GetCurrentTimeInMicroseconds() {
+#if !defined(_WIN32)
+  struct timeval now;
+  gettimeofday(&now, nullptr);
+  return now.tv_sec * 1000000LL + now.tv_usec;
+#else
+  return WinGetCurrentTimeInMicroseconds();
+#endif
+}
 
 // WindowContext represents the handle to the parent window.  It's type
 // (and usage) vary based on the OS.
