@@ -341,16 +341,18 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
           // Get the current time to compare to the Timestamp.
           int64_t current_time_seconds = static_cast<int64_t>(time(nullptr));
-          int64_t updated_time = metadata->updated_time();
-          int64_t time_difference = updated_time - current_time_seconds;
+          int64_t updated_time_milliseconds = metadata->updated_time();
+          int64_t updated_time_seconds = updated_time_milliseconds / 1000;
+          int64_t time_difference_seconds =
+              updated_time_seconds - current_time_seconds;
           // As long as our timestamp is within a day, it's correct enough for
           // our purposes.
           const int64_t kAllowedTimeDifferenceSeconds = 60L * 60L * 24L;
-          if (time_difference > kAllowedTimeDifferenceSeconds ||
-              time_difference < -kAllowedTimeDifferenceSeconds) {
+          if (time_difference_seconds > kAllowedTimeDifferenceSeconds ||
+              time_difference_seconds < -kAllowedTimeDifferenceSeconds) {
             LogMessage("ERROR: Incorrect metadata.");
             LogMessage("  Timestamp: Got %lld, expected something near %lld",
-                       updated_time, current_time_seconds);
+                       updated_time_seconds, current_time_seconds);
           } else {
             LogMessage("SUCCESS: Read file successfully.");
           }
