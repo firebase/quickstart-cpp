@@ -28,16 +28,17 @@ using ::firebase::AppOptions;
 using ::firebase::Future;
 using ::firebase::FutureBase;
 using ::firebase::auth::Auth;
-using ::firebase::auth::Credential;
 using ::firebase::auth::AuthError;
-using ::firebase::auth::kAuthErrorNone;
-using ::firebase::auth::kAuthErrorFailure;
+using ::firebase::auth::Credential;
 using ::firebase::auth::EmailAuthProvider;
 using ::firebase::auth::FacebookAuthProvider;
 using ::firebase::auth::GitHubAuthProvider;
 using ::firebase::auth::GoogleAuthProvider;
+using ::firebase::auth::kAuthErrorFailure;
+using ::firebase::auth::kAuthErrorNone;
 using ::firebase::auth::OAuthProvider;
 using ::firebase::auth::PhoneAuthProvider;
+using ::firebase::auth::PlayGamesAuthProvider;
 using ::firebase::auth::TwitterAuthProvider;
 using ::firebase::auth::User;
 using ::firebase::auth::UserInfoInterface;
@@ -55,6 +56,7 @@ static const char kTestIdTokenBad[] = "bad id token for testing";
 static const char kTestAccessTokenBad[] = "bad access token for testing";
 static const char kTestPasswordUpdated[] = "testpasswordupdated";
 static const char kTestIdProviderIdBad[] = "bad provider id for testing";
+static const char kTestServerAuthCodeBad[] = "bad server auth code";
 
 static const int kWaitIntervalMs = 300;
 static const int kPhoneAuthCodeSendWaitMs = 600000;
@@ -113,7 +115,8 @@ static bool WaitForSignInFuture(Future<User*> sign_in_future, const char* fn,
       sign_in_user_ptr == nullptr ? nullptr : *sign_in_user_ptr;
   const User* auth_user = auth->current_user();
 
-  if (sign_in_user != auth_user) {
+  if (expected_error == ::firebase::auth::kAuthErrorNone &&
+      sign_in_user != auth_user) {
     LogMessage("ERROR: future's user (%x) and current_user (%x) don't match",
                static_cast<int>(reinterpret_cast<intptr_t>(sign_in_user)),
                static_cast<int>(reinterpret_cast<intptr_t>(auth_user)));
@@ -461,8 +464,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
                         kAuthErrorNone, auth);
     // Notified when the user is about to change and after the user has
     // changed.
-    counter.CompleteTest("SignInAnonymously()", 2, 4);
-    token_counter.CompleteTest("SignInAnonymously()", 2, 5);
+    counter.CompleteTest("SignInAnonymously()", 1, 4);
+    token_counter.CompleteTest("SignInAnonymously()", 1, 5);
 
     // Refresh the token.
     if (auth->current_user() != nullptr) {
@@ -485,6 +488,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
     auth->RemoveIdTokenListener(&token_counter);
   }
 
+  // Phone verification isn't currently implemented on desktop
+#if defined(__ANDROID__) || TARGET_OS_IPHONE
   // --- PhoneListener tests ---------------------------------------------------
   {
     UserLogin user_login(auth);  // Generate a random name/password
@@ -541,6 +546,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       }
     }
   }
+#endif  // defined(__ANDROID__) || TARGET_OS_IPHONE
 
   // --- Auth tests ------------------------------------------------------------
   {
@@ -705,6 +711,18 @@ extern "C" int common_main(int argc, const char* argv[]) {
             kAuthErrorFailure, auth);
       }
 
+      // Use bad Play Games credentials. Should fail.
+      {
+        Credential play_games_cred_bad =
+            PlayGamesAuthProvider::GetCredential(kTestServerAuthCodeBad);
+        Future<User*> play_games_bad =
+            auth->SignInWithCredential(play_games_cred_bad);
+        WaitForSignInFuture(
+            play_games_bad,
+            "Auth:SignInWithCredential() bad Play Games credentials",
+            kAuthErrorFailure, auth);
+      }
+
       // Use bad Twitter credentials. Should fail.
       {
         Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
@@ -723,7 +741,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
         WaitForSignInFuture(
             oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
-            kAuthErrorFailure, auth);
+            ::firebase::auth::kAuthErrorNoSuchProvider, auth);
       }
 
       // Test Auth::SendPasswordResetEmail().

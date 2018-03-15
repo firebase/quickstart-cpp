@@ -109,6 +109,9 @@ class ExpectValueListener : public firebase::database::ValueListener {
       const firebase::database::DataSnapshot& snapshot) override {
     if (snapshot.value().AsString() == wait_value_) {
       got_value_ = true;
+    } else {
+      LogMessage(
+          "FAILURE: ExpectValueListener did not receive the expected result.");
     }
   }
   void OnCancelled(const firebase::database::Error& error_code,
@@ -189,6 +192,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
   LogMessage("Successfully initialized Firebase Auth and Firebase Database.");
 
+  database->set_persistence_enabled(true);
+
   // Sign in using Auth before accessing the database.
   // The default Database permissions allow anonymous users access. This will
   // work as long as your project's Authentication permissions allow anonymous
@@ -226,6 +231,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   {
     const char* kSimpleString = "Some simple string";
     const int kSimpleInt = 2;
+    const int kSimplePriority = 100;
     const double kSimpleDouble = 3.4;
     const bool kSimpleBool = true;
 
@@ -243,22 +249,30 @@ extern "C" int common_main(int argc, const char* argv[]) {
           ref.Child("Simple")
               .Child("Timestamp")
               .SetValue(firebase::database::ServerTimestamp());
+      firebase::Future<void> f6 =
+          ref.Child("Simple")
+              .Child("IntAndPriority")
+              .SetValueAndPriority(kSimpleInt, kSimplePriority);
       WaitForCompletion(f1, "SetSimpleString");
       WaitForCompletion(f2, "SetSimpleInt");
       WaitForCompletion(f3, "SetSimpleDouble");
       WaitForCompletion(f4, "SetSimpleBool");
       WaitForCompletion(f5, "SetSimpleTimestamp");
+      WaitForCompletion(f6, "SetSimpleIntAndPriority");
       if (f1.error() != firebase::database::kErrorNone ||
           f2.error() != firebase::database::kErrorNone ||
           f3.error() != firebase::database::kErrorNone ||
           f4.error() != firebase::database::kErrorNone ||
-          f5.error() != firebase::database::kErrorNone) {
+          f5.error() != firebase::database::kErrorNone ||
+          f6.error() != firebase::database::kErrorNone) {
         LogMessage("ERROR: Set simple values failed.");
         LogMessage("  String: Error %d: %s", f1.error(), f1.error_message());
         LogMessage("  Int: Error %d: %s", f2.error(), f2.error_message());
         LogMessage("  Double: Error %d: %s", f3.error(), f3.error_message());
         LogMessage("  Bool: Error %d: %s", f4.error(), f4.error_message());
         LogMessage("  Timestamp: Error %d: %s", f5.error(), f5.error_message());
+        LogMessage("  Int and Priority: Error %d: %s", f6.error(),
+                   f6.error_message());
       } else {
         LogMessage("SUCCESS: Set simple values.");
       }
@@ -277,17 +291,21 @@ extern "C" int common_main(int argc, const char* argv[]) {
           ref.Child("Simple").Child("Bool").GetValue();
       firebase::Future<firebase::database::DataSnapshot> f5 =
           ref.Child("Simple").Child("Timestamp").GetValue();
+      firebase::Future<firebase::database::DataSnapshot> f6 =
+          ref.Child("Simple").Child("IntAndPriority").GetValue();
       WaitForCompletion(f1, "GetSimpleString");
       WaitForCompletion(f2, "GetSimpleInt");
       WaitForCompletion(f3, "GetSimpleDouble");
       WaitForCompletion(f4, "GetSimpleBool");
       WaitForCompletion(f5, "GetSimpleTimestamp");
+      WaitForCompletion(f6, "GetSimpleIntAndPriority");
 
       if (f1.error() == firebase::database::kErrorNone &&
           f2.error() == firebase::database::kErrorNone &&
           f3.error() == firebase::database::kErrorNone &&
           f4.error() == firebase::database::kErrorNone &&
-          f5.error() == firebase::database::kErrorNone) {
+          f5.error() == firebase::database::kErrorNone &&
+          f6.error() == firebase::database::kErrorNone) {
         // Get the current time to compare to the Timestamp.
         int64_t current_time_milliseconds =
             static_cast<int64_t>(time(nullptr)) * 1000L;
@@ -297,10 +315,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
         // purposes.
         const int64_t kAllowedTimeDifferenceMilliseconds =
             1000L * 60L * 60L * 24L;
+
         if (f1.result()->value().AsString() != kSimpleString ||
             f2.result()->value().AsInt64() != kSimpleInt ||
             f3.result()->value().AsDouble() != kSimpleDouble ||
             f4.result()->value().AsBool() != kSimpleBool ||
+            f6.result()->value().AsInt64() != kSimpleInt ||
+            f6.result()->priority().AsInt64() != kSimplePriority ||
             time_difference > kAllowedTimeDifferenceMilliseconds ||
             time_difference < -kAllowedTimeDifferenceMilliseconds) {
           LogMessage("ERROR: Get simple values failed, values did not match.");
@@ -318,6 +339,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
           LogMessage("  Timestamp: Got %lld, expected something near %lld",
                      f5.result()->value().AsInt64().int64_value(),
                      current_time_milliseconds);
+          LogMessage(
+              "  IntAndPriority: Got {.value:%lld,.priority:%lld}, expected "
+              "{.value:%d,.priority:%d}",
+              f6.result()->value().AsInt64().int64_value(),
+              f6.result()->priority().AsInt64().int64_value(), kSimpleInt,
+              kSimplePriority);
 
         } else {
           LogMessage("SUCCESS: Get simple values.");
@@ -343,6 +370,65 @@ extern "C" int common_main(int argc, const char* argv[]) {
       }
     }
   }
+
+#if defined(__ANDROID__) || TARGET_OS_IPHONE
+  // Actually shut down the realtime database, and restart it, to make sure
+  // that persistence persists across database object instances.
+  {
+    // Write a value that we can test for.
+    const char* kPersistenceString = "Persistence Test!";
+    WaitForCompletion(ref.Child("PersistenceTest").SetValue(kPersistenceString),
+                      "SetPersistenceTestValue");
+
+    LogMessage("Destroying database object.");
+    delete database;
+    LogMessage("Recreating database object.");
+    database = ::firebase::database::Database::GetInstance(app);
+
+    // Offline mode.  If persistence works, we should still be able to fetch
+    // our value even though we're offline.
+
+    database->GoOffline();
+    ref = database->GetReferenceFromUrl(saved_url.c_str());
+
+    {
+      LogMessage(
+          "TEST: Fetching the value while offline via AddValueListener.");
+      ExpectValueListener* listener =
+          new ExpectValueListener(kPersistenceString);
+      ref.Child("PersistenceTest").AddValueListener(listener);
+
+      while (!listener->got_value()) {
+        ProcessEvents(100);
+      }
+      delete listener;
+      listener = nullptr;
+    }
+
+    {
+      LogMessage("TEST: Fetching the value while offline via GetValue.");
+      firebase::Future<firebase::database::DataSnapshot> value_future =
+          ref.Child("PersistenceTest").GetValue();
+
+      WaitForCompletion(value_future, "GetValue");
+
+      const firebase::database::DataSnapshot& result = *value_future.result();
+
+      if (value_future.error() == firebase::database::kErrorNone) {
+        if (result.value().AsString() == kPersistenceString) {
+          LogMessage("SUCCESS: GetValue returned the correct value.");
+        } else {
+          LogMessage("FAILURE: GetValue returned an incorrect value.");
+        }
+      } else {
+        LogMessage("FAILURE: GetValue Future returned an error.");
+      }
+    }
+
+    LogMessage("Going back online.");
+    database->GoOnline();
+  }
+#endif  // defined(__ANDROID__) || TARGET_OS_IPHONE
 
   // Test running a transaction. This will call RunTransaction and set
   // some values, including incrementing the player's score.
@@ -910,8 +996,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
                future.error(), future.error_message());
   }
 
-  firebase::database::DataSnapshot test_snapshot = *future.result();
-  bool test_snapshot_was_valid = test_snapshot.is_valid();
+  bool test_snapshot_was_valid = false;
+  firebase::database::DataSnapshot *test_snapshot = nullptr;
+  if (future.error() == firebase::database::kErrorNone) {
+    // This is a little convoluted as it's not possible to construct an
+    // empty test snapshot so we copy the result and point at the copy.
+    static firebase::database::DataSnapshot copied_snapshot =  // NOLINT
+      *future.result();  // NOLINT
+    test_snapshot = &copied_snapshot;
+    test_snapshot_was_valid = test_snapshot->is_valid();
+  }
 
   LogMessage("Shutdown the Database library.");
   delete database;
@@ -924,8 +1018,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("ERROR: Reference is still valid after library shutdown.");
   }
 
-  if (test_snapshot_was_valid) {
-    if (!test_snapshot.is_valid()) {
+  if (test_snapshot_was_valid && test_snapshot) {
+    if (!test_snapshot->is_valid()) {
       LogMessage("SUCCESS: Snapshot was invalidated on library shutdown.");
     } else {
       LogMessage("ERROR: Snapshot is still valid after library shutdown.");

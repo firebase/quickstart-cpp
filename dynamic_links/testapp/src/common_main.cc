@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <assert.h>
+#include <string.h>
 
 #include "firebase/app.h"
 #include "firebase/dynamic_links.h"

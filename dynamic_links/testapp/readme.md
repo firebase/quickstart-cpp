@@ -17,16 +17,16 @@ Building and Running the testapp
   - Link your iOS app to the Firebase libraries.
     - Get CocoaPods version 1 or later by running,
         ```
-        $ sudo gem install cocoapods --pre
+        sudo gem install cocoapods --pre
         ```
     - From the testapp directory, install the CocoaPods listed in the Podfile
       by running,
         ```
-        $ pod install
+        pod install
         ```
     - Open the generated Xcode workspace (which now has the CocoaPods),
         ```
-        $ open testapp.xcworkspace
+        open testapp.xcworkspace
         ```
     - For further details please refer to the
       [general instructions for setting up an iOS app with Firebase](https://firebase.google.com/docs/ios/setup).
@@ -117,7 +117,7 @@ Building and Running the testapp
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
       ```
-      > echo "systemProp.firebase\_cpp\_sdk.dir=/User/$USER/firebase\_cpp\_sdk" >> gradle.properties
+      echo "systemProp.firebase\_cpp\_sdk.dir=/User/$USER/firebase\_cpp\_sdk" >> gradle.properties
       ```
   - Ensure the Android SDK and NDK locations are set in Android Studio.
     - From the Android Studio launch menu, go to `File/Project Structure...` or
@@ -138,6 +138,50 @@ Building and Running the testapp
     - A dynamically generated short link.
   - Leaving the application and opening a link (e.g via an email) for the app
     should reopen the app and display the dynamic link.
+
+### Desktop
+  - Register your app with Firebase.
+    - Create a new app on the [Firebase console](https://firebase.google.com/console/),
+      following the above instructions for Android or iOS.
+    - If you have an Android project, add the `google-services.json` file that
+      you downloaded from the Firebase console to the root directory of the
+      testapp.
+    - If you have an iOS project, and don't wish to use an Android project,
+      you can use the Python script `generate_xml_from_google_services_json.py --plist`,
+      located in the Firebase C++ SDK, to convert your `GoogleService-Info.plist`
+      file into a `google-services-desktop.json` file, which can then be
+      placed in the root directory of the testapp.
+  - Download the Firebase C++ SDK linked from
+    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
+    directory of your choice.
+  - Configure the testapp with the location of the Firebase C++ SDK.
+    This can be done a couple different ways (in highest to lowest priority):
+    - When invoking cmake, pass in the location with
+      -DFIREBASE_CPP_SDK_DIR=/path/to/firebase_cpp_sdk.
+    - Set an environment variable for FIREBASE_CPP_SDK_DIR to the path to use.
+    - Edit the CMakeLists.txt file, changing the FIREBASE_CPP_SDK_DIR path
+      to the appropriate location.
+  - From the testapp directory, generate the build files by running,
+      ```
+      cmake .
+      ```
+    If you want to use XCode, you can use -G"Xcode" to generate the project.
+    Similarly, to use Visual Studio, -G"Visual Studio 15 2017". For more
+    information, see
+    [CMake generators](https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html).
+  - Build the testapp, by either opening the generated project file based on
+    the platform, or running,
+      ```
+      cmake --build .
+      ```
+  - Execute the testapp by running,
+      ```
+      ./desktop_testapp
+      ```
+    Note that the executable might be under another directory, such as Debug.
+  - The testapp has no user interface, but the output can be viewed via the
+    console. Note that Dynamic Links uses a stubbed implementation on desktop,
+    so functionality is not expected.
 
 Support
 -------

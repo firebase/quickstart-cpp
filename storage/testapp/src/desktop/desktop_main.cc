@@ -15,15 +15,34 @@
 #include <signal.h>
 #include <stdarg.h>
 #include <stdio.h>
-#ifndef _WIN32
+
+#ifdef _WIN32
+#include <direct.h>
+#define chdir _chdir
+#else
 #include <unistd.h>
-#endif  // !_WIN32
+#endif  // _WIN32
 
 #ifdef _WIN32
 #include <windows.h>
 #endif  // _WIN32
 
+#include <algorithm>
+#include <string>
+
 #include "main.h"  // NOLINT
+
+// The TO_STRING macro is useful for command line defined strings as the quotes
+// get stripped.
+#define TO_STRING_EXPAND(X) #X
+#define TO_STRING(X) TO_STRING_EXPAND(X)
+
+// Path to the Firebase config file to load.
+#ifdef FIREBASE_CONFIG
+#define FIREBASE_CONFIG_STRING TO_STRING(FIREBASE_CONFIG)
+#else
+#define FIREBASE_CONFIG_STRING ""
+#endif  // FIREBASE_CONFIG
 
 extern "C" int common_main(int argc, const char* argv[]);
 
@@ -65,7 +84,22 @@ void LogMessage(const char* format, ...) {
 
 WindowContext GetWindowContext() { return nullptr; }
 
+// Change the current working directory to the directory containing the
+// specified file.
+void ChangeToFileDirectory(const char* file_path) {
+  std::string path(file_path);
+  std::replace(path.begin(), path.end(), '\\', '/');
+  auto slash = path.rfind('/');
+  if (slash != std::string::npos) {
+    std::string directory = path.substr(0, slash);
+    if (!directory.empty()) chdir(directory.c_str());
+  }
+}
+
 int main(int argc, const char* argv[]) {
+  ChangeToFileDirectory(
+      FIREBASE_CONFIG_STRING[0] != '\0' ?
+        FIREBASE_CONFIG_STRING : argv[0]);  // NOLINT
 #ifdef _WIN32
   SetConsoleCtrlHandler((PHANDLER_ROUTINE)SignalHandler, TRUE);
 #else

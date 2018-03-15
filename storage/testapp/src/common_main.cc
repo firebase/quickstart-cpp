@@ -42,12 +42,13 @@ class StorageListener : public firebase::storage::Listener {
 
   // Tracks whether OnPaused was ever called
   void OnPaused(firebase::storage::Controller* controller) override {
-    (void)controller;
+    LogMessage("Paused");
     on_paused_was_called_ = true;
   }
 
   void OnProgress(firebase::storage::Controller* controller) override {
-    (void)controller;
+    LogMessage("Transferred %lld of %lld", controller->bytes_transferred(),
+               controller->total_byte_count());
     on_progress_was_called_ = true;
   }
 
@@ -105,9 +106,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage("Attempt to initialize Cloud Storage.");
         void** targets = reinterpret_cast<void**>(data);
         ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::storage::Storage**>(targets[1]) =
-            ::firebase::storage::Storage::GetInstance(app, kStorageUrl,
-                                                      &result);
+        firebase::storage::Storage* storage =
+            firebase::storage::Storage::GetInstance(app, kStorageUrl, &result);
+        *reinterpret_cast<::firebase::storage::Storage**>(targets[1]) = storage;
+        LogMessage("Initialized storage with URL %s, %s",
+                   kStorageUrl ? kStorageUrl : "(null)",
+                   storage->url().c_str());
         return result;
       }};
 
@@ -161,7 +165,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   firebase::storage::Metadata test_metadata;
 
-  LogMessage("Storage URL: gs://%s/%s", ref.bucket().c_str(),
+  LogMessage("Storage URL: gs://%s%s", ref.bucket().c_str(),
              ref.full_path().c_str());
 
   // Read and write from memory. This will save a small file and then read it
@@ -307,11 +311,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForCompletion(future, "Read File");
 
         FILE* file = fopen(path.c_str(), "r");
-        std::fread(buffer, 1, kBufferSize, file);
-        fclose(file);
+        if (file != nullptr) {
+          std::fread(buffer, 1, kBufferSize, file);
+          fclose(file);
+        }
 
-        // Check if the file contents is correct.
-        if (future.error() == firebase::storage::kErrorNone) {
+        // Check if the file contents are correct.
+        if (file != nullptr &&
+            future.error() == firebase::storage::kErrorNone) {
           if (*future.result() != kSimpleTestFile.size()) {
             LogMessage(
                 "ERROR: Read file failed, read incorrect number of bytes (read "
@@ -360,37 +367,42 @@ extern "C" int common_main(int argc, const char* argv[]) {
           LogMessage("ERROR: Read file failed.");
         }
         // Check custom metadata field to make sure it is empty.
-        auto custom_metadata = metadata->custom_metadata();
-        if (!custom_metadata->empty()) {
+        auto custom_metadata = metadata ? metadata->custom_metadata() : nullptr;
+        if (custom_metadata && !custom_metadata->empty()) {
           LogMessage("ERROR: Metadata reports incorrect custom metadata.");
         } else {
           LogMessage("SUCCESS: Metadata reports correct custom metadata.");
         }
 
-        // Add some values to custom metadata, update and then compare.
-        custom_metadata->insert(std::make_pair("Key", "Value"));
-        custom_metadata->insert(std::make_pair("Foo", "Bar"));
-        firebase::Future<firebase::storage::Metadata> custom_metadata_future =
-            ref.Child("TestFile").Child("File1.txt").UpdateMetadata(*metadata);
-        WaitForCompletion(custom_metadata_future, "UpdateMetadata");
-        if (future.error() != firebase::storage::kErrorNone) {
-          LogMessage("ERROR: UpdateMetadata failed.");
-          LogMessage("  File1.txt: Error %d: %s", future.error(),
-                     future.error_message());
-        } else {
-          LogMessage("SUCCESS: Updated Metadata.");
-          const firebase::storage::Metadata* new_metadata =
-              custom_metadata_future.result();
-          auto new_custom_metadata = new_metadata->custom_metadata();
-          auto pair1 = new_custom_metadata->find("Key");
-          auto pair2 = new_custom_metadata->find("Foo");
-          if (pair1 == new_custom_metadata->end() || pair1->second != "Value" ||
-              pair2 == new_custom_metadata->end() || pair2->second != "Bar") {
-            LogMessage(
-                "ERROR: New metadata reports incorrect custom metadata.");
+        if (custom_metadata) {
+          // Add some values to custom metadata, update and then compare.
+          custom_metadata->insert(std::make_pair("Key", "Value"));
+          custom_metadata->insert(std::make_pair("Foo", "Bar"));
+          firebase::Future<firebase::storage::Metadata> custom_metadata_future =
+              ref.Child("TestFile")
+                  .Child("File1.txt")
+                  .UpdateMetadata(*metadata);
+          WaitForCompletion(custom_metadata_future, "UpdateMetadata");
+          if (future.error() != firebase::storage::kErrorNone) {
+            LogMessage("ERROR: UpdateMetadata failed.");
+            LogMessage("  File1.txt: Error %d: %s", future.error(),
+                       future.error_message());
           } else {
-            LogMessage(
-                "SUCCESS: New metadata reports correct custom metadata.");
+            LogMessage("SUCCESS: Updated Metadata.");
+            const firebase::storage::Metadata* new_metadata =
+                custom_metadata_future.result();
+            auto new_custom_metadata = new_metadata->custom_metadata();
+            auto pair1 = new_custom_metadata->find("Key");
+            auto pair2 = new_custom_metadata->find("Foo");
+            if (pair1 == new_custom_metadata->end() ||
+                pair1->second != "Value" ||
+                pair2 == new_custom_metadata->end() || pair2->second != "Bar") {
+              LogMessage(
+                  "ERROR: New metadata reports incorrect custom metadata.");
+            } else {
+              LogMessage(
+                  "SUCCESS: New metadata reports correct custom metadata.");
+            }
           }
         }
       }

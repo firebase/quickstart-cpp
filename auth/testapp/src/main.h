@@ -21,10 +21,11 @@
 #include <android/native_activity.h>
 #include <jni.h>
 #elif defined(__APPLE__)
+#include <TargetConditionals.h>
 extern "C" {
 #include <objc/objc.h>
 }  // extern "C"
-#endif  // __ANDROID__
+#endif  // __ANDROID__, __APPLE__
 
 // Defined using -DANDROID_MAIN_APP_NAME=some_app_name when compiling this
 // file.
@@ -44,7 +45,7 @@ bool ProcessEvents(int msec);
 // (and usage) vary based on the OS.
 #if defined(__ANDROID__)
 typedef jobject WindowContext;  // A jobject to the Java Activity.
-#elif defined(__APPLE__)
+#elif TARGET_OS_IPHONE
 typedef id WindowContext;  // A pointer to an iOS UIView.
 #else
 typedef void* WindowContext;  // A void* for any other environments.
