@@ -679,17 +679,20 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   // Test a ValueListener, which sits on a Query and listens for changes in
-  // the
-  // value at that location.
+  // the value at that location.
   {
     LogMessage("TEST: ValueListener");
     SampleValueListener* listener = new SampleValueListener();
-    // Set a value before attaching the listener. The listener should not
-    // receive this value.
     WaitForCompletion(ref.Child("ValueListener").SetValue(0), "SetValueZero");
     // Attach the listener, then set 3 values, which will trigger the
     // listener.
     ref.Child("ValueListener").AddValueListener(listener);
+
+    // The listener's OnChanged callback is triggered once when the listener is
+    // attached and again every time the data, including children, changes.
+    // Wait for here for a moment for the initial values to be received.
+    ProcessEvents(2000);
+
     WaitForCompletion(ref.Child("ValueListener").SetValue(1), "SetValueOne");
     WaitForCompletion(ref.Child("ValueListener").SetValue(2), "SetValueTwo");
     WaitForCompletion(ref.Child("ValueListener").SetValue(3), "SetValueThree");
@@ -708,10 +711,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
     // Wait a few more seconds to ensure the listener is not triggered.
     ProcessEvents(2000);
 
-    // Ensure that the listener was only triggered 3 times, with the values
-    // 1, 2, and 3.
-    if (listener->num_seen_values() == 3 && listener->seen_value(1) &&
-        listener->seen_value(2) && listener->seen_value(3)) {
+    // Ensure that the listener was only triggered 4 times, with the values
+    // 0 (the initial value), 1, 2, and 3.
+    if (listener->num_seen_values() == 4 && listener->seen_value(0) &&
+        listener->seen_value(1) && listener->seen_value(2) &&
+        listener->seen_value(3)) {
       LogMessage("SUCCESS: ValueListener got all values.");
     } else {
       LogMessage("ERROR: ValueListener did not get all values.");
@@ -719,7 +723,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
     delete listener;
   }
-
   // Test a ChildListener, which sits on a Query and listens for changes in
   // the child hierarchy at the location.
   {
@@ -732,6 +735,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
     entity_list.OrderByChild("entity_type")
         .EqualTo("enemy")
         .AddChildListener(listener);
+
+    // The listener's OnChanged callback is triggered once when the listener is
+    // attached and again every time the data, including children, changes.
+    // Wait for here for a moment for the initial values to be received.
+    ProcessEvents(2000);
 
     std::map<std::string, std::string> params;
     params["entity_name"] = "cobra";
@@ -829,7 +837,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
           "ERROR: OnChildAdded(7) was called an incorrect number of times.");
       failed = true;
     }
-    if (listener->num_events("removed 4") != 1) {
+    if (listener->num_events("changed 4") != 1) {
       LogMessage(
           "ERROR: OnChildRemoved(4) was called an incorrect number of "
           "times.");
@@ -847,7 +855,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
           "times.");
       failed = true;
     }
-    if (listener->total_events() != 9) {
+    if (listener->total_events() != 13) {
       LogMessage("ERROR: ChildListener got an incorrect number of events.");
       failed = true;
     }
@@ -997,12 +1005,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   bool test_snapshot_was_valid = false;
-  firebase::database::DataSnapshot *test_snapshot = nullptr;
+  firebase::database::DataSnapshot* test_snapshot = nullptr;
   if (future.error() == firebase::database::kErrorNone) {
     // This is a little convoluted as it's not possible to construct an
     // empty test snapshot so we copy the result and point at the copy.
     static firebase::database::DataSnapshot copied_snapshot =  // NOLINT
-      *future.result();  // NOLINT
+        *future.result();                                      // NOLINT
     test_snapshot = &copied_snapshot;
     test_snapshot_was_valid = test_snapshot->is_valid();
   }
