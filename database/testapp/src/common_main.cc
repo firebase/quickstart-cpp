@@ -837,7 +837,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
           "ERROR: OnChildAdded(7) was called an incorrect number of times.");
       failed = true;
     }
-    if (listener->num_events("changed 4") != 1) {
+    if (listener->num_events("removed 4") != 1) {
       LogMessage(
           "ERROR: OnChildRemoved(4) was called an incorrect number of "
           "times.");
@@ -855,7 +855,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
           "times.");
       failed = true;
     }
-    if (listener->total_events() != 13) {
+    if (listener->total_events() != 9) {
       LogMessage("ERROR: ChildListener got an incorrect number of events.");
       failed = true;
     }

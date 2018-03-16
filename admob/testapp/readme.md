@@ -57,8 +57,7 @@ Getting Started
   - In Xcode, build & run the sample on an iOS device or simulator.
   - The testapp displays a banner ad and an interstitial ad. You can dismiss
     the interstitial ad to see the banner ad.
-  - Afterwards, the testapp will display a Native Express test ad and a
-    Rewarded Video test ad.
+  - Afterwards, the testapp will display a Rewarded Video test ad.
   - The output of the app can be viewed onscreen or via the console. To view
     the console in Xcode, select "View --> Debug Area --> Activate Console"
     from the menu.
@@ -111,8 +110,7 @@ Getting Started
     a test interstitial.
   - Tapping on an ad to verify the clickthrough process is possible, and the
     interstitial will wait to be closed by the user.
-  - Afterwards, the testapp will display a Native Express test ad and a
-    Rewarded Video test ad.
+  - Afterwards, the testapp will display a Rewarded Video test ad.
   - While this is happening, information from the device log will be written
     to an onscreen TextView.
     - Logcat can also be used as normal.

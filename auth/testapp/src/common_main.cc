@@ -711,7 +711,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
             kAuthErrorFailure, auth);
       }
 
-      // Use bad Play Games credentials. Should fail.
+#if defined(__ANDROID__)
+      // Use bad Play Games (Android-only) credentials. Should fail.
       {
         Credential play_games_cred_bad =
             PlayGamesAuthProvider::GetCredential(kTestServerAuthCodeBad);
@@ -722,6 +723,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             "Auth:SignInWithCredential() bad Play Games credentials",
             kAuthErrorFailure, auth);
       }
+#endif  // defined(__ANDROID__)
 
       // Use bad Twitter credentials. Should fail.
       {

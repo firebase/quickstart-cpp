@@ -15,7 +15,6 @@
 #include "firebase/admob.h"
 #include "firebase/admob/banner_view.h"
 #include "firebase/admob/interstitial_ad.h"
-#include "firebase/admob/native_express_ad_view.h"
 #include "firebase/admob/rewarded_video.h"
 #include "firebase/admob/types.h"
 #include "firebase/app.h"
@@ -54,27 +53,6 @@ class LoggingInterstitialAdListener
   }
 };
 
-// A simple listener that logs changes to a NativeExpressAdView.
-class LoggingNativeExpressAdViewListener
-    : public firebase::admob::NativeExpressAdView::Listener {
- public:
-  LoggingNativeExpressAdViewListener() {}
-  void OnPresentationStateChanged(
-      firebase::admob::NativeExpressAdView* native_express_ad_view,
-      firebase::admob::NativeExpressAdView::PresentationState state) override {
-    ::LogMessage("NativeExpressAdView PresentationState has changed to %d.",
-                 state);
-  }
-  void OnBoundingBoxChanged(
-      firebase::admob::NativeExpressAdView* native_express_ad_view,
-      firebase::admob::BoundingBox box) override {
-    ::LogMessage(
-        "NativeExpressAdView BoundingBox has changed to (x: %d, y: %d, width: "
-        "%d, height %d).",
-        box.x, box.y, box.width, box.height);
-  }
-};
-
 // A simple listener that logs changes to rewarded video state.
 class LoggingRewardedVideoListener
     : public firebase::admob::rewarded_video::Listener {
@@ -102,22 +80,16 @@ const char* kAdMobAppID = "ca-app-pub-3940256099942544~1458002511";
 #if defined(__ANDROID__)
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/6300978111";
 const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/1033173712";
-const char* kNativeExpressAdUnit = "ca-app-pub-3940256099942544/1072772517";
 const char* kRewardedVideoAdUnit = "ca-app-pub-3940256099942544/2888167318";
 #else
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/2934735716";
 const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/4411468910";
-const char* kNativeExpressAdUnit = "ca-app-pub-3940256099942544/2562852117";
 const char* kRewardedVideoAdUnit = "ca-app-pub-3940256099942544/6386090517";
 #endif
 
 // Standard mobile banner size is 320x50.
 static const int kBannerWidth = 320;
 static const int kBannerHeight = 50;
-
-// The native express ad's width and height.
-static const int kNativeExpressAdWidth = 320;
-static const int kNativeExpressAdHeight = 220;
 
 // Sample keywords to use in making the request.
 static const char* kKeywords[] = {"AdMob", "C++", "Fun"};
@@ -329,110 +301,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
     ProcessEvents(1000);
   }
 
-  // Create an ad size for the NativeExpressAdView.
-  firebase::admob::AdSize native_express_ad_size;
-  native_express_ad_size.ad_size_type = firebase::admob::kAdSizeStandard;
-  native_express_ad_size.width = kNativeExpressAdWidth;
-  native_express_ad_size.height = kNativeExpressAdHeight;
-
-  LogMessage("Creating the NativeExpressAdView.");
-  firebase::admob::NativeExpressAdView* native_express_ad =
-      new firebase::admob::NativeExpressAdView();
-  native_express_ad->Initialize(GetWindowContext(), kNativeExpressAdUnit,
-                                native_express_ad_size);
-
-  WaitForFutureCompletion(native_express_ad->InitializeLastResult());
-
-  // Set the listener.
-  LoggingNativeExpressAdViewListener native_express_ad_listener;
-  native_express_ad->SetListener(&native_express_ad_listener);
-
-  // Load the native express ad.
-  LogMessage("Loading a native express ad.");
-  native_express_ad->LoadAd(request);
-
-  WaitForFutureCompletion(native_express_ad->LoadAdLastResult());
-
-  // Make the NativeExpressAdView visible.
-  LogMessage("Showing the native express ad.");
-  native_express_ad->Show();
-
-  WaitForFutureCompletion(native_express_ad->ShowLastResult());
-
-  // Move to each of the six pre-defined positions.
-  LogMessage("Moving the native express ad to top-center.");
-  native_express_ad->MoveTo(firebase::admob::NativeExpressAdView::kPositionTop);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  LogMessage("Moving the native express ad to top-left.");
-  native_express_ad->MoveTo(
-      firebase::admob::NativeExpressAdView::kPositionTopLeft);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  LogMessage("Moving the native express ad to top-right.");
-  native_express_ad->MoveTo(
-      firebase::admob::NativeExpressAdView::kPositionTopRight);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  LogMessage("Moving the native express ad to bottom-center.");
-  native_express_ad->MoveTo(
-      firebase::admob::NativeExpressAdView::kPositionBottom);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  LogMessage("Moving the native express ad to bottom-left.");
-  native_express_ad->MoveTo(
-      firebase::admob::NativeExpressAdView::kPositionBottomLeft);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  LogMessage("Moving the native express ad to bottom-right.");
-  native_express_ad->MoveTo(
-      firebase::admob::NativeExpressAdView::kPositionBottomRight);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  // Try some coordinate moves.
-  LogMessage("Moving the native express ad to (100, 300).");
-  native_express_ad->MoveTo(100, 300);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  LogMessage("Moving the native express ad to (100, 400).");
-  native_express_ad->MoveTo(100, 400);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  // Try hiding and showing the NativeExpressAdView.
-  LogMessage("Hiding the native express ad.");
-  native_express_ad->Hide();
-
-  WaitForFutureCompletion(native_express_ad->HideLastResult());
-
-  LogMessage("Showing the native express ad.");
-  native_express_ad->Show();
-
-  WaitForFutureCompletion(native_express_ad->ShowLastResult());
-
-  // A few last moves after showing it again.
-  LogMessage("Moving the native express ad to (100, 300).");
-  native_express_ad->MoveTo(100, 300);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  LogMessage("Moving the native express ad to (100, 400).");
-  native_express_ad->MoveTo(100, 400);
-
-  WaitForFutureCompletion(native_express_ad->MoveToLastResult());
-
-  LogMessage("Hiding the native express ad now that we're done with it.");
-  native_express_ad->Hide();
-
-  WaitForFutureCompletion(native_express_ad->HideLastResult());
-
   // Start up rewarded video ads and associated mediation adapters.
   LogMessage("Initializing rewarded video.");
   namespace rewarded_video = firebase::admob::rewarded_video;
@@ -479,7 +347,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   delete banner;
   delete interstitial;
-  delete native_express_ad;
   rewarded_video::Destroy();
   firebase::admob::Terminate();
   delete app;
