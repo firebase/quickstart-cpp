@@ -424,21 +424,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
           LogMessage("  %s", download_url->c_str());
         }
       }
-      {
-        firebase::Future<firebase::storage::Metadata> future =
-            ref.Child("TestFile").Child("File1.txt").GetMetadata();
-        WaitForCompletion(future, "GetFileMetadataForDownloadUrl");
-        if (future.error() == firebase::storage::kErrorNone) {
-          if (future.result()->download_url() != nullptr) {
-            LogMessage("SUCCESS: Got URL in metadata: %s",
-                       future.result()->download_url());
-          } else {
-            LogMessage("ERROR: No download URL listed in metadata.");
-          }
-        } else {
-          LogMessage("ERROR: Couldn't read metadata to check download URL.");
-        }
-      }
 
       // Try removing the file.
       {
