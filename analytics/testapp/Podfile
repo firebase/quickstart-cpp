@@ -2,5 +2,6 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Analytics test application.
 target 'testapp' do
-  pod 'Firebase/Analytics'
+  pod 'Firebase/Core', '4.13.0'
+  pod 'Firebase/Analytics', '4.13.0'
 end

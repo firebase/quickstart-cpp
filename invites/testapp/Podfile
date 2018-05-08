@@ -2,5 +2,6 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Invites test application.
 target 'testapp' do
-  pod 'Firebase/Invites'
+  pod 'Firebase/Core', '4.13.0'
+  pod 'Firebase/Invites', '4.13.0'
 end
