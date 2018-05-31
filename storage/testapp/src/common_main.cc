@@ -40,10 +40,14 @@ class StorageListener : public firebase::storage::Listener {
   StorageListener()
       : on_paused_was_called_(false), on_progress_was_called_(false) {}
 
-  // Tracks whether OnPaused was ever called
+  // Tracks whether OnPaused was ever called and resumes the transfer.
   void OnPaused(firebase::storage::Controller* controller) override {
     LogMessage("Paused");
     on_paused_was_called_ = true;
+    LogMessage("INFO: Resuming.");
+    if (!controller->Resume()) {
+      LogMessage("ERROR: Resume() failed.");
+    }
   }
 
   void OnProgress(firebase::storage::Controller* controller) override {
@@ -491,16 +495,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       // effect immediately, so we give it a few moments to pause before
       // failing.
       LogMessage("INFO: Pausing.");
-      if (controller.Pause()) {
-        ProcessEvents(5000);
-        if (!listener.on_paused_was_called()) {
-          LogMessage("ERROR: Listener OnPaused callback was not called.");
-        }
-        LogMessage("INFO: Resuming.");
-        if (!controller.Resume()) {
-          LogMessage("ERROR: Resume() failed.");
-        }
-      } else {
+      if (!controller.Pause()) {
         LogMessage("ERROR: Pause() failed.");
       }
 
