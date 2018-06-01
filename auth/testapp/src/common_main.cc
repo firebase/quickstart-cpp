@@ -514,7 +514,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
       wait_ms += kWaitIntervalMs;
       LogMessage(".");
     }
-    if (wait_ms > kPhoneAuthCodeSendWaitMs) {
+    if (wait_ms > kPhoneAuthCodeSendWaitMs ||
+        listener.num_calls_on_verification_failed()) {
       LogMessage("ERROR: SMS with verification code not sent.");
     } else {
       LogMessage("SMS verification code sent.");
@@ -743,7 +744,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
         WaitForSignInFuture(
             oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
-            ::firebase::auth::kAuthErrorNoSuchProvider, auth);
+            ::firebase::auth::kAuthErrorFailure, auth);
       }
 
       // Test Auth::SendPasswordResetEmail().

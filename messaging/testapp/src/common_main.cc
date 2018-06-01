@@ -40,7 +40,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage("Try to initialize Firebase Messaging");
         ::firebase::messaging::PollableListener* listener =
             static_cast<::firebase::messaging::PollableListener*>(userdata);
-        return ::firebase::messaging::Initialize(*app, listener);
+        firebase::messaging::MessagingOptions options;
+        // Prevent the app from requesting permission to show notifications
+        // immediately upon starting up. Since it the prompt is being
+        // suppressed, we must manually display it with a call to
+        // RequestPermission() elsewhere.
+        options.suppress_notification_permission_prompt = true;
+
+        return ::firebase::messaging::Initialize(*app, listener, options);
       });
 
   while (initializer.InitializeLastResult().status() !=
@@ -56,6 +63,22 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   LogMessage("Initialized Firebase Cloud Messaging.");
 
+  // This will display the prompt to request permission to receive notifications
+  // if the prompt has not already been displayed before. (If the user already
+  // responded to the prompt, their decision is cached by the OS and can be
+  // changed in the OS settings).
+  ::firebase::Future<void> result = ::firebase::messaging::RequestPermission();
+  LogMessage("Display permission prompt if necessary.");
+  while (result.status() == ::firebase::kFutureStatusPending) {
+    ProcessEvents(100);
+  }
+  if (result.error() ==
+      ::firebase::messaging::kErrorFailedToRegisterForRemoteNotifications) {
+    LogMessage("Error registering for remote notifications.");
+  } else {
+    LogMessage("Finished checking for permission.");
+  }
+
   ::firebase::messaging::Subscribe("TestTopic");
   LogMessage("Subscribed to TestTopic");
 
@@ -63,12 +86,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
   while (!done) {
     std::string token;
     if (listener.PollRegistrationToken(&token)) {
-      LogMessage("Recieved Registration Token: %s", token.c_str());
+      LogMessage("Received Registration Token: %s", token.c_str());
     }
 
     ::firebase::messaging::Message message;
     while (listener.PollMessage(&message)) {
-      LogMessage("Recieved a new message");
+      LogMessage("Received a new message");
       LogMessage("This message was %s by the user",
                  message.notification_opened ? "opened" : "not opened");
       if (!message.from.empty()) LogMessage("from: %s", message.from.c_str());
