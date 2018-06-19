@@ -209,6 +209,80 @@ extern "C" int common_main(int argc, const char* argv[]) {
     }
 
     {
+      LogMessage("TEST: Write a sample file from byte buffer with metadata.");
+      std::string content_type = "text/plain";
+      firebase::storage::Metadata metadata;
+      metadata.set_content_type(content_type.c_str());
+      firebase::Future<firebase::storage::Metadata> future =
+          ref.Child("TestFile")
+              .Child("File1-Metadata.txt")
+              .PutBytes(&kSimpleTestFile[0], kSimpleTestFile.size(), metadata);
+      WaitForCompletion(future, "Write Bytes");
+      if (future.error() != firebase::storage::kErrorNone) {
+        LogMessage("ERROR: Write sample file failed.");
+        LogMessage("  File1-Metadata.txt: Error %d: %s", future.error(),
+                   future.error_message());
+      } else {
+        LogMessage("SUCCESS: Wrote file with PutBytes.");
+        auto metadata = future.result();
+        if (metadata->size_bytes() == kSimpleTestFile.size()) {
+          LogMessage("SUCCESS: Metadata reports correct size.");
+        } else {
+          LogMessage("ERROR: Metadata reports incorrect size.");
+          LogMessage("  Got %i bytes, expected %i bytes.",
+                     metadata->size_bytes(), kSimpleTestFile.size());
+        }
+        if (std::string(metadata->content_type()) == content_type) {
+          LogMessage("SUCCESS: Metadata reports correct content type.");
+        } else {
+          LogMessage("ERROR: Metadata reports incorrect content type.");
+          LogMessage("  Got %s, expected %s.", metadata->content_type(),
+                     content_type.c_str());
+        }
+      }
+    }
+
+    {
+      LogMessage(
+          "TEST: Write a sample file from byte buffer with custom "
+          "metadata.");
+      std::string custom_metadata_key = "special/key";
+      std::string custom_metadata_value = "secret value";
+      firebase::storage::Metadata metadata;
+      (*metadata.custom_metadata())[custom_metadata_key] =
+          custom_metadata_value;
+      firebase::Future<firebase::storage::Metadata> future =
+          ref.Child("TestFile")
+              .Child("File1-Custom-Metadata.txt")
+              .PutBytes(&kSimpleTestFile[0], kSimpleTestFile.size(), metadata);
+      WaitForCompletion(future, "Write Bytes");
+      if (future.error() != firebase::storage::kErrorNone) {
+        LogMessage("ERROR: Write sample file failed.");
+        LogMessage("  File1-Custom-Metadata.txt: Error %d: %s", future.error(),
+                   future.error_message());
+      } else {
+        LogMessage("SUCCESS: Wrote file with PutBytes.");
+        auto metadata = future.result();
+        if (metadata->size_bytes() == kSimpleTestFile.size()) {
+          LogMessage("SUCCESS: Metadata reports correct size.");
+        } else {
+          LogMessage("ERROR: Metadata reports incorrect size.");
+          LogMessage("  Got %i bytes, expected %i bytes.",
+                     metadata->size_bytes(), kSimpleTestFile.size());
+        }
+        auto& custom_metadata = *metadata->custom_metadata();
+        if (custom_metadata[custom_metadata_key] == custom_metadata_value) {
+          LogMessage("SUCCESS: Metadata reports correct custom metadata.");
+        } else {
+          LogMessage("ERROR: Metadata reports incorrect custom metadata.");
+          LogMessage("  Got %s, expected %s.",
+                     custom_metadata[custom_metadata_key].c_str(),
+                     custom_metadata_value.c_str());
+        }
+      }
+    }
+
+    {
       LogMessage("TEST: Write a sample file from local file.");
 
       // Write file that we're going to upload.

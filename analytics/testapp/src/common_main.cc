@@ -40,10 +40,24 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   LogMessage("Enabling data collection.");
   analytics::SetAnalyticsCollectionEnabled(true);
-  // App needs to be open at least 1s before logging a valid session.
-  analytics::SetMinimumSessionDuration(1000);
-  // App session times out after 5s.
-  analytics::SetSessionTimeoutDuration(5000);
+  // App needs to be open at least 10s before logging a valid session.
+  analytics::SetMinimumSessionDuration(1000 * 10);
+  // App session times out after 30 minutes.
+  // If the app is placed in the background and returns to the foreground after
+  // the timeout is expired analytics will log a new session.
+  analytics::SetSessionTimeoutDuration(1000 * 60 * 30);
+
+  LogMessage("Get App Instance ID...");
+  auto future_result = analytics::GetAnalyticsInstanceId();
+  while (future_result.status() == firebase::kFutureStatusPending) {
+    if (ProcessEvents(1000)) break;
+  }
+  if (future_result.status() == firebase::kFutureStatusComplete) {
+    LogMessage("Analytics Instance ID %s", future_result.result()->c_str());
+  } else {
+    LogMessage("ERROR: Failed to fetch Analytics Instance ID %s (%d)",
+               future_result.error_message(), future_result.error());
+  }
 
   LogMessage("Set user properties.");
   // Set the user's sign up method.

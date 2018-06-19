@@ -6,7 +6,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.1.0'
+    classpath 'com.android.tools.build:gradle:3.0.1'
     classpath 'com.google.gms:google-services:4.0.1'
   }
 }
@@ -73,7 +73,7 @@ android {
     }
 
     defaultConfig {
-        applicationId 'com.google.android.dynamiclinks.testapp'
+        applicationId 'com.google.firebase.cpp.functions.testapp'
         minSdkVersion 14
         targetSdkVersion 26
         versionCode 1
@@ -84,16 +84,17 @@ android {
             minifyEnabled true
             proguardFile getDefaultProguardFile('proguard-android.txt')
             proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/app.pro")
-            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/dynamic_links.pro")
+            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/auth.pro")
+            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/functions.pro")
             proguardFile file('proguard.pro')
       }
     }
 }
 
 dependencies {
-  compile 'com.google.firebase:firebase-core:16.0.1'
-  compile 'com.google.firebase:firebase-invites:16.0.0'
-  compile 'com.google.firebase:firebase-common:16.0.0'
+    compile 'com.google.firebase:firebase-core:16.0.1'
+    compile 'com.google.firebase:firebase-auth:16.0.2'
+    compile 'com.google.firebase:firebase-functions:16.0.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

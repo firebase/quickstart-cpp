@@ -91,8 +91,8 @@ android {
 }
 
 dependencies {
-  compile 'com.google.firebase:firebase-core:16.0.0'
-  compile 'com.google.firebase:firebase-analytics:16.0.0'
+  compile 'com.google.firebase:firebase-core:16.0.1'
+  compile 'com.google.firebase:firebase-analytics:16.0.1'
   compile 'com.google.firebase:firebase-common:16.0.0'
 }
 
