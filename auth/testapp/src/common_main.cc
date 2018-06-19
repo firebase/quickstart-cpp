@@ -973,7 +973,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
           Future<User*> link_future =
               anonymous_user->LinkWithCredential(user_cred);
           WaitForSignInFuture(link_future, "User::LinkWithCredential() again",
-                              kAuthErrorNone, auth);
+                              ::firebase::auth::kAuthErrorProviderAlreadyLinked,
+                              auth);
         }
 
         // Test User::LinkWithCredential(), linking with bad credential.
