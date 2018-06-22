@@ -716,6 +716,35 @@ extern "C" int common_main(int argc, const char* argv[]) {
         }
       }
 
+      // Test User::UpdateUserProfile
+      {
+        Future<User*> sign_in_future = auth->SignInWithEmailAndPassword(
+            user_login.email(), user_login.password());
+        WaitForSignInFuture(
+            sign_in_future,
+            "Auth::SignInWithEmailAndPassword() existing email and password",
+            kAuthErrorNone, auth);
+        if (sign_in_future.error() == kAuthErrorNone) {
+          User* user = *sign_in_future.result();
+          const char* kDisplayName = "Hello World";
+          const char* kPhotoUrl = "http://test.com/image.jpg";
+          User::UserProfile user_profile;
+          user_profile.display_name = kDisplayName;
+          user_profile.photo_url = kPhotoUrl;
+          Future<void> update_profile_future =
+              user->UpdateUserProfile(user_profile);
+          WaitForFuture(update_profile_future, "User::UpdateUserProfile",
+                        kAuthErrorNone);
+          if (update_profile_future.error() == kAuthErrorNone) {
+            ExpectStringsEqual("User::display_name", kDisplayName,
+                               user->display_name().c_str());
+            ExpectStringsEqual("User::photo_url", kPhotoUrl,
+                               user->photo_url().c_str());
+          }
+        }
+      }
+
+
       // Sign in anonymously, link an email credential, reauthenticate with the
       // credential, unlink the credential and finally sign out.
       {

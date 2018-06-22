@@ -66,6 +66,19 @@ Building and Running the testapp
             [APNs](https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/ApplePushService.html)
             certificate. If you don't already have one, see
             [Provisioning APNs SSL Certificates.](https://firebase.google.com/docs/cloud-messaging/ios/certs)
+  - Configure the Xcode project for push messaging.
+      - Select the `testapp` project from the `Navigator area`.
+      - Select the `testapp` target from the `Editor area`.
+      - Select the `General` tab from the `Editor area`.
+      - Scroll down to `Linked Frameworks and Libraries` and click the `+`
+        button to add a framework.
+        - In the window that appears, scroll to `UserNotifications.framework`
+          and click on that entry, then click on `Add`. This framework will only
+          appear in Xcode version 8 and higher, required by this library.
+      - Select the `Capabilities` tab from the `Editor area`.
+      - Switch `Push Notifications` to `On`.
+      - Scroll down to `Background Modes` and switch it to `On`.
+      - Tick the `Remote notifications` box under `Background Modes`.
   - In XCode, build & run the sample on an iOS device or simulator.
   - The testapp has no user interface. The output of the app can be viewed
     via the console.  In Xcode,  select

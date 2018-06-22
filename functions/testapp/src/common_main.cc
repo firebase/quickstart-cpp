@@ -128,8 +128,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("  Error %d: %s", future.error(), future.error_message());
   } else {
     firebase::Variant result = future.result()->data();
-    int64_t op_result = result.map()["operationResult"].int64_value();
-    LogMessage("Result: %d", op_result);
+    int op_result =
+        static_cast<int>(result.map()["operationResult"].int64_value());
+    const int expected = 12;
+    if (op_result != expected) {
+      LogMessage("FAILED!");
+      LogMessage("  Expected: %d, Actual: %d", expected, op_result);
+    } else {
+      LogMessage("SUCCESS.");
+      LogMessage("  Got expected result: %d", op_result);
+    }
   }
 
   LogMessage("Shutting down the Functions library.");
