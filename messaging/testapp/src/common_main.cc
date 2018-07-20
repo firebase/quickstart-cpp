@@ -13,11 +13,50 @@
 // limitations under the License.
 
 #include "firebase/app.h"
+#include "firebase/future.h"
 #include "firebase/messaging.h"
 #include "firebase/util.h"
 
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
+
+// Don't return until `future` is complete.
+// Print a message for whether the result mathes our expectations.
+// Returns true if the application should exit.
+static bool WaitForFuture(const ::firebase::FutureBase& future, const char* fn,
+                          ::firebase::messaging::Error expected_error,
+                          bool log_error = true) {
+  // Note if the future has not be started properly.
+  if (future.status() == ::firebase::kFutureStatusInvalid) {
+    LogMessage("ERROR: Future for %s is invalid", fn);
+    return false;
+  }
+
+  // Wait for future to complete.
+  LogMessage("  %s...", fn);
+  while (future.status() == ::firebase::kFutureStatusPending) {
+    if (ProcessEvents(100)) return true;
+  }
+
+  // Log error result.
+  if (log_error) {
+    const ::firebase::messaging::Error error =
+        static_cast<::firebase::messaging::Error>(future.error());
+    if (error == expected_error) {
+      const char* error_message = future.error_message();
+      if (error_message) {
+        LogMessage("%s completed as expected", fn);
+      } else {
+        LogMessage("%s completed as expected, error: %d '%s'", fn, error,
+                   error_message);
+      }
+    } else {
+      LogMessage("ERROR: %s completed with error: %d, `%s`", fn, error,
+                 future.error_message());
+    }
+  }
+  return false;
+}
 
 // Execute all methods of the C++ Firebase Cloud Messaging API.
 extern "C" int common_main(int argc, const char* argv[]) {
@@ -79,8 +118,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
     LogMessage("Finished checking for permission.");
   }
 
-  ::firebase::messaging::Subscribe("TestTopic");
-  LogMessage("Subscribed to TestTopic");
+  // Subscribe to topics.
+  WaitForFuture(::firebase::messaging::Subscribe("TestTopic"),
+                "::firebase::messaging::Subscribe(\"TestTopic\")",
+                ::firebase::messaging::kErrorNone);
+  WaitForFuture(::firebase::messaging::Subscribe("!@#$%^&*()"),
+                "::firebase::messaging::Subscribe(\"!@#$%^&*()\")",
+                ::firebase::messaging::kErrorInvalidTopicName);
 
   bool done = false;
   while (!done) {

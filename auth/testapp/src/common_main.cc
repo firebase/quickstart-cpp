@@ -44,8 +44,8 @@ using ::firebase::auth::PlayGamesAuthProvider;
 using ::firebase::auth::SignInResult;
 using ::firebase::auth::TwitterAuthProvider;
 using ::firebase::auth::User;
-using ::firebase::auth::UserMetadata;
 using ::firebase::auth::UserInfoInterface;
+using ::firebase::auth::UserMetadata;
 
 // Set this to true, and set the email/password, to test a custom email address.
 static const bool kTestCustomEmail = false;
@@ -197,16 +197,14 @@ static void LogVariantMap(const std::map<Variant, Variant>& variant_map,
                           int indent);
 
 // Log a vector of variants.
-static void LogVariantVector(const std::vector<Variant>& variants,
-                             int indent) {
+static void LogVariantVector(const std::vector<Variant>& variants, int indent) {
   std::string indent_string(indent * 2, ' ');
   LogMessage("%s[", indent_string.c_str());
   for (auto it = variants.begin(); it != variants.end(); ++it) {
     const Variant& item = *it;
     if (item.is_fundamental_type()) {
       const Variant& string_value = item.AsString();
-      LogMessage("%s  %s,", indent_string.c_str(),
-                 string_value.string_value());
+      LogMessage("%s  %s,", indent_string.c_str(), string_value.string_value());
     } else if (item.is_vector()) {
       LogVariantVector(item.vector(), indent + 2);
     } else if (item.is_map()) {
@@ -228,12 +226,10 @@ static void LogVariantMap(const std::map<Variant, Variant>& variant_map,
     const Variant& value = it->second;
     if (value.is_fundamental_type()) {
       const Variant& string_value = value.AsString();
-      LogMessage("%s%s: %s,", indent_string.c_str(),
-                 key_string.string_value(),
+      LogMessage("%s%s: %s,", indent_string.c_str(), key_string.string_value(),
                  string_value.string_value());
     } else {
-      LogMessage("%s%s:", indent_string.c_str(),
-                 key_string.string_value());
+      LogMessage("%s%s:", indent_string.c_str(), key_string.string_value());
       if (value.is_vector()) {
         LogVariantVector(value.vector(), indent + 1);
       } else if (value.is_map()) {
@@ -636,6 +632,16 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(phone_future,
                             "Auth::SignInWithCredential() phone credential",
                             kAuthErrorNone, auth);
+        if (phone_future.error() == kAuthErrorNone) {
+          User* user = *phone_future.result();
+          Future<User*> update_future =
+              user->UpdatePhoneNumberCredential(phone_credential);
+          WaitForSignInFuture(
+              update_future,
+              "user->UpdatePhoneNumberCredential(phone_credential)",
+              kAuthErrorNone, auth);
+        }
+
       } else {
         LogMessage("ERROR: SMS auto-detect time out did not occur.");
       }
@@ -744,7 +750,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
         }
       }
 
-
       // Sign in anonymously, link an email credential, reauthenticate with the
       // credential, unlink the credential and finally sign out.
       {
@@ -754,8 +759,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
         if (sign_in_anonymously_future.error() == kAuthErrorNone) {
           User* user = *sign_in_anonymously_future.result();
           std::string email = CreateNewEmail();
-          Credential credential = EmailAuthProvider::GetCredential(
-              email.c_str(), kTestPassword);
+          Credential credential =
+              EmailAuthProvider::GetCredential(email.c_str(), kTestPassword);
           // Link with an email / password credential.
           Future<SignInResult> link_future =
               user->LinkAndRetrieveDataWithCredential(credential);
@@ -773,10 +778,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
               LogSignInResult(*reauth_future.result());
             }
             // Unlink email / password from credential.
-            Future<User*> unlink_future = user->Unlink(
-                credential.provider().c_str());
-            WaitForSignInFuture(unlink_future, "User::Unlink",
-                                kAuthErrorNone, auth);
+            Future<User*> unlink_future =
+                user->Unlink(credential.provider().c_str());
+            WaitForSignInFuture(unlink_future, "User::Unlink", kAuthErrorNone,
+                                auth);
           }
           auth->SignOut();
         }
@@ -838,19 +843,22 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInAndRetrieveDataWithCredential(email_cred);
         WaitForSignInFuture(sign_in_future,
                             "Auth::SignInAndRetrieveDataWithCredential "
-                            "existing email", kAuthErrorNone, auth);
-        ExpectTrue("SignInAndRetrieveDataWithCredentialLastResult matches "
-                   "returned Future",
-                   sign_in_future ==
-                   auth->SignInAndRetrieveDataWithCredentialLastResult());
+                            "existing email",
+                            kAuthErrorNone, auth);
+        ExpectTrue(
+            "SignInAndRetrieveDataWithCredentialLastResult matches "
+            "returned Future",
+            sign_in_future ==
+                auth->SignInAndRetrieveDataWithCredentialLastResult());
         if (sign_in_future.error() == kAuthErrorNone) {
           const SignInResult* sign_in_result = sign_in_future.result();
           if (sign_in_result != nullptr && sign_in_result->user) {
             LogMessage("SignInAndRetrieveDataWithCredential");
             LogSignInResult(*sign_in_result);
           } else {
-            LogMessage("ERROR: SignInAndRetrieveDataWithCredential returned no "
-                       "result");
+            LogMessage(
+                "ERROR: SignInAndRetrieveDataWithCredential returned no "
+                "result");
           }
         }
       }

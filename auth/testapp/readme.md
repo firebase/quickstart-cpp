@@ -75,6 +75,9 @@ Building and Running the testapp
             Select the "Build Settings" tab, and click "All" to see all
             the build settings. Scroll down to "Search Paths", and add
             your path to "Framework Search Paths".
+  - Configure the XCode project for push messaging.
+      - Select the `Capabilities` tab in the XCode project.
+      - Switch `Push Notifications` to `On`.
   - In XCode, build & run the sample on an iOS device or simulator.
   - Phone authentication needs to launch a webview and return the results to the
     application.  To do this it requires you configure a URL type to handle the
