@@ -6,12 +6,23 @@ Cloud Functions operations with the Firebase Cloud Functions C++ SDK. The
 application has no user interface and simply logs actions it's performing to the
 console.
 
+There are **two parts** to this project, the app and the server.  Without the server, the app won't work correctly.  However, you need to follow all of these instructions to setup your Firebase Project before you can setup the server.
+
+Follow the directions in `testserver\readme.md` to upload the echo function to the server.
+
 The testapp performs the following:
   - Creates a firebase::App in a platform-specific way. The App holds
     platform-specific context that's used by other Firebase APIs, and is a
     central point for communication between the Firebase Cloud Functions C++
     and Firebase Auth C++ libraries.
-  - Shuts down the Firebase functions, Firebase Auth, and Firebase App systems.
+  - Creates a Functions Object
+  - Grabs a HTTPS function reference to 'echoBody'
+  - Sends various values to server, and checks that the echo response
+    is the same as what was sent.
+  - Shuts down the Firebase functions and Firebase App systems.
+
+The testserver performs the following:
+  - Echos the request body back as a JSON response.
 
 Introduction
 ------------

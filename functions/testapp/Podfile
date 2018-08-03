@@ -3,6 +3,6 @@ platform :ios, '8.0'
 # Firebase Cloud Functions test application.
 target 'testapp' do
   pod 'Firebase/Core'
-  pod 'Firebase/functions'
+  pod 'Firebase/Functions'
   pod 'Firebase/Auth'
 end
