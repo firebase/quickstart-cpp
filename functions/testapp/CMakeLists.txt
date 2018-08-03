@@ -70,7 +70,7 @@ endif()
 # Link Firebase libraries.
 # NOTE: firebase_app needs to be after all other Firebase libraries.
 link_directories(${FIREBASE_SDK_LIBDIR})
-set(FIREBASE_LIBS firebase_database firebase_auth firebase_app)
+set(FIREBASE_LIBS firebase_functions firebase_auth firebase_app)
 
 # Add the Firebase include directory.
 set(FIREBASE_SDK_INCLUDEDIR ${FIREBASE_CPP_SDK_DIR}/include)

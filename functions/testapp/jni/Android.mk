@@ -36,8 +36,8 @@ LOCAL_EXPORT_C_INCLUDES:=$(FIREBASE_CPP_SDK_DIR)/include
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE:=firebase_database
-LOCAL_SRC_FILES:=$(FIREBASE_LIBRARY_PATH)/libfirebase_database.a
+LOCAL_MODULE:=firebase_functions
+LOCAL_SRC_FILES:=$(FIREBASE_LIBRARY_PATH)/libfirebase_functions.a
 LOCAL_EXPORT_C_INCLUDES:=$(FIREBASE_CPP_SDK_DIR)/include
 include $(PREBUILT_STATIC_LIBRARY)
 
@@ -47,7 +47,7 @@ LOCAL_SRC_FILES:=\
 	$(LOCAL_PATH)/src/common_main.cc \
 	$(LOCAL_PATH)/src/android/android_main.cc
 LOCAL_STATIC_LIBRARIES:=\
-	firebase_database \
+	firebase_functions \
 	firebase_auth \
 	firebase_app
 LOCAL_WHOLE_STATIC_LIBRARIES:=\
