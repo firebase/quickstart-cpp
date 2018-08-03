@@ -20,6 +20,8 @@
 #include "firebase/future.h"
 #include "firebase/util.h"
 
+#include <math.h>
+
 #include <map>
 #include <vector>
 
@@ -45,6 +47,82 @@ void WaitForCompletion(const firebase::FutureBase &future, const char *name)
   }
 }
 
+double GetDoubleVal(const firebase::Variant& val)
+{
+    if(val.is_double()) return val.double_value();
+    if(val.is_int64()) return (double)val.int64_value();
+
+    return 0.0;
+}
+
+bool CheckDoubleInt64(const firebase::Variant& lhs, const firebase::Variant& rhs)
+{
+    double left = GetDoubleVal(lhs);
+    double right = GetDoubleVal(rhs);
+
+    return fabs(left - right) < 0.01;
+}
+
+bool IsEqual(const firebase::Variant& lhs, const firebase::Variant& rhs)
+{
+    if(lhs.is_numeric() && rhs.is_numeric())
+        return CheckDoubleInt64(lhs, rhs);
+    else if(lhs.is_map() && rhs.is_map()){
+        const auto& lhs_map = lhs.map();
+        const auto& rhs_map = rhs.map();
+
+        if(lhs_map.size() != rhs_map.size()) return false;
+
+        for(const auto& kv : lhs_map){
+            if(rhs_map.find(kv.first) == rhs_map.end())
+                return false;
+
+            if(!IsEqual(rhs_map.at(kv.first), kv.second))
+                return false;
+        }
+        return true;
+    }
+    else if(lhs.is_vector() && rhs.is_vector()){
+        const auto& lhs_arr = lhs.vector();
+        const auto& rhs_arr = rhs.vector();
+
+        if(lhs_arr.size() != rhs_arr.size())
+            return false;
+
+        for(size_t i = 0; i < lhs_arr.size(); ++i){
+            if(!IsEqual(lhs_arr[i], rhs_arr[i]))
+                return false;
+        }
+    }
+    else if(lhs == rhs)
+        return true;
+    return false;
+}
+
+void TestEcho (firebase::functions::HttpsCallableReference& server_func, const firebase::Variant &test_var, const char* test_name)
+{
+    LogMessage("Starting test [%s]...", test_name);
+    auto call = server_func.Call(test_var);
+    WaitForCompletion(call, test_name);
+    if(call.error() != firebase::functions::kErrorNone){
+        LogMessage("[%s] error: %s", test_name, call.error_message());
+        return;
+    }
+
+    if(call.result() == nullptr)
+    {
+        LogMessage("[%s] error: missing return value", test_name);
+        return;
+    }
+
+    auto result_var = call.result()->data();
+
+    if(IsEqual(test_var,result_var))
+        LogMessage("[%s] : success", test_name);
+    else
+        LogMessage("[%s] error: Return value is not equal", test_name);
+}
+
 extern "C" int common_main(int argc, const char *argv[])
 {
   ::firebase::App *app;
@@ -65,7 +143,7 @@ extern "C" int common_main(int argc, const char *argv[])
 
     // Setup data to send
     auto bool_var = firebase::Variant((bool)true);
-    auto float_var = firebase::Variant((float)5.0f);
+    auto float_var = firebase::Variant((double)5.0f);
     auto int_var = firebase::Variant((int)42);
     auto int64_var = firebase::Variant((int64_t)99);
 
@@ -90,6 +168,13 @@ extern "C" int common_main(int argc, const char *argv[])
     if (func_ref.is_valid())
     {
       LogMessage("Got reference to function: %s", remote_func_name);
+
+        TestEcho(func_ref, bool_var, "bool");
+        TestEcho(func_ref, float_var, "float");
+        TestEcho(func_ref, int_var, "int");
+        TestEcho(func_ref, int64_var, "int64");
+        TestEcho(func_ref, map_var, "map");
+        TestEcho(func_ref, arr_var, "array");
     }
     else
       LogMessage("ERROR: %s is not a valid function", remote_func_name);
@@ -97,6 +182,10 @@ extern "C" int common_main(int argc, const char *argv[])
   }
   else
     LogMessage("ERROR: starting functions");
+
+
+  LogMessage("Shutdown Functions.");
+  delete functions;
 
   LogMessage("Shutdown Firebase App.");
   delete app;
