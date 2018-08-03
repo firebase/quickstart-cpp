@@ -372,7 +372,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
 #if defined(__ANDROID__) || TARGET_OS_IPHONE
-  // Actually shut down the realtime database, and restart it, to make sure
+  // Actually shut down the Cloud Functions, and restart it, to make sure
   // that persistence persists across database object instances.
   {
     // Write a value that we can test for.

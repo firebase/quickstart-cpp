@@ -1,41 +1,22 @@
-Firebase Realtime Database Quickstart
+Firebase Cloud Functions Quickstart
 ========================
 
-The Firebase Realtime Database Test Application (testapp) demonstrates Firebase
-Realtime Database operations with the Firebase Realtime Database C++ SDK. The
+The Firebase Cloud Functions Test Application (testapp) demonstrates Firebase
+Cloud Functions operations with the Firebase Cloud Functions C++ SDK. The
 application has no user interface and simply logs actions it's performing to the
 console.
 
 The testapp performs the following:
   - Creates a firebase::App in a platform-specific way. The App holds
     platform-specific context that's used by other Firebase APIs, and is a
-    central point for communication between the Firebase Realtime Database C++
+    central point for communication between the Firebase Cloud Functions C++
     and Firebase Auth C++ libraries.
-  - Gets a pointer to firebase::Auth, and signs in anonymously. This allows the
-    testapp to access a Firebase Database instance with authentication rules
-    enabled, which is the default setting in Firebase Console.
-  - Gets a DatabaseReference to the root node's "test_app_data" child, uses
-    DatabaseReference::PushChild() to create a child with a unique key
-    underneath it to work in, and gets a reference to that child, which the
-    testapp will use for the remainder of its actions.
-  - Sets some simple values (numbers, bools, strings, timestamp) and reads them
-    back to ensure the database can be read from and written to.
-  - Runs a transaction, using DatabaseReference::RunTransaction(), and validates
-    that its results were applied properly.
-  - Runs DatabaseReference::UpdateChildren to update multiple children at once.
-  - Uses Query to narrow down the view from a DatabaseReference.
-  - Sets up a ValueListener to watch for data value changes at a given database
-    location.
-  - Sets up a ChildListener to watch for changes in the list of children at
-    a database location.
-  - Sets up OnDisconnect actions to make changes to the database on disconnect,
-    then disconnects from the database to confirm the actions are performed.
   - Shuts down the Firebase Database, Firebase Auth, and Firebase App systems.
 
 Introduction
 ------------
 
-- [Read more about Firebase Realtime Database](https://firebase.google.com/docs/database/)
+- [Read more about Firebase Cloud Functions](https://firebase.google.com/docs/functions/callable)
 
 Building and Running the testapp
 --------------------------------
@@ -118,10 +99,6 @@ Building and Running the testapp
     - Add the `google-services.json` file that you downloaded from Firebase
       console to the root directory of testapp. This file identifies your
       Android app to the Firebase backend.
-    - In the Firebase console for your app, select "Auth", then enable
-      "Anonymous". This will allow the testapp to use anonymous sign-in to
-      authenticate with Firebase Database, which requires a signed-in user by
-      default (an anonymous user will suffice).
     - For further details please refer to the
       [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
   - Download the Firebase C++ SDK linked from
@@ -193,7 +170,7 @@ Building and Running the testapp
 Known issues
 ------------
 
-  - Due to the way Firebase Realtime Database interacts with JSON, it is
+  - Due to the way Firebase Cloud Functions interacts with JSON, it is
     possible that if you set a location to an integral value using a
     firebase::Variant of type Int64, you may get back a firebase::Variant of
     type Double when later retrieving the data from the database. Be sure to

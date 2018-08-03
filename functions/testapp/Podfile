@@ -1,6 +1,6 @@
 source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
-# Firebase Realtime Database test application.
+# Firebase Cloud Functions test application.
 target 'testapp' do
   pod 'Firebase/Core'
   pod 'Firebase/Database'
