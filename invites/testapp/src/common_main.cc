@@ -104,6 +104,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     invite.message_text = "Please try my app! It's awesome.";
     invite.call_to_action_text = "Download it for FREE";
     invite.deep_link_url = "http://google.com/abc";
+    invite.android_minimum_version_code = 19;
     auto future_result = ::firebase::invites::SendInvite(invite);
     while (future_result.status() == firebase::kFutureStatusPending) {
       if (ProcessEvents(10)) break;
