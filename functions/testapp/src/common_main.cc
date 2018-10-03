@@ -90,6 +90,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
   LogMessage("Successfully initialized Firebase Auth and Cloud Functions.");
 
+  // To test against a local emulator, uncomment this line:
+  //   functions->UseFunctionsEmulator("http://localhost:5005");
+  // Or when running in an Android emulator:
+  //   functions->UseFunctionsEmulator("http://10.0.2.2:5005");
+
   // Optionally, sign in using Auth before accessing Functions.
   {
     firebase::Future<firebase::auth::User*> sign_in_future =
