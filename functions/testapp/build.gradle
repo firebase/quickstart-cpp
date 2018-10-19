@@ -92,9 +92,9 @@ android {
 }
 
 dependencies {
-    compile 'com.google.firebase:firebase-core:16.0.3'
-    compile 'com.google.firebase:firebase-auth:16.0.3'
-    compile 'com.google.firebase:firebase-functions:16.1.0'
+    compile 'com.google.firebase:firebase-core:16.0.4'
+    compile 'com.google.firebase:firebase-auth:16.0.5'
+    compile 'com.google.firebase:firebase-functions:16.1.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

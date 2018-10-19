@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.google.ios.auth.testapp</string>
+	<string>com.google.FirebaseCppAuthTestApp.dev</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -22,10 +22,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.google.ios.auth.testapp</string>
+			<string>com.google.FirebaseCppAuthTestApp.dev</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.google.ios.auth.testapp</string>
+				<string>com.google.FirebaseCppAuthTestApp.dev</string>
 			</array>
 		</dict>
 		<dict>

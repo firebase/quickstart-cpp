@@ -33,7 +33,7 @@ Building and Running the testapp
   - Register your iOS app with Firebase.
     - Create a new app on the [Firebase console](https://firebase.google.com/console/), and attach
       your iOS app to it.
-      - You can use "com.google.ios.dynamiclinks.testapp" as the iOS Bundle ID
+      - You can use "com.google.FirebaseCppDynamicLinksTestApp.dev" as the iOS Bundle ID
         while you're testing. You can omit App Store ID while testing.
     - Add the GoogleService-Info.plist that you downloaded from Firebase
       console to the testapp root directory. This file identifies your iOS app

@@ -38,7 +38,7 @@ Building and Running the testapp
       and attach your iOS app to it.
       - For Invites, you will need an App Store ID. Use something random such
         as 12345678."
-      - You can use "com.google.ios.invites.testapp" as the iOS Bundle ID
+      - You can use "com.google.FirebaseCppInvitesTestApp.dev" as the iOS Bundle ID
         while you're testing.
     - Add the GoogleService-Info.plist that you downloaded from Firebase
       console to the testapp root directory. This file identifies your iOS app

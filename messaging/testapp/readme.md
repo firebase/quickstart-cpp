@@ -39,7 +39,7 @@ Building and Running the testapp
     , and attach your iOS app to it.
       - For Messaging, you will need an App Store ID. Use something random such
         as 12345678."
-      - You can use "com.google.ios.messaging.testapp" as the iOS Bundle ID
+      - You can use "com.google.FirebaseCppMessagingTestApp.dev" as the iOS Bundle ID
         while you're testing.
     - Add the GoogleService-Info.plist that you downloaded from Firebase
       console to the testapp root directory. This file identifies your iOS app
@@ -218,7 +218,7 @@ viewed via the console:
     * **Android**: View the logcat output in Android studio or by running
     "adb logcat" from the command line.
 - When you first run the app, it will print:
-`Recieved Registration Token: <code>`. Copy this code to a text editor.
+`Received Registration Token: <code>`. Copy this code to a text editor.
 - Copy the ServerKey from the firebase console:
   - Open your project in the
     [Firebase Console](https://firebase.google.com/console/).
