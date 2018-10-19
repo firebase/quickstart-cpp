@@ -151,6 +151,28 @@ Building and Running the testapp
   - Register your app with Firebase.
     - Create a new app on the [Firebase console](https://firebase.google.com/console/),
       following the above instructions for Android or iOS.
+      - The Desktop version of the library requires you to set up any keys you
+        use via Query::OrderByChild() in advance. Add this to your database's
+        rules in the _Rules_ tab of your database settings in Firebase console:
+        ```
+        {
+          "rules": {
+            // Require authentication for writing to the database.
+            ".read": "true",
+            ".write": "auth != null",
+            // Set up entity_list to be indexed by the entity_type child.
+            "test_app_data": {
+              "$dummy": {
+                "ChildListener": {
+                  "entity_list": {
+                    ".indexOn": "entity_type"
+                  }
+                }
+              }
+            }
+          }
+        }
+        ```
     - If you have an Android project, add the `google-services.json` file that
       you downloaded from the Firebase console to the root directory of the
       testapp.
