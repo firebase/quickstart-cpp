@@ -6,7 +6,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.1.0'
+    classpath 'com.android.tools.build:gradle:3.2.1'
     classpath 'com.google.gms:google-services:4.0.1'
   }
 }
@@ -21,9 +21,6 @@ allprojects {
 
 apply plugin: 'com.android.application'
 
-// Pre-experimental Gradle plug-in NDK boilerplate below.
-// Right now the Firebase plug-in does not work with the experimental
-// Gradle plug-in so we're using ndk-build for the moment.
 project.ext {
   // Configure the Firebase C++ SDK location.
   firebase_cpp_sdk_dir = System.getProperty('firebase_cpp_sdk.dir')
@@ -46,22 +43,11 @@ project.ext {
       sprintf('Firebase C++ SDK directory %s does not exist',
               firebase_cpp_sdk_dir))
   }
-  // Check the NDK location using the same configuration options as the
-  // experimental Gradle plug-in.
-  ndk_dir = project.android.ndkDirectory
-  if (ndk_dir == null || !ndk_dir.exists()) {
-    ndk_dir = System.getenv('ANDROID_NDK_HOME')
-    if (ndk_dir == null || ndk_dir.isEmpty()) {
-      throw new StopActionException(
-        'Android NDK directory should be specified using the ndk.dir ' +
-        'property or ANDROID_NDK_HOME environment variable.')
-    }
-  }
 }
 
 android {
     compileSdkVersion 26
-    buildToolsVersion '26.0.3'
+    buildToolsVersion '28.0.3'
 
     sourceSets {
       main {
@@ -74,11 +60,22 @@ android {
 
     defaultConfig {
         applicationId 'com.google.android.remoteconfig.testapp'
-        minSdkVersion 14
+        minSdkVersion 16
         targetSdkVersion 26
         versionCode 1
         versionName '1.0'
+        externalNativeBuild.ndkBuild {
+          arguments "FIREBASE_CPP_SDK_DIR=${project.ext.firebase_cpp_sdk_dir}",
+                    "NDK_APPLICTION_MK=jni/Application.mk",
+                    sprintf("APP_PLATFORM=android-%d",
+                            android.defaultConfig.minSdkVersion.mApiLevel)
+        }
     }
+
+    externalNativeBuild.ndkBuild {
+        path 'jni/Android.mk'
+    }
+
     buildTypes {
       release {
             minifyEnabled true
@@ -91,31 +88,8 @@ android {
 }
 
 dependencies {
-  compile 'com.google.firebase:firebase-core:16.0.5'
-  compile 'com.google.firebase:firebase-config:16.1.0'
-  compile 'com.google.firebase:firebase-common:16.0.4'
+  implementation 'com.google.firebase:firebase-core:16.0.6'
+  implementation 'com.google.firebase:firebase-config:16.1.3'
 }
 
 apply plugin: 'com.google.gms.google-services'
-
-task ndkBuildCompile(type:Exec) {
-  description 'Use ndk-build to compile the C++ application.'
-  commandLine("${project.ext.ndk_dir}${File.separator}ndk-build",
-              "FIREBASE_CPP_SDK_DIR=${project.ext.firebase_cpp_sdk_dir}",
-              sprintf("APP_PLATFORM=android-%d",
-                      android.defaultConfig.minSdkVersion.mApiLevel))
-}
-
-task ndkBuildClean(type:Exec) {
-  description 'Use ndk-build to clean the C++ application.'
-  commandLine("${project.ext.ndk_dir}${File.separator}ndk-build",
-              "FIREBASE_CPP_SDK_DIR=${project.ext.firebase_cpp_sdk_dir}",
-              "clean")
-}
-
-// Once the Android Gradle plug-in has generated tasks, add dependencies for
-// the ndk-build targets.
-project.afterEvaluate {
-  preBuild.dependsOn(ndkBuildCompile)
-  clean.dependsOn(ndkBuildClean)
-}
