@@ -21,77 +21,45 @@ allprojects {
 
 apply plugin: 'com.android.application'
 
-project.ext {
-  // Configure the Firebase C++ SDK location.
-  firebase_cpp_sdk_dir = System.getProperty('firebase_cpp_sdk.dir')
-  if (firebase_cpp_sdk_dir == null || firebase_cpp_sdk_dir.isEmpty()) {
-    firebase_cpp_sdk_dir = System.getenv('FIREBASE_CPP_SDK_DIR')
-    if (firebase_cpp_sdk_dir == null || firebase_cpp_sdk_dir.isEmpty()) {
-      if ((new File('firebase_cpp_sdk')).exists()) {
-        firebase_cpp_sdk_dir = 'firebase_cpp_sdk'
-      } else {
-        throw new StopActionException(
-          'firebase_cpp_sdk.dir property or the FIREBASE_CPP_SDK_DIR ' +
-          'environment variable must be set to reference the Firebase C++ ' +
-          'SDK install directory.  This is used to configure static library ' +
-          'and C/C++ include paths for the SDK.')
-      }
-    }
-  }
-  if (!(new File(firebase_cpp_sdk_dir)).exists()) {
-    throw new StopActionException(
-      sprintf('Firebase C++ SDK directory %s does not exist',
-              firebase_cpp_sdk_dir))
-  }
-}
-
 android {
-    compileSdkVersion 26
-    buildToolsVersion '28.0.3'
+  compileSdkVersion 26
+  buildToolsVersion '28.0.3'
 
-    sourceSets {
-      main {
-        jniLibs.srcDirs = ['libs']
-        manifest.srcFile 'AndroidManifest.xml'
-        java.srcDirs = ['src/android/java']
-        res.srcDirs = ['res']
-      }
+  sourceSets {
+    main {
+      jniLibs.srcDirs = ['libs']
+      manifest.srcFile 'AndroidManifest.xml'
+      java.srcDirs = ['src/android/java']
+      res.srcDirs = ['res']
     }
+  }
 
-    defaultConfig {
-        applicationId 'com.google.firebase.cpp.functions.testapp'
-        minSdkVersion 16
-        targetSdkVersion 26
-        versionCode 1
-        versionName '1.0'
-        externalNativeBuild.ndkBuild {
-          arguments "FIREBASE_CPP_SDK_DIR=${project.ext.firebase_cpp_sdk_dir}",
-                    "NDK_APPLICTION_MK=jni/Application.mk",
-                    sprintf("APP_PLATFORM=android-%d",
-                            android.defaultConfig.minSdkVersion.mApiLevel)
-        }
+  defaultConfig {
+    applicationId 'com.google.firebase.cpp.functions.testapp'
+    minSdkVersion 16
+    targetSdkVersion 26
+    versionCode 1
+    versionName '1.0'
+    externalNativeBuild.cmake {
+      arguments "-DFIREBASE_CPP_SDK_DIR=$gradle.firebase_cpp_sdk_dir"
     }
-
-    externalNativeBuild.ndkBuild {
-        path 'jni/Android.mk'
+  }
+  externalNativeBuild.cmake {
+    path 'CMakeLists.txt'
+  }
+  buildTypes {
+    release {
+      minifyEnabled true
+      proguardFile getDefaultProguardFile('proguard-android.txt')
+      proguardFile file('proguard.pro')
     }
-
-    buildTypes {
-      release {
-            minifyEnabled true
-            proguardFile getDefaultProguardFile('proguard-android.txt')
-            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/app.pro")
-            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/auth.pro")
-            proguardFile file(project.ext.firebase_cpp_sdk_dir + "/libs/android/functions.pro")
-            proguardFile file('proguard.pro')
-      }
-    }
+  }
 }
 
-dependencies {
-    implementation 'com.google.firebase:firebase-core:16.0.6'
-    implementation 'com.google.firebase:firebase-auth:16.1.0'
-    implementation 'com.google.firebase:firebase-functions:16.1.3'
+apply from: "$gradle.firebase_cpp_sdk_dir/Android/firebase_dependencies.gradle"
+firebaseCpp.dependencies {
+  auth
+  functions
 }
 
 apply plugin: 'com.google.gms.google-services'

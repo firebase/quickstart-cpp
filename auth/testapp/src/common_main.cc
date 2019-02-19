@@ -488,8 +488,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
   if (auth->current_user() == nullptr) {
     LogMessage("No user signed in at creation time.");
   } else {
-    LogMessage("Current user %s already signed in, so signing them out.",
-               auth->current_user()->display_name().c_str());
+    LogMessage(
+        "Current user uid(%s) name(%s) already signed in, so signing them out.",
+        auth->current_user()->uid().c_str(),
+        auth->current_user()->display_name().c_str());
     auth->SignOut();
   }
 
@@ -1202,6 +1204,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
     Future<User*> sign_in_future = auth->SignInAnonymously();
     WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously() at end",
                         kAuthErrorNone, auth);
+
+    LogMessage("Anonymous uid(%s)", auth->current_user()->uid().c_str());
   }
 
   LogMessage("Completed Auth tests.");
