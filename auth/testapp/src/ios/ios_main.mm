@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import <GameKit/GameKit.h>
 #import <UIKit/UIKit.h>
 
 #include <stdarg.h>
@@ -40,6 +41,29 @@ static UITextView *g_text_view;
 static UIView *g_parent_view;
 static FTAViewController *g_view_controller;
 
+void initGameCenter(UIViewController* view_controller) {
+  if (![GKLocalPlayer class])
+    return;
+
+  __weak GKLocalPlayer *localPlayer = [GKLocalPlayer localPlayer];
+  localPlayer.authenticateHandler = ^(UIViewController *gcAuthViewController, NSError *error) {
+    if (gcAuthViewController != nil) {
+      // Pause any activities that require user interaction, then present the
+      // gcAuthViewController to the player.
+      [view_controller presentViewController:gcAuthViewController animated:YES completion:nil];
+    } else if (localPlayer.isAuthenticated) {
+      // Player is already logged into Game Center
+    } else {
+      if (error) {
+        LogMessage("Unable to initialize GameCenter: %s", error.localizedDescription);
+        return;
+      } else {
+        LogMessage("Unable to initialize GameCenter: Unknown Error");
+      }
+    }
+  };
+}
+
 @implementation FTAViewController
 
 - (void)viewDidLoad {
@@ -48,6 +72,7 @@ static FTAViewController *g_view_controller;
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     const char *argv[] = {FIREBASE_TESTAPP_NAME};
     [g_shutdown_signal lock];
+    initGameCenter(self);
     g_exit_status = common_main(1, argv);
     [g_shutdown_complete signal];
   });

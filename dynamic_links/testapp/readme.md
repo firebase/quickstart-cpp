@@ -53,8 +53,8 @@ Building and Running the testapp
     e.g xyz.app.goo.gl and assign to the string kDynamicLinksDomain in
     src/common_main.cc .
   - Download the Firebase C++ SDK linked from
-    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
-    directory of your choice.
+    [https://firebase.google.com/docs/cpp/setup](https://firebase.google.com/docs/cpp/setup)
+    and unzip it to a directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase\_dynamic_links.framework
@@ -111,8 +111,8 @@ Building and Running the testapp
     e.g xyz.app.goo.gl and assign to the string kDynamicLinksDomain in
     src/common_main.cc .
   - Download the Firebase C++ SDK linked from
-    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
-    directory of your choice.
+    [https://firebase.google.com/docs/cpp/setup](https://firebase.google.com/docs/cpp/setup)
+    and unzip it to a directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
@@ -152,8 +152,8 @@ Building and Running the testapp
       file into a `google-services-desktop.json` file, which can then be
       placed in the root directory of the testapp.
   - Download the Firebase C++ SDK linked from
-    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
-    directory of your choice.
+    [https://firebase.google.com/docs/cpp/setup](https://firebase.google.com/docs/cpp/setup)
+    and unzip it to a directory of your choice.
   - Configure the testapp with the location of the Firebase C++ SDK.
     This can be done a couple different ways (in highest to lowest priority):
     - When invoking cmake, pass in the location with
@@ -186,7 +186,7 @@ Building and Running the testapp
 Support
 -------
 
-[https://firebase.google.com/support/]()
+[https://firebase.google.com/support/](https://firebase.google.com/support/)
 
 License
 -------

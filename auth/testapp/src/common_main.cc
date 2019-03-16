@@ -37,6 +37,8 @@ using ::firebase::auth::FacebookAuthProvider;
 using ::firebase::auth::GitHubAuthProvider;
 using ::firebase::auth::GoogleAuthProvider;
 using ::firebase::auth::kAuthErrorFailure;
+using ::firebase::auth::kAuthErrorInvalidCredential;
+using ::firebase::auth::kAuthErrorInvalidProviderId;
 using ::firebase::auth::kAuthErrorNone;
 using ::firebase::auth::OAuthProvider;
 using ::firebase::auth::PhoneAuthProvider;
@@ -46,6 +48,10 @@ using ::firebase::auth::TwitterAuthProvider;
 using ::firebase::auth::User;
 using ::firebase::auth::UserInfoInterface;
 using ::firebase::auth::UserMetadata;
+
+#if TARGET_OS_IPHONE
+  using ::firebase::auth::GameCenterAuthProvider;
+#endif
 
 // Set this to true, and set the email/password, to test a custom email address.
 static const bool kTestCustomEmail = false;
@@ -874,7 +880,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(
             facebook_bad,
             "Auth::SignInWithCredential() bad Facebook credentials",
-            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
+            kAuthErrorInvalidProviderId, auth);
       }
 
       // Use bad GitHub credentials. Should fail.
@@ -885,7 +891,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(git_hub_cred_bad);
         WaitForSignInFuture(
             git_hub_bad, "Auth::SignInWithCredential() bad GitHub credentials",
-            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
+            kAuthErrorInvalidProviderId, auth);
       }
 
       // Use bad Google credentials. Should fail.
@@ -895,7 +901,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> google_bad = auth->SignInWithCredential(google_cred_bad);
         WaitForSignInFuture(
             google_bad, "Auth::SignInWithCredential() bad Google credentials",
-            kAuthErrorFailure, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 
       // Use bad Google credentials, missing an optional parameter. Should fail.
@@ -905,7 +911,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> google_bad = auth->SignInWithCredential(google_cred_bad);
         WaitForSignInFuture(
             google_bad, "Auth::SignInWithCredential() bad Google credentials",
-            kAuthErrorFailure, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 
 #if defined(__ANDROID__)
@@ -918,9 +924,50 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(
             play_games_bad,
             "Auth:SignInWithCredential() bad Play Games credentials",
-            kAuthErrorFailure, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 #endif  // defined(__ANDROID__)
+
+#if TARGET_OS_IPHONE
+      // Test Game Center status/login
+      {
+        // Check if the current user is authenticated to GameCenter
+        bool is_authenticated = GameCenterAuthProvider::IsPlayerAuthenticated();
+        if (!is_authenticated) {
+          LogMessage("Not signed into Game Center, skipping test.");
+        } else {
+          LogMessage("Signed in, testing Game Center authentication.");
+
+          // Get the Game Center credential from the device
+          Future<Credential> game_center_credential_future =
+              GameCenterAuthProvider::GetCredential();
+          WaitForFuture(
+              game_center_credential_future,
+              "GameCenterAuthProvider::GetCredential()",
+              kAuthErrorNone);
+
+          const AuthError credential_error =
+              static_cast<AuthError>(game_center_credential_future.error());
+
+          // Only attempt to sign in if we were able to get a credential.
+          if (credential_error == kAuthErrorNone) {
+            const Credential* gc_credential_ptr =
+                game_center_credential_future.result();
+
+            if (gc_credential_ptr == nullptr) {
+              LogMessage("Failed to retrieve Game Center credential.");
+            } else {
+              Future<User*> game_center_user =
+                  auth->SignInWithCredential(*gc_credential_ptr);
+              WaitForFuture(game_center_user,
+                            "Auth::SignInWithCredential() test Game Center "
+                            "credential signin",
+                            kAuthErrorNone);
+            }
+          }
+        }
+      }
+#endif  // TARGET_OS_IPHONE
 
       // Use bad Twitter credentials. Should fail.
       {
@@ -930,7 +977,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(twitter_cred_bad);
         WaitForSignInFuture(
             twitter_bad, "Auth::SignInWithCredential() bad Twitter credentials",
-            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
+            kAuthErrorInvalidProviderId, auth);
       }
 
       // Use bad OAuth credentials. Should fail.
@@ -940,7 +987,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
         WaitForSignInFuture(
             oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
-            ::firebase::auth::kAuthErrorFailure, auth);
+            kAuthErrorInvalidProviderId, auth);
       }
 
       // Test Auth::SendPasswordResetEmail().
@@ -1029,7 +1076,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               anonymous_user->LinkWithCredential(twitter_cred_bad);
           WaitForFuture(link_bad_future,
                         "User::LinkWithCredential() with bad credential",
-                        ::firebase::auth::kAuthErrorOperationNotAllowed);
+                        kAuthErrorInvalidProviderId);
           ExpectTrue("Linking maintains user",
                      auth->current_user() == pre_link_user);
         }
@@ -1046,7 +1093,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               auth->SignInWithCredential(twitter_cred_bad);
           WaitForFuture(signin_bad_future,
                         "Auth::SignInWithCredential() with bad credential",
-                        ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
+                        kAuthErrorInvalidProviderId, auth);
           ExpectTrue("Failed sign in maintains user",
                      auth->current_user() == pre_signin_user);
         }

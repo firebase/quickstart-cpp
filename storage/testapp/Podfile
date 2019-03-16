@@ -2,7 +2,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Cloud Storage for Firebase test application.
 target 'testapp' do
-  pod 'Firebase/Core', '5.15.0'
-  pod 'Firebase/Storage', '5.15.0'
-  pod 'Firebase/Auth', '5.15.0'
+  pod 'Firebase/Core', '5.18.0'
+  pod 'Firebase/Storage', '5.18.0'
+  pod 'Firebase/Auth', '5.18.0'
 end
