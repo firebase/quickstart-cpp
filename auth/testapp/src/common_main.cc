@@ -548,8 +548,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
     // Test notification on registration.
     auth->AddAuthStateListener(&counter);
     auth->AddIdTokenListener(&token_counter);
-    counter.CompleteTest("registration", 0);
-    token_counter.CompleteTest("registration", 0);
+    // Expect notification immediately after registration.
+    counter.CompleteTest("registration", 1);
+    token_counter.CompleteTest("registration", 1);
 
     // Test notification on SignOut(), when already signed-out.
     auth->SignOut();

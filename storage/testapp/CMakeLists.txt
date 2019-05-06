@@ -89,6 +89,7 @@ else()
     set(ADDITIONAL_LIBS
       pthread
       "-framework CoreFoundation"
+      "-framework Foundation"
       "-framework Security"
     )
   elseif(MSVC)

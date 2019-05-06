@@ -72,9 +72,11 @@ class LoggingRewardedVideoListener
 #if defined(__ANDROID__)
 // If you change the AdMob app ID for your Android app, make sure to change it
 // in AndroidManifest.xml as well.
-const char* kAdMobAppID = "ca-app-pub-3940256099942544~3347511713";
+const char* kAdMobAppID = "YOUR_ANDROID_ADMOB_APP_ID";
 #else
-const char* kAdMobAppID = "ca-app-pub-3940256099942544~1458002511";
+// If you change the AdMob app ID for your iOS app, make sure to change the
+// value for "GADApplicationIdentifier" in your Info.plist as well.
+const char* kAdMobAppID = "YOUR_IOS_ADMOB_APP_ID";
 #endif
 
 // These ad units IDs have been created specifically for testing, and will

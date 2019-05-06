@@ -54,6 +54,13 @@ Getting Started
             Select the "Build Settings" tab, and click "All" to see all
             the build settings. Scroll down to "Search Paths", and add
             your path to "Framework Search Paths".
+  - Update the AdMob App ID:
+    - In the `src/common_main.cc`, update `kAdMobAppID` with the app ID for
+      your iOS app, replacing 'YOUR_IOS_ADMOB_APP_ID'.
+    - In the `testapp/Info.plist`, update `GADApplicationIdentifier` with the
+      same app ID, replacing 'YOUR_IOS_ADMOB_APP_ID'.
+    - For more information, see
+      [Update your Info.plist](https://developers.google.com/admob/ios/quick-start#manual_download)
   - In Xcode, build & run the sample on an iOS device or simulator.
   - The testapp displays a banner ad and an interstitial ad. You can dismiss
     the interstitial ad to see the banner ad.
@@ -105,6 +112,14 @@ Getting Started
     - From the Android Studio launch menu, "Open an existing Android Studio
       project", and select `build.gradle`.
   - Install the SDK Platforms that Android Studio reports missing.
+  - Update the AdMob App ID:
+    - In the `src/common_main.cc`, update `kAdMobAppID` with the app ID for
+      your Android app, replacing 'YOUR_ANDROID_ADMOB_APP_ID'.
+    - In the `AndroidManifest.xml`, update
+      `com.google.android.gms.ads.APPLICATION_ID` with the same app ID,
+      replacing 'YOUR_ANDROID_ADMOB_APP_ID'.
+    - For more information, see
+      [Update your AndroidManifest.xml](https://developers.google.com/admob/android/quick-start#update_your_androidmanifestxml)
   - Build the testapp and run it on an Android device or emulator.
   - The testapp will initialize AdMob, then load and display a test banner and
     a test interstitial.
