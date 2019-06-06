@@ -87,9 +87,11 @@ else()
 
   if(APPLE)
     set(ADDITIONAL_LIBS
+      gssapi_krb5
       pthread
       "-framework CoreFoundation"
       "-framework Foundation"
+      "-framework GSS"
       "-framework Security"
     )
   elseif(MSVC)

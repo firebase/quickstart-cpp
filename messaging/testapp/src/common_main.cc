@@ -155,6 +155,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
       }
       if (message.notification) {
         LogMessage("notification:");
+        if (message.notification->android) {
+          LogMessage("  android:");
+          LogMessage("    channel_id: %s",
+                     message.notification->android->channel_id.c_str());
+        }
         if (!message.notification->title.empty()) {
           LogMessage("  title: %s", message.notification->title.c_str());
         }

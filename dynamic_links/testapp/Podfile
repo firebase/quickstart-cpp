@@ -2,6 +2,6 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Dynamic Links test application.
 target 'testapp' do
-  pod 'Firebase/Analytics', '6.0.0'
-  pod 'Firebase/DynamicLinks', '6.0.0'
+  pod 'Firebase/Analytics', '6.1.0'
+  pod 'Firebase/DynamicLinks', '6.1.0'
 end

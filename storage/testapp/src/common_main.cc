@@ -78,6 +78,24 @@ void WaitForCompletion(const firebase::FutureBase& future, const char* name) {
   }
 }
 
+void EnsureRefsEqual(
+    std::initializer_list<firebase::storage::StorageReference*> refs) {
+  using firebase::storage::StorageReference;
+  for (StorageReference* ref : refs) {
+    for (StorageReference* compare_to : refs) {
+      if (ref->bucket() != compare_to->bucket()) {
+        LogMessage(
+            "ERROR: StorageReferences unequal. Buckets differ: '%s' vs '%s'",
+            ref->bucket().c_str(), compare_to->bucket().c_str());
+      } else if (ref->full_path() != compare_to->full_path()) {
+        LogMessage(
+            "ERROR: StorageReferences unequal. full_paths differ: '%s' vs '%s'",
+            ref->full_path().c_str(), compare_to->full_path().c_str());
+      }
+    }
+  }
+}
+
 extern "C" int common_main(int argc, const char* argv[]) {
   ::firebase::App* app;
 
@@ -164,8 +182,17 @@ extern "C" int common_main(int argc, const char* argv[]) {
   std::string saved_url = buffer;
 
   // Create a unique child in the storage that we can run our tests in.
-  firebase::storage::StorageReference ref;
+  firebase::storage::StorageReference ref, ref2, ref3, ref4;
   ref = storage->GetReference("test_app_data").Child(saved_url);
+
+  // Create the same reference in a few different manners and ensure they're
+  // equivalent.
+  // NOLINTNEXTLINE intentional redundant string conversion
+  ref2 = storage->GetReference(std::string("test_app_data")).Child(saved_url);
+  std::string url = storage->url() + "/test_app_data";
+  ref3 = storage->GetReferenceFromUrl(url.c_str()).Child(saved_url);
+  ref4 = storage->GetReferenceFromUrl(url).Child(saved_url);
+  EnsureRefsEqual({&ref, &ref2, &ref3, &ref4});
 
   firebase::storage::Metadata test_metadata;
 
