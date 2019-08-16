@@ -15,8 +15,13 @@
 package com.google.firebase.example;
 
 import android.app.Activity;
+import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.Window;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -27,29 +32,70 @@ import android.widget.TextView;
  * text to the screen, via a non-editable TextView.
  */
 public class LoggingUtils {
-  public static TextView sTextView = null;
+  static TextView textView = null;
+  static ScrollView scrollView = null;
+  // Tracks if the log window was touched at least once since the testapp was started.
+  static boolean didTouch = false;
 
   public static void initLogWindow(Activity activity) {
+    initLogWindow(activity, true);
+  }
+
+  public static void initLogWindow(Activity activity, boolean monospace) {
     LinearLayout linearLayout = new LinearLayout(activity);
-    ScrollView scrollView = new ScrollView(activity);
-    TextView textView = new TextView(activity);
+    scrollView = new ScrollView(activity);
+    textView = new TextView(activity);
     textView.setTag("Logger");
+    if (monospace) {
+      textView.setTypeface(Typeface.MONOSPACE);
+      textView.setTextSize(10);
+    }
     linearLayout.addView(scrollView);
     scrollView.addView(textView);
     Window window = activity.getWindow();
     window.takeSurface(null);
     window.setContentView(linearLayout);
-    sTextView = textView;
+
+    // Force the TextView to stay scrolled to the bottom.
+    textView.addTextChangedListener(
+        new TextWatcher() {
+          @Override
+          public void afterTextChanged(Editable e) {
+            if (scrollView != null && !didTouch) {
+              // If the user never interacted with the screen, scroll to bottom.
+              scrollView.fullScroll(View.FOCUS_DOWN);
+            }
+          }
+          @Override
+          public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+          @Override
+          public void onTextChanged(CharSequence s, int start, int count, int after) {}
+        });
+    textView.setOnTouchListener(
+        new View.OnTouchListener() {
+          @Override
+          public boolean onTouch(View v, MotionEvent event) {
+            didTouch = true;
+            return false;
+          }
+        });
   }
 
   public static void addLogText(final String text) {
-    new Handler(Looper.getMainLooper()).post(new Runnable() {
-        @Override
-        public void run() {
-          if (sTextView != null) {
-            sTextView.append(text);
-          }
-        }
-      });
+    new Handler(Looper.getMainLooper())
+        .post(
+            new Runnable() {
+              @Override
+              public void run() {
+                if (textView != null) {
+                  textView.append(text);
+                }
+              }
+            });
+  }
+
+  public static boolean getDidTouch() {
+    return didTouch;
   }
 }

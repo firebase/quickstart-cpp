@@ -24,19 +24,19 @@
 #include "main.h"  // NOLINT
 
 // Invalid domain, used to make sure the user sets a valid domain.
-#define INVALID_DYNAMIC_LINKS_DOMAIN "THIS_IS_AN_INVALID_DOMAIN"
+#define INVALID_DOMAIN_URI_PREFIX "THIS_IS_AN_INVALID_DOMAIN"
 
-static const char* kDynamicLinksDomainInvalidError =
-    "kDynamicLinksDomain is not valid, link shortening will fail.\n"
+static const char* kDomainUriPrefixInvalidError =
+    "kDomainUriPrefix is not valid, link shortening will fail.\n"
     "To resolve this:\n"
     "* Goto the Firebase console https://firebase.google.com/console/\n"
     "* Click on the Dynamic Links tab\n"
-    "* Copy the domain e.g x20yz.app.goo.gl\n"
-    "* Replace the value of kDynamicLinksDomain with the copied domain.\n";
+    "* Copy the URI prefix e.g https://x20yz.app.goo.gl\n"
+    "* Replace the value of kDomainUriPrefix with the copied URI prefix.\n";
 
-// IMPORTANT: You need to set this to a valid domain from the Firebase
-// console (see kDynamicLinksDomainInvalidError for the details).
-static const char* kDynamicLinksDomain = INVALID_DYNAMIC_LINKS_DOMAIN;
+// IMPORTANT: You need to set this to a valid URI prefix from the Firebase
+// console (see kDomainUriPrefixInvalidError for the details).
+static const char* kDomainUriPrefix = INVALID_DOMAIN_URI_PREFIX;
 
 // Displays a received dynamic link.
 class Listener : public firebase::dynamic_links::Listener {
@@ -158,7 +158,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   social_parameters.image_url = "https://mysite.com/someimage.jpg";
 
   firebase::dynamic_links::DynamicLinkComponents components(
-      "https://google.com/abc", kDynamicLinksDomain);
+      "https://google.com/abc", kDomainUriPrefix);
   components.google_analytics_parameters = &analytics_parameters;
   components.ios_parameters = &ios_parameters;
   components.itunes_connect_analytics_parameters = &app_store_parameters;
@@ -173,8 +173,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
     ShowGeneratedLink(long_link, description);
   }
 
-  if (strcmp(kDynamicLinksDomain, INVALID_DYNAMIC_LINKS_DOMAIN) == 0) {
-    LogMessage(kDynamicLinksDomainInvalidError);
+  if (strcmp(kDomainUriPrefix, INVALID_DOMAIN_URI_PREFIX) == 0) {
+    LogMessage(kDomainUriPrefixInvalidError);
   } else {
     {
       firebase::Future<dynamic_links::GeneratedDynamicLink> link_future =

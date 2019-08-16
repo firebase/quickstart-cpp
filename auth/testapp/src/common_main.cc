@@ -18,6 +18,7 @@
 
 #include "firebase/app.h"
 #include "firebase/auth.h"
+#include "firebase/auth/client/cpp/src/include/firebase/auth/credential.h"
 #include "firebase/util.h"
 
 // Thin OS abstraction layer.
@@ -50,7 +51,7 @@ using ::firebase::auth::UserInfoInterface;
 using ::firebase::auth::UserMetadata;
 
 #if TARGET_OS_IPHONE
-  using ::firebase::auth::GameCenterAuthProvider;
+using ::firebase::auth::GameCenterAuthProvider;
 #endif
 
 // Set this to true, and set the email/password, to test a custom email address.
@@ -942,10 +943,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
           // Get the Game Center credential from the device
           Future<Credential> game_center_credential_future =
               GameCenterAuthProvider::GetCredential();
-          WaitForFuture(
-              game_center_credential_future,
-              "GameCenterAuthProvider::GetCredential()",
-              kAuthErrorNone);
+          WaitForFuture(game_center_credential_future,
+                        "GameCenterAuthProvider::GetCredential()",
+                        kAuthErrorNone);
 
           const AuthError credential_error =
               static_cast<AuthError>(game_center_credential_future.error());
@@ -1255,6 +1255,98 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
     LogMessage("Anonymous uid(%s)", auth->current_user()->uid().c_str());
   }
+
+#ifdef INTERNAL_EXPERIMENTAL
+#if defined TARGET_OS_IPHONE
+  // --- FederatedAuthProvider tests  ------------------------------------------
+  {
+    {  // --- LinkWithProvider  ---
+      LogMessage("LinkWithProvider");
+      UserLogin user_login(auth);  // Generate a random name/password
+      user_login.Register();
+      if (!user_login.user()) {
+        LogMessage("ERROR: Could not register new user.");
+      } else {
+        LogMessage("Setting up provider data");
+        firebase::auth::FederatedOAuthProviderData provider_data;
+        provider_data.provider_id =
+            firebase::auth::GoogleAuthProvider::GetProviderId();
+        provider_data.provider_id = "google.com";
+        provider_data.scopes = {
+            "https://www.googleapis.com/auth/fitness.activity.read"};
+        provider_data.custom_parameters = {{"req_id", "1234"}};
+
+        LogMessage("Configuration oAuthProvider");
+        firebase::auth::FederatedOAuthProvider provider;
+        provider.SetProviderData(provider_data);
+        LogMessage("invoking linkwithprovider");
+        Future<SignInResult> sign_in_future =
+            user_login.user()->LinkWithProvider(&provider);
+        WaitForSignInFuture(sign_in_future, "LinkWithProvider", kAuthErrorNone,
+                            auth);
+        if (sign_in_future.error() == kAuthErrorNone) {
+          const SignInResult* result_ptr = sign_in_future.result();
+          LogMessage("user email %s", result_ptr->user->email().c_str());
+          LogMessage("Additonal user info provider_id: %s",
+                     result_ptr->info.provider_id.c_str());
+          LogMessage("LinkWithProviderDone");
+        }
+      }
+    }
+
+    {
+      LogMessage("SignInWithProvider");
+      // --- SignInWithProvider ---
+      firebase::auth::FederatedOAuthProviderData provider_data;
+      provider_data.provider_id =
+          firebase::auth::GoogleAuthProvider::GetProviderId();
+      provider_data.custom_parameters = {{"req_id", "1234"}};
+
+      firebase::auth::FederatedOAuthProvider provider;
+      provider.SetProviderData(provider_data);
+      LogMessage("SignInWithProvider SETUP COMPLETE");
+      Future<SignInResult> sign_in_future = auth->SignInWithProvider(&provider);
+      WaitForSignInFuture(sign_in_future, "SignInWithProvider", kAuthErrorNone,
+                          auth);
+      if (sign_in_future.error() == kAuthErrorNone &&
+          sign_in_future.result() != nullptr) {
+        LogSignInResult(*sign_in_future.result());
+      }
+    }
+
+    {  // --- ReauthenticateWithProvider ---
+      LogMessage("ReauthetnicateWithProvider");
+      if (!auth->current_user()) {
+        LogMessage("ERROR: Expected User from SignInWithProvider");
+      } else {
+        firebase::auth::FederatedOAuthProviderData provider_data;
+        provider_data.provider_id =
+            firebase::auth::GoogleAuthProvider::GetProviderId();
+        provider_data.custom_parameters = {{"req_id", "1234"}};
+
+        firebase::auth::FederatedOAuthProvider provider;
+        provider.SetProviderData(provider_data);
+        Future<SignInResult> sign_in_future =
+            auth->current_user()->ReauthenticateWithProvider(&provider);
+        WaitForSignInFuture(sign_in_future, "ReauthenticateWithProvider",
+                            kAuthErrorNone, auth);
+        if (sign_in_future.error() == kAuthErrorNone &&
+            sign_in_future.result() != nullptr) {
+          LogSignInResult(*sign_in_future.result());
+        }
+      }
+    }
+
+    // Clean up provider-linked user so we can run the test app again
+    // and not get "user with that email already exists" errors.
+    if (auth->current_user()) {
+      WaitForFuture(auth->current_user()->Delete(), "Delete User",
+                    kAuthErrorNone,
+                    /*log_error=*/true);
+    }
+  }     // end FederatedAuthProvider
+#endif  // TARGET_OS_IPHONE
+#endif  // INTERNAL_EXPERIMENTAL
 
   LogMessage("Completed Auth tests.");
 

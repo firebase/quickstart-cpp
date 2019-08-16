@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.google.android.analytics.testapp"
+          package="com.google.firebase.cpp.storage.testapp"
           android:versionCode="1"
           android:versionName="1.0">
   <uses-permission android:name="android.permission.INTERNET" />
@@ -12,7 +12,7 @@
               android:screenOrientation="portrait"
               android:configChanges="orientation|screenSize">
       <meta-data android:name="android.app.lib_name"
-                 android:value="android_main" />
+                 android:value="android_main_automated" />
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
         <category android:name="android.intent.category.LAUNCHER" />

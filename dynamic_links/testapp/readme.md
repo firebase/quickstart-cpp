@@ -50,8 +50,13 @@ Building and Running the testapp
           For example "applinks:xyz.app.goo.gl".
   - Copy the dynamic links domain for your project under the Dynamic Links
     tab of the [Firebase console](https://firebase.google.com/console/)
-    e.g xyz.app.goo.gl and assign to the string kDynamicLinksDomain in
+    e.g xyz.app.goo.gl and assign to the string kDomainUriPrefix in
     src/common_main.cc .
+    - Optional: If you want to use a custom Dynamic Links domain, follow
+      [these instructions](https://firebase.google.com/docs/dynamic-links/custom-domains)
+      to set up the domain in Firebase console and in your project's Info.plist.
+      Be sure to assign that domain to the string kDomainUriPrefix in
+      src/common_main.cc.
   - Download the Firebase C++ SDK linked from
     [https://firebase.google.com/docs/cpp/setup](https://firebase.google.com/docs/cpp/setup)
     and unzip it to a directory of your choice.
@@ -108,8 +113,12 @@ Building and Running the testapp
       [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
   - Copy the dynamic links domain for your project under the Dynamic Links
     tab of the [Firebase console](https://firebase.google.com/console/)
-    e.g xyz.app.goo.gl and assign to the string kDynamicLinksDomain in
+    e.g xyz.app.goo.gl and assign to the string kDomainUriPrefix in
     src/common_main.cc .
+    - Optional: If you want to use a custom Dynamic Links domain, follow
+      [these instructions](https://firebase.google.com/docs/dynamic-links/custom-domains)
+      to set up the domain in Firebase console. Be sure to assign that domain to
+      the string kDomainUriPrefix in src/common_main.cc.
   - Download the Firebase C++ SDK linked from
     [https://firebase.google.com/docs/cpp/setup](https://firebase.google.com/docs/cpp/setup)
     and unzip it to a directory of your choice.
