@@ -84,11 +84,11 @@ const char* kAdMobAppID = "YOUR_IOS_ADMOB_APP_ID";
 #if defined(__ANDROID__)
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/6300978111";
 const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/1033173712";
-const char* kRewardedVideoAdUnit = "ca-app-pub-3940256099942544/2888167318";
+const char* kRewardedVideoAdUnit = "ca-app-pub-3940256099942544/5224354917";
 #else
 const char* kBannerAdUnit = "ca-app-pub-3940256099942544/2934735716";
 const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/4411468910";
-const char* kRewardedVideoAdUnit = "ca-app-pub-3940256099942544/6386090517";
+const char* kRewardedVideoAdUnit = "ca-app-pub-3940256099942544/1712485313";
 #endif
 
 // Standard mobile banner size is 320x50.

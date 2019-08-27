@@ -18,7 +18,7 @@
 
 #include "firebase/app.h"
 #include "firebase/auth.h"
-#include "firebase/auth/client/cpp/src/include/firebase/auth/credential.h"
+#include "firebase/auth/credential.h"
 #include "firebase/util.h"
 
 // Thin OS abstraction layer.
@@ -1257,7 +1257,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
 #ifdef INTERNAL_EXPERIMENTAL
-#if defined TARGET_OS_IPHONE
+#if defined TARGET_OS_IPHONE || defined(__ANDROID__)
   // --- FederatedAuthProvider tests  ------------------------------------------
   {
     {  // --- LinkWithProvider  ---
@@ -1315,7 +1315,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     }
 
     {  // --- ReauthenticateWithProvider ---
-      LogMessage("ReauthetnicateWithProvider");
+      LogMessage("ReauthethenticateWithProvider");
       if (!auth->current_user()) {
         LogMessage("ERROR: Expected User from SignInWithProvider");
       } else {
@@ -1345,7 +1345,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
                     /*log_error=*/true);
     }
   }     // end FederatedAuthProvider
-#endif  // TARGET_OS_IPHONE
+#endif  // TARGET_OS_IPHONE || defined(__ANDROID__)
 #endif  // INTERNAL_EXPERIMENTAL
 
   LogMessage("Completed Auth tests.");
