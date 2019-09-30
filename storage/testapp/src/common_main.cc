@@ -162,7 +162,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         "culpa qui officia deserunt mollit anim id est laborum.";
     {
       LogMessage("Write a sample file.");
-      std::string custom_metadata_key = "special/key";
+      std::string custom_metadata_key = "specialkey";
       std::string custom_metadata_value = "secret value";
       firebase::storage::Metadata metadata;
       metadata.set_content_type("test/plain");
