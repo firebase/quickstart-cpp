@@ -118,6 +118,8 @@ else()
   endif()
 endif()
 
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--exclude-libs,libfirebase_database.a -Wl,--exclude-libs,libfirebase_auth.a -Wl,--exclude-libs,libfirebase_app.a")
+
 # Add the Firebase libraries to the target using the function from the SDK.
 add_subdirectory(${FIREBASE_CPP_SDK_DIR} bin/ EXCLUDE_FROM_ALL)
 # Note that firebase_app needs to be last in the list.
