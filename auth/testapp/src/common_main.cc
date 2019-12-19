@@ -60,6 +60,7 @@ static const char kCustomEmail[] = "custom.email@example.com";
 static const char kCustomPassword[] = "CustomPasswordGoesHere";
 
 // Constants used during tests.
+static const char kTestNonceBad[] = "testBadNonce";
 static const char kTestPassword[] = "testEmailPassword123";
 static const char kTestEmailBad[] = "bad.test.email@example.com";
 static const char kTestPasswordBad[] = "badTestPassword";
@@ -882,7 +883,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(
             facebook_bad,
             "Auth::SignInWithCredential() bad Facebook credentials",
-            kAuthErrorInvalidProviderId, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 
       // Use bad GitHub credentials. Should fail.
@@ -893,7 +894,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(git_hub_cred_bad);
         WaitForSignInFuture(
             git_hub_bad, "Auth::SignInWithCredential() bad GitHub credentials",
-            kAuthErrorInvalidProviderId, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 
       // Use bad Google credentials. Should fail.
@@ -969,7 +970,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
         }
       }
 #endif  // TARGET_OS_IPHONE
-
       // Use bad Twitter credentials. Should fail.
       {
         Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
@@ -978,7 +978,21 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(twitter_cred_bad);
         WaitForSignInFuture(
             twitter_bad, "Auth::SignInWithCredential() bad Twitter credentials",
-            kAuthErrorInvalidProviderId, auth);
+            kAuthErrorInvalidCredential, auth);
+      }
+
+      // Construct OAuthCredential with nonce & access token.
+      {
+        Credential nonce_credential_good =
+            OAuthProvider::GetCredential(kTestIdProviderIdBad, kTestIdTokenBad,
+                                         kTestNonceBad, kTestAccessTokenBad);
+      }
+
+      // Construct OAuthCredential with nonce, null access token.
+      {
+        Credential nonce_credential_good = OAuthProvider::GetCredential(
+            kTestIdProviderIdBad, kTestIdTokenBad, kTestNonceBad,
+            /*access_token=*/nullptr);
       }
 
       // Use bad OAuth credentials. Should fail.
@@ -988,7 +1002,18 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
         WaitForSignInFuture(
             oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
-            kAuthErrorInvalidProviderId, auth);
+            kAuthErrorFailure, auth);
+      }
+
+      // Use bad OAuth credentials with nonce. Should fail.
+      {
+        Credential oauth_cred_bad =
+            OAuthProvider::GetCredential(kTestIdProviderIdBad, kTestIdTokenBad,
+                                         kTestNonceBad, kTestAccessTokenBad);
+        Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
+        WaitForSignInFuture(
+            oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
+            kAuthErrorFailure, auth);
       }
 
       // Test Auth::SendPasswordResetEmail().
@@ -1077,7 +1102,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               anonymous_user->LinkWithCredential(twitter_cred_bad);
           WaitForFuture(link_bad_future,
                         "User::LinkWithCredential() with bad credential",
-                        kAuthErrorInvalidProviderId);
+                        kAuthErrorInvalidCredential);
           ExpectTrue("Linking maintains user",
                      auth->current_user() == pre_link_user);
         }
@@ -1094,7 +1119,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               auth->SignInWithCredential(twitter_cred_bad);
           WaitForFuture(signin_bad_future,
                         "Auth::SignInWithCredential() with bad credential",
-                        kAuthErrorInvalidProviderId, auth);
+                        kAuthErrorInvalidCredential, auth);
           ExpectTrue("Failed sign in maintains user",
                      auth->current_user() == pre_signin_user);
         }
@@ -1270,7 +1295,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage("Setting up provider data");
         firebase::auth::FederatedOAuthProviderData provider_data;
         provider_data.provider_id =
-            firebase::auth::GoogleAuthProvider::GetProviderId();
+            firebase::auth::GoogleAuthProvider::kProviderId;
         provider_data.provider_id = "google.com";
         provider_data.scopes = {
             "https://www.googleapis.com/auth/fitness.activity.read"};
@@ -1299,7 +1324,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       // --- SignInWithProvider ---
       firebase::auth::FederatedOAuthProviderData provider_data;
       provider_data.provider_id =
-          firebase::auth::GoogleAuthProvider::GetProviderId();
+          firebase::auth::GoogleAuthProvider::kProviderId;
       provider_data.custom_parameters = {{"req_id", "1234"}};
 
       firebase::auth::FederatedOAuthProvider provider;
@@ -1321,7 +1346,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       } else {
         firebase::auth::FederatedOAuthProviderData provider_data;
         provider_data.provider_id =
-            firebase::auth::GoogleAuthProvider::GetProviderId();
+            firebase::auth::GoogleAuthProvider::kProviderId;
         provider_data.custom_parameters = {{"req_id", "1234"}};
 
         firebase::auth::FederatedOAuthProvider provider;
