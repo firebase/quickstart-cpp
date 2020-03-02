@@ -40,8 +40,6 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   LogMessage("Enabling data collection.");
   analytics::SetAnalyticsCollectionEnabled(true);
-  // App needs to be open at least 10s before logging a valid session.
-  analytics::SetMinimumSessionDuration(1000 * 10);
   // App session times out after 30 minutes.
   // If the app is placed in the background and returns to the foreground after
   // the timeout is expired analytics will log a new session.

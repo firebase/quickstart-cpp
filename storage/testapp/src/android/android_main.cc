@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <stdarg.h>
-#include <stdio.h>
-
 #include <android/log.h>
 #include <android_native_app_glue.h>
 #include <pthread.h>
+#include <unistd.h>
+
 #include <cassert>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 
 #include "main.h"  // NOLINT
 
@@ -36,6 +40,8 @@ static pthread_mutex_t g_started_mutex;
 static void OnAppCmd(struct android_app* app, int32_t cmd) {
   g_destroy_requested |= cmd == APP_CMD_DESTROY;
 }
+
+namespace app_framework {
 
 // Process events pending on the main thread.
 // Returns true when the app receives an event requesting exit.
@@ -103,7 +109,8 @@ class LoggingUtilsData {
   LoggingUtilsData()
       : logging_utils_class_(nullptr),
         logging_utils_add_log_text_(0),
-        logging_utils_init_log_window_(0) {}
+        logging_utils_init_log_window_(0),
+        logging_utils_get_did_touch_(0) {}
 
   ~LoggingUtilsData() {
     JNIEnv* env = GetJniEnv();
@@ -131,6 +138,8 @@ class LoggingUtilsData {
         logging_utils_class_, "initLogWindow", "(Landroid/app/Activity;)V");
     logging_utils_add_log_text_ = env->GetStaticMethodID(
         logging_utils_class_, "addLogText", "(Ljava/lang/String;)V");
+    logging_utils_get_did_touch_ =
+        env->GetStaticMethodID(logging_utils_class_, "getDidTouch", "()Z");
 
     env->CallStaticVoidMethod(logging_utils_class_,
                               logging_utils_init_log_window_, GetActivity());
@@ -146,10 +155,19 @@ class LoggingUtilsData {
     env->DeleteLocalRef(text_string);
   }
 
+  bool DidTouch() {
+    if (logging_utils_class_ == 0) return false;  // haven't been initted yet
+    JNIEnv* env = GetJniEnv();
+    assert(env);
+    return env->CallStaticBooleanMethod(logging_utils_class_,
+                                        logging_utils_get_did_touch_);
+  }
+
  private:
   jclass logging_utils_class_;
   jmethodID logging_utils_add_log_text_;
   jmethodID logging_utils_init_log_window_;
+  jmethodID logging_utils_get_did_touch_;
 };
 
 LoggingUtilsData* g_logging_utils_data;
@@ -170,12 +188,10 @@ void CheckJNIException() {
     const char* exception_text = env->GetStringUTFChars(s, nullptr);
 
     // Log the exception text.
-    __android_log_print(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME,
+    __android_log_print(ANDROID_LOG_INFO, TESTAPP_NAME,
                         "-------------------JNI exception:");
-    __android_log_print(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME, "%s",
-                        exception_text);
-    __android_log_print(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME,
-                        "-------------------");
+    __android_log_print(ANDROID_LOG_INFO, TESTAPP_NAME, "%s", exception_text);
+    __android_log_print(ANDROID_LOG_INFO, TESTAPP_NAME, "-------------------");
 
     // Also, assert fail.
     assert(false);
@@ -187,23 +203,33 @@ void CheckJNIException() {
   }
 }
 
-// Log a message that can be viewed in "adb logcat".
 void LogMessage(const char* format, ...) {
-  static const int kLineBufferSize = 100;
-  char buffer[kLineBufferSize + 2];
-
   va_list list;
   va_start(list, format);
+  LogMessageV(format, list);
+  va_end(list);
+}
+
+// Log a message that can be viewed in "adb logcat".
+void LogMessageV(const char* format, va_list list) {
+  static const int kLineBufferSize = 1024;
+  char buffer[kLineBufferSize + 2];
+
   int string_len = vsnprintf(buffer, kLineBufferSize, format, list);
   string_len = string_len < kLineBufferSize ? string_len : kLineBufferSize;
   // append a linebreak to the buffer:
   buffer[string_len] = '\n';
   buffer[string_len + 1] = '\0';
 
-  __android_log_vprint(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME, format, list);
-  g_logging_utils_data->AppendText(buffer);
+  __android_log_vprint(ANDROID_LOG_INFO, TESTAPP_NAME, format, list);
+  fputs(buffer, stdout);
+  fflush(stdout);
+}
+
+// Log a message that can be viewed in the console.
+void AddToTextView(const char* str) {
+  app_framework::g_logging_utils_data->AppendText(str);
   CheckJNIException();
-  va_end(list);
 }
 
 // Get the JNI environment.
@@ -213,6 +239,75 @@ JNIEnv* GetJniEnv() {
   jint result = vm->AttachCurrentThread(&env, nullptr);
   return result == JNI_OK ? env : nullptr;
 }
+
+// Remove all lines starting with these strings.
+static const char* const filter_lines[] = {"referenceTable ", nullptr};
+
+bool should_filter(const char* str) {
+  for (int i = 0; filter_lines[i] != nullptr; ++i) {
+    if (strncmp(str, filter_lines[i], strlen(filter_lines[i])) == 0)
+      return true;
+  }
+  return false;
+}
+
+void* stdout_logger(void* filedes_ptr) {
+  int fd = reinterpret_cast<int*>(filedes_ptr)[0];
+  static std::string buffer;
+  char bufchar;
+  while (int n = read(fd, &bufchar, 1)) {
+    if (bufchar == '\0') {
+      break;
+    }
+    buffer = buffer + bufchar;
+    if (bufchar == '\n') {
+      if (!should_filter(buffer.c_str())) {
+        app_framework::AddToTextView(buffer.c_str());
+      }
+      buffer.clear();
+    }
+  }
+  JavaVM* jvm;
+  if (app_framework::GetJniEnv()->GetJavaVM(&jvm) == 0) {
+    jvm->DetachCurrentThread();
+  }
+  return nullptr;
+}
+
+struct FunctionData {
+  void* (*func)(void*);
+  void* data;
+};
+
+static void* CallFunction(void* bg_void) {
+  FunctionData* bg = reinterpret_cast<FunctionData*>(bg_void);
+  void* (*func)(void*) = bg->func;
+  void* data = bg->data;
+  // Clean up the data that was passed to us.
+  delete bg;
+  // Call the background function.
+  void* result = func(data);
+  // Then clean up the Java thread.
+  JavaVM* jvm;
+  if (app_framework::GetJniEnv()->GetJavaVM(&jvm) == 0) {
+    jvm->DetachCurrentThread();
+  }
+  return result;
+}
+
+void RunOnBackgroundThread(void* (*func)(void*), void* data) {
+  pthread_t thread;
+  // Rather than running pthread_create(func, data), we must package them into a
+  // struct, because the c++ thread needs to clean up the JNI thread after it
+  // finishes.
+  FunctionData* bg = new FunctionData;
+  bg->func = func;
+  bg->data = data;
+  pthread_create(&thread, nullptr, CallFunction, bg);
+  pthread_detach(thread);
+}
+
+}  // namespace app_framework
 
 // Execute common_main(), flush pending events and finish the activity.
 extern "C" void android_main(struct android_app* state) {
@@ -238,18 +333,37 @@ extern "C" void android_main(struct android_app* state) {
   g_app_state->onAppCmd = OnAppCmd;
 
   // Create the logging display.
-  g_logging_utils_data = new LoggingUtilsData();
-  g_logging_utils_data->Init();
+  app_framework::g_logging_utils_data = new app_framework::LoggingUtilsData();
+  app_framework::g_logging_utils_data->Init();
+
+  // Pipe stdout to AddToTextView so we get the gtest output.
+  int filedes[2];
+  assert(pipe(filedes) != -1);
+  assert(dup2(filedes[1], STDOUT_FILENO) != -1);
+  pthread_t thread;
+  pthread_create(&thread, nullptr, app_framework::stdout_logger,
+                 reinterpret_cast<void*>(filedes));
 
   // Execute cross platform entry point.
-  static const char* argv[] = {FIREBASE_TESTAPP_NAME};
+  static const char* argv[] = {TESTAPP_NAME};
   int return_value = common_main(1, argv);
   (void)return_value;  // Ignore the return value.
-  ProcessEvents(10);
+
+  // Signal to stdout_logger to exit.
+  write(filedes[1], "\0", 1);
+  pthread_join(thread, nullptr);
+  close(filedes[0]);
+  close(filedes[1]);
+  // Pause a few seconds so you can see the results. If the user touches
+  // the screen during that time, don't exit until they choose to.
+  bool should_exit = false;
+  do {
+    should_exit = app_framework::ProcessEvents(10000);
+  } while (app_framework::g_logging_utils_data->DidTouch() && !should_exit);
 
   // Clean up logging display.
-  delete g_logging_utils_data;
-  g_logging_utils_data = nullptr;
+  delete app_framework::g_logging_utils_data;
+  app_framework::g_logging_utils_data = nullptr;
 
   // Finish the activity.
   if (!g_restarted) ANativeActivity_finish(state->activity);

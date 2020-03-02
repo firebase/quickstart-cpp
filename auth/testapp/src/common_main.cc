@@ -18,6 +18,7 @@
 
 #include "firebase/app.h"
 #include "firebase/auth.h"
+#include "firebase/auth/credential.h"
 #include "firebase/util.h"
 
 // Thin OS abstraction layer.
@@ -37,6 +38,8 @@ using ::firebase::auth::FacebookAuthProvider;
 using ::firebase::auth::GitHubAuthProvider;
 using ::firebase::auth::GoogleAuthProvider;
 using ::firebase::auth::kAuthErrorFailure;
+using ::firebase::auth::kAuthErrorInvalidCredential;
+using ::firebase::auth::kAuthErrorInvalidProviderId;
 using ::firebase::auth::kAuthErrorNone;
 using ::firebase::auth::OAuthProvider;
 using ::firebase::auth::PhoneAuthProvider;
@@ -47,12 +50,17 @@ using ::firebase::auth::User;
 using ::firebase::auth::UserInfoInterface;
 using ::firebase::auth::UserMetadata;
 
+#if TARGET_OS_IPHONE
+using ::firebase::auth::GameCenterAuthProvider;
+#endif
+
 // Set this to true, and set the email/password, to test a custom email address.
 static const bool kTestCustomEmail = false;
 static const char kCustomEmail[] = "custom.email@example.com";
 static const char kCustomPassword[] = "CustomPasswordGoesHere";
 
 // Constants used during tests.
+static const char kTestNonceBad[] = "testBadNonce";
 static const char kTestPassword[] = "testEmailPassword123";
 static const char kTestEmailBad[] = "bad.test.email@example.com";
 static const char kTestPasswordBad[] = "badTestPassword";
@@ -488,8 +496,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
   if (auth->current_user() == nullptr) {
     LogMessage("No user signed in at creation time.");
   } else {
-    LogMessage("Current user %s already signed in, so signing them out.",
-               auth->current_user()->display_name().c_str());
+    LogMessage(
+        "Current user uid(%s) name(%s) already signed in, so signing them out.",
+        auth->current_user()->uid().c_str(),
+        auth->current_user()->display_name().c_str());
     auth->SignOut();
   }
 
@@ -540,8 +550,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
     // Test notification on registration.
     auth->AddAuthStateListener(&counter);
     auth->AddIdTokenListener(&token_counter);
-    counter.CompleteTest("registration", 0);
-    token_counter.CompleteTest("registration", 0);
+    // Expect notification immediately after registration.
+    counter.CompleteTest("registration", 1);
+    token_counter.CompleteTest("registration", 1);
 
     // Test notification on SignOut(), when already signed-out.
     auth->SignOut();
@@ -872,7 +883,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(
             facebook_bad,
             "Auth::SignInWithCredential() bad Facebook credentials",
-            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 
       // Use bad GitHub credentials. Should fail.
@@ -883,7 +894,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(git_hub_cred_bad);
         WaitForSignInFuture(
             git_hub_bad, "Auth::SignInWithCredential() bad GitHub credentials",
-            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 
       // Use bad Google credentials. Should fail.
@@ -893,7 +904,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> google_bad = auth->SignInWithCredential(google_cred_bad);
         WaitForSignInFuture(
             google_bad, "Auth::SignInWithCredential() bad Google credentials",
-            kAuthErrorFailure, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 
       // Use bad Google credentials, missing an optional parameter. Should fail.
@@ -903,7 +914,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> google_bad = auth->SignInWithCredential(google_cred_bad);
         WaitForSignInFuture(
             google_bad, "Auth::SignInWithCredential() bad Google credentials",
-            kAuthErrorFailure, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 
 #if defined(__ANDROID__)
@@ -916,10 +927,49 @@ extern "C" int common_main(int argc, const char* argv[]) {
         WaitForSignInFuture(
             play_games_bad,
             "Auth:SignInWithCredential() bad Play Games credentials",
-            kAuthErrorFailure, auth);
+            kAuthErrorInvalidCredential, auth);
       }
 #endif  // defined(__ANDROID__)
 
+#if TARGET_OS_IPHONE
+      // Test Game Center status/login
+      {
+        // Check if the current user is authenticated to GameCenter
+        bool is_authenticated = GameCenterAuthProvider::IsPlayerAuthenticated();
+        if (!is_authenticated) {
+          LogMessage("Not signed into Game Center, skipping test.");
+        } else {
+          LogMessage("Signed in, testing Game Center authentication.");
+
+          // Get the Game Center credential from the device
+          Future<Credential> game_center_credential_future =
+              GameCenterAuthProvider::GetCredential();
+          WaitForFuture(game_center_credential_future,
+                        "GameCenterAuthProvider::GetCredential()",
+                        kAuthErrorNone);
+
+          const AuthError credential_error =
+              static_cast<AuthError>(game_center_credential_future.error());
+
+          // Only attempt to sign in if we were able to get a credential.
+          if (credential_error == kAuthErrorNone) {
+            const Credential* gc_credential_ptr =
+                game_center_credential_future.result();
+
+            if (gc_credential_ptr == nullptr) {
+              LogMessage("Failed to retrieve Game Center credential.");
+            } else {
+              Future<User*> game_center_user =
+                  auth->SignInWithCredential(*gc_credential_ptr);
+              WaitForFuture(game_center_user,
+                            "Auth::SignInWithCredential() test Game Center "
+                            "credential signin",
+                            kAuthErrorNone);
+            }
+          }
+        }
+      }
+#endif  // TARGET_OS_IPHONE
       // Use bad Twitter credentials. Should fail.
       {
         Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
@@ -928,7 +978,21 @@ extern "C" int common_main(int argc, const char* argv[]) {
             auth->SignInWithCredential(twitter_cred_bad);
         WaitForSignInFuture(
             twitter_bad, "Auth::SignInWithCredential() bad Twitter credentials",
-            ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
+            kAuthErrorInvalidCredential, auth);
+      }
+
+      // Construct OAuthCredential with nonce & access token.
+      {
+        Credential nonce_credential_good =
+            OAuthProvider::GetCredential(kTestIdProviderIdBad, kTestIdTokenBad,
+                                         kTestNonceBad, kTestAccessTokenBad);
+      }
+
+      // Construct OAuthCredential with nonce, null access token.
+      {
+        Credential nonce_credential_good = OAuthProvider::GetCredential(
+            kTestIdProviderIdBad, kTestIdTokenBad, kTestNonceBad,
+            /*access_token=*/nullptr);
       }
 
       // Use bad OAuth credentials. Should fail.
@@ -938,7 +1002,18 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
         WaitForSignInFuture(
             oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
-            ::firebase::auth::kAuthErrorFailure, auth);
+            kAuthErrorFailure, auth);
+      }
+
+      // Use bad OAuth credentials with nonce. Should fail.
+      {
+        Credential oauth_cred_bad =
+            OAuthProvider::GetCredential(kTestIdProviderIdBad, kTestIdTokenBad,
+                                         kTestNonceBad, kTestAccessTokenBad);
+        Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
+        WaitForSignInFuture(
+            oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
+            kAuthErrorFailure, auth);
       }
 
       // Test Auth::SendPasswordResetEmail().
@@ -1027,7 +1102,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               anonymous_user->LinkWithCredential(twitter_cred_bad);
           WaitForFuture(link_bad_future,
                         "User::LinkWithCredential() with bad credential",
-                        ::firebase::auth::kAuthErrorOperationNotAllowed);
+                        kAuthErrorInvalidCredential);
           ExpectTrue("Linking maintains user",
                      auth->current_user() == pre_link_user);
         }
@@ -1044,7 +1119,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
               auth->SignInWithCredential(twitter_cred_bad);
           WaitForFuture(signin_bad_future,
                         "Auth::SignInWithCredential() with bad credential",
-                        ::firebase::auth::kAuthErrorOperationNotAllowed, auth);
+                        kAuthErrorInvalidCredential, auth);
           ExpectTrue("Failed sign in maintains user",
                      auth->current_user() == pre_signin_user);
         }
@@ -1202,7 +1277,101 @@ extern "C" int common_main(int argc, const char* argv[]) {
     Future<User*> sign_in_future = auth->SignInAnonymously();
     WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously() at end",
                         kAuthErrorNone, auth);
+
+    LogMessage("Anonymous uid(%s)", auth->current_user()->uid().c_str());
   }
+
+#ifdef INTERNAL_EXPERIMENTAL
+#if defined TARGET_OS_IPHONE || defined(__ANDROID__)
+  // --- FederatedAuthProvider tests  ------------------------------------------
+  {
+    {  // --- LinkWithProvider  ---
+      LogMessage("LinkWithProvider");
+      UserLogin user_login(auth);  // Generate a random name/password
+      user_login.Register();
+      if (!user_login.user()) {
+        LogMessage("ERROR: Could not register new user.");
+      } else {
+        LogMessage("Setting up provider data");
+        firebase::auth::FederatedOAuthProviderData provider_data;
+        provider_data.provider_id =
+            firebase::auth::GoogleAuthProvider::kProviderId;
+        provider_data.provider_id = "google.com";
+        provider_data.scopes = {
+            "https://www.googleapis.com/auth/fitness.activity.read"};
+        provider_data.custom_parameters = {{"req_id", "1234"}};
+
+        LogMessage("Configuration oAuthProvider");
+        firebase::auth::FederatedOAuthProvider provider;
+        provider.SetProviderData(provider_data);
+        LogMessage("invoking linkwithprovider");
+        Future<SignInResult> sign_in_future =
+            user_login.user()->LinkWithProvider(&provider);
+        WaitForSignInFuture(sign_in_future, "LinkWithProvider", kAuthErrorNone,
+                            auth);
+        if (sign_in_future.error() == kAuthErrorNone) {
+          const SignInResult* result_ptr = sign_in_future.result();
+          LogMessage("user email %s", result_ptr->user->email().c_str());
+          LogMessage("Additonal user info provider_id: %s",
+                     result_ptr->info.provider_id.c_str());
+          LogMessage("LinkWithProviderDone");
+        }
+      }
+    }
+
+    {
+      LogMessage("SignInWithProvider");
+      // --- SignInWithProvider ---
+      firebase::auth::FederatedOAuthProviderData provider_data;
+      provider_data.provider_id =
+          firebase::auth::GoogleAuthProvider::kProviderId;
+      provider_data.custom_parameters = {{"req_id", "1234"}};
+
+      firebase::auth::FederatedOAuthProvider provider;
+      provider.SetProviderData(provider_data);
+      LogMessage("SignInWithProvider SETUP COMPLETE");
+      Future<SignInResult> sign_in_future = auth->SignInWithProvider(&provider);
+      WaitForSignInFuture(sign_in_future, "SignInWithProvider", kAuthErrorNone,
+                          auth);
+      if (sign_in_future.error() == kAuthErrorNone &&
+          sign_in_future.result() != nullptr) {
+        LogSignInResult(*sign_in_future.result());
+      }
+    }
+
+    {  // --- ReauthenticateWithProvider ---
+      LogMessage("ReauthethenticateWithProvider");
+      if (!auth->current_user()) {
+        LogMessage("ERROR: Expected User from SignInWithProvider");
+      } else {
+        firebase::auth::FederatedOAuthProviderData provider_data;
+        provider_data.provider_id =
+            firebase::auth::GoogleAuthProvider::kProviderId;
+        provider_data.custom_parameters = {{"req_id", "1234"}};
+
+        firebase::auth::FederatedOAuthProvider provider;
+        provider.SetProviderData(provider_data);
+        Future<SignInResult> sign_in_future =
+            auth->current_user()->ReauthenticateWithProvider(&provider);
+        WaitForSignInFuture(sign_in_future, "ReauthenticateWithProvider",
+                            kAuthErrorNone, auth);
+        if (sign_in_future.error() == kAuthErrorNone &&
+            sign_in_future.result() != nullptr) {
+          LogSignInResult(*sign_in_future.result());
+        }
+      }
+    }
+
+    // Clean up provider-linked user so we can run the test app again
+    // and not get "user with that email already exists" errors.
+    if (auth->current_user()) {
+      WaitForFuture(auth->current_user()->Delete(), "Delete User",
+                    kAuthErrorNone,
+                    /*log_error=*/true);
+    }
+  }     // end FederatedAuthProvider
+#endif  // TARGET_OS_IPHONE || defined(__ANDROID__)
+#endif  // INTERNAL_EXPERIMENTAL
 
   LogMessage("Completed Auth tests.");
 

@@ -37,8 +37,8 @@ Getting Started
       - You can use "com.google.ios.admob.testapp" as the iOS Bundle ID
         while you're testing. You can omit App Store ID while testing.
   - Download the Firebase C++ SDK linked from
-    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
-    directory of your choice.
+    [https://firebase.google.com/docs/cpp/setup](https://firebase.google.com/docs/cpp/setup)
+    and unzip it to a directory of your choice.
   - Add the following frameworks from the Firebase C++ SDK to the project:
     - frameworks/ios/universal/firebase.framework
     - frameworks/ios/universal/firebase_admob.framework
@@ -54,6 +54,13 @@ Getting Started
             Select the "Build Settings" tab, and click "All" to see all
             the build settings. Scroll down to "Search Paths", and add
             your path to "Framework Search Paths".
+  - Update the AdMob App ID:
+    - In the `src/common_main.cc`, update `kAdMobAppID` with the app ID for
+      your iOS app, replacing 'YOUR_IOS_ADMOB_APP_ID'.
+    - In the `testapp/Info.plist`, update `GADApplicationIdentifier` with the
+      same app ID, replacing 'YOUR_IOS_ADMOB_APP_ID'.
+    - For more information, see
+      [Update your Info.plist](https://developers.google.com/admob/ios/quick-start#manual_download)
   - In Xcode, build & run the sample on an iOS device or simulator.
   - The testapp displays a banner ad and an interstitial ad. You can dismiss
     the interstitial ad to see the banner ad.
@@ -88,8 +95,8 @@ Getting Started
     - For further details please refer to the
       [general instructions for setting up an Android app with Firebase](https://firebase.google.com/docs/android/setup).
   - Download the Firebase C++ SDK linked from
-    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
-    directory of your choice.
+    [https://firebase.google.com/docs/cpp/setup](https://firebase.google.com/docs/cpp/setup)
+    and unzip it to a directory of your choice.
   - Configure the location of the Firebase C++ SDK by setting the
     firebase\_cpp\_sdk.dir Gradle property to the SDK install directory.
     For example, in the project directory:
@@ -105,6 +112,14 @@ Getting Started
     - From the Android Studio launch menu, "Open an existing Android Studio
       project", and select `build.gradle`.
   - Install the SDK Platforms that Android Studio reports missing.
+  - Update the AdMob App ID:
+    - In the `src/common_main.cc`, update `kAdMobAppID` with the app ID for
+      your Android app, replacing 'YOUR_ANDROID_ADMOB_APP_ID'.
+    - In the `AndroidManifest.xml`, update
+      `com.google.android.gms.ads.APPLICATION_ID` with the same app ID,
+      replacing 'YOUR_ANDROID_ADMOB_APP_ID'.
+    - For more information, see
+      [Update your AndroidManifest.xml](https://developers.google.com/admob/android/quick-start#update_your_androidmanifestxml)
   - Build the testapp and run it on an Android device or emulator.
   - The testapp will initialize AdMob, then load and display a test banner and
     a test interstitial.
@@ -128,8 +143,8 @@ Getting Started
       file into a `google-services-desktop.json` file, which can then be
       placed in the root directory of the testapp.
   - Download the Firebase C++ SDK linked from
-    [https://firebase.google.com/docs/cpp/setup]() and unzip it to a
-    directory of your choice.
+    [https://firebase.google.com/docs/cpp/setup](https://firebase.google.com/docs/cpp/setup)
+    and unzip it to a directory of your choice.
   - Configure the testapp with the location of the Firebase C++ SDK.
     This can be done a couple different ways:
     - When invoking cmake, pass in the location with
@@ -162,7 +177,7 @@ Getting Started
 Support
 -------
 
-[https://firebase.google.com/support/]()
+[https://firebase.google.com/support/](https://firebase.google.com/support/)
 
 License
 -------

@@ -15,6 +15,8 @@
 #ifndef FIREBASE_TESTAPP_MAIN_H_  // NOLINT
 #define FIREBASE_TESTAPP_MAIN_H_  // NOLINT
 
+#include <stdarg.h>
+
 #include <string>
 #if !defined(_WIN32)
 #include <sys/time.h>
@@ -28,15 +30,18 @@ extern "C" {
 }  // extern "C"
 #endif  // __ANDROID__
 
-// Defined using -DANDROID_MAIN_APP_NAME=some_app_name when compiling this
+// Defined using -DTESTAPP_NAME=some_app_name when compiling this
 // file.
-#ifndef FIREBASE_TESTAPP_NAME
-#define FIREBASE_TESTAPP_NAME "android_main"
-#endif  // FIREBASE_TESTAPP_NAME
+#ifndef TESTAPP_NAME
+#define TESTAPP_NAME "android_main"
+#endif  // TESTAPP_NAME
+
+namespace app_framework {
 
 // Cross platform logging method.
 // Implemented by android/android_main.cc or ios/ios_main.mm.
-extern "C" void LogMessage(const char* format, ...);
+void LogMessage(const char* format, ...);
+void LogMessageV(const char* format, va_list list);
 
 // Platform-independent method to flush pending events for the main thread.
 // Returns true when an event requesting program-exit is received.
@@ -82,5 +87,10 @@ jobject GetActivity();
 // this will be a jobject pointing to the Activity. On iOS, it's an id pointing
 // to the root view of the view controller.
 WindowContext GetWindowContext();
+
+// Run the given function on a detached background thread.
+void RunOnBackgroundThread(void* (*func)(void* data), void* data);
+
+}  // namespace app_framework
 
 #endif  // FIREBASE_TESTAPP_MAIN_H_  // NOLINT

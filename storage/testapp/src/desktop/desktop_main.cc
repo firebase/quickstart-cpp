@@ -16,10 +16,14 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <thread>  // NOLINT
+
 #ifdef _WIN32
 #include <direct.h>
 #define chdir _chdir
 #else
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #endif  // _WIN32
 
@@ -60,6 +64,8 @@ static BOOL WINAPI SignalHandler(DWORD event) {
 static void SignalHandler(int /* ignored */) { quit = true; }
 #endif  // _WIN32
 
+namespace app_framework {
+
 bool ProcessEvents(int msec) {
 #ifdef _WIN32
   Sleep(msec);
@@ -70,14 +76,46 @@ bool ProcessEvents(int msec) {
 }
 
 std::string PathForResource() {
+#if defined(_WIN32)
+  // On Windows we should hvae TEST_TMPDIR or TEMP or TMP set.
+  char buf[MAX_PATH + 1];
+  if (GetEnvironmentVariable("TEST_TMPDIR", buf, sizeof(buf)) ||
+      GetEnvironmentVariable("TEMP", buf, sizeof(buf)) ||
+      GetEnvironmentVariable("TMP", buf, sizeof(buf))) {
+    std::string path(buf);
+    // Add trailing slash.
+    if (path[path.size() - 1] != '\\') path += '\\';
+    return path;
+  }
+#else
+  // Linux and OS X should either have the TEST_TMPDIR environment variable set
+  // or use /tmp.
+  if (const char* value = getenv("TEST_TMPDIR")) {
+    std::string path(value);
+    // Add trailing slash.
+    if (path[path.size() - 1] != '/') path += '/';
+    return path;
+  }
+  struct stat s;
+  if (stat("/tmp", &s) == 0) {
+    if (s.st_mode & S_IFDIR) {
+      return std::string("/tmp/");
+    }
+  }
+#endif  // defined(_WIN32)
+  // If nothing else, use the current directory.
   return std::string();
 }
 
 void LogMessage(const char* format, ...) {
   va_list list;
   va_start(list, format);
-  vprintf(format, list);
+  LogMessageV(format, list);
   va_end(list);
+}
+
+void LogMessageV(const char* format, va_list list) {
+  vprintf(format, list);
   printf("\n");
   fflush(stdout);
 }
@@ -96,18 +134,6 @@ void ChangeToFileDirectory(const char* file_path) {
   }
 }
 
-int main(int argc, const char* argv[]) {
-  ChangeToFileDirectory(
-      FIREBASE_CONFIG_STRING[0] != '\0' ?
-        FIREBASE_CONFIG_STRING : argv[0]);  // NOLINT
-#ifdef _WIN32
-  SetConsoleCtrlHandler((PHANDLER_ROUTINE)SignalHandler, TRUE);
-#else
-  signal(SIGINT, SignalHandler);
-#endif  // _WIN32
-  return common_main(argc, argv);
-}
-
 #if defined(_WIN32)
 // Returns the number of microseconds since the epoch.
 int64_t WinGetCurrentTimeInMicroseconds() {
@@ -123,3 +149,23 @@ int64_t WinGetCurrentTimeInMicroseconds() {
   return now.QuadPart * 10LL;
 }
 #endif
+
+void RunOnBackgroundThread(void* (*func)(void*), void* data) {
+  // On desktop, use std::thread as Windows doesn't support pthreads.
+  std::thread thread(func, data);
+  thread.detach();
+}
+
+}  // namespace app_framework
+
+int main(int argc, const char* argv[]) {
+  app_framework::ChangeToFileDirectory(FIREBASE_CONFIG_STRING[0] != '\0'
+                                           ? FIREBASE_CONFIG_STRING
+                                           : argv[0]);  // NOLINT
+#ifdef _WIN32
+  SetConsoleCtrlHandler((PHANDLER_ROUTINE)SignalHandler, TRUE);
+#else
+  signal(SIGINT, SignalHandler);
+#endif  // _WIN32
+  return common_main(argc, argv);
+}

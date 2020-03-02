@@ -14,7 +14,15 @@
 
 #import <UIKit/UIKit.h>
 
-#include <stdarg.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#include <cassert>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 
 #include "main.h"
 
@@ -43,7 +51,7 @@ static UIView *g_parent_view;
   [super viewDidLoad];
   g_parent_view = self.view;
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    const char *argv[] = {FIREBASE_TESTAPP_NAME};
+    const char *argv[] = {TESTAPP_NAME};
     [g_shutdown_signal lock];
     g_exit_status = common_main(1, argv);
     [g_shutdown_complete signal];
@@ -51,6 +59,7 @@ static UIView *g_parent_view;
 }
 
 @end
+namespace app_framework {
 
 bool ProcessEvents(int msec) {
   [g_shutdown_signal
@@ -71,27 +80,91 @@ WindowContext GetWindowContext() {
   return g_parent_view;
 }
 
+void LogMessage(const char *format, ...) {
+  va_list list;
+  va_start(list, format);
+  LogMessageV(format, list);
+  va_end(list);
+}
+
 // Log a message that can be viewed in the console.
-void LogMessage(const char* format, ...) {
-  va_list args;
+void LogMessageV(const char *format, va_list list) {
   NSString *formatString = @(format);
 
-  va_start(args, format);
-  NSString *message = [[NSString alloc] initWithFormat:formatString arguments:args];
-  va_end(args);
+  NSString *message = [[NSString alloc] initWithFormat:formatString arguments:list];
 
   NSLog(@"%@", message);
   message = [message stringByAppendingString:@"\n"];
 
+  fputs(message.UTF8String, stdout);
+  fflush(stdout);
+}
+
+// Log a message that can be viewed in the console.
+void AddToTextView(const char *str) {
+  NSString *message = @(str);
+
   dispatch_async(dispatch_get_main_queue(), ^{
     g_text_view.text = [g_text_view.text stringByAppendingString:message];
+    NSRange range = NSMakeRange(g_text_view.text.length, 0);
+    [g_text_view scrollRangeToVisible:range];
   });
 }
 
+// Remove all lines starting with these strings.
+static const char *const filter_lines[] = {nullptr};
+
+bool should_filter(const char *str) {
+  for (int i = 0; filter_lines[i] != nullptr; ++i) {
+    if (strncmp(str, filter_lines[i], strlen(filter_lines[i])) == 0) return true;
+  }
+  return false;
+}
+
+void *stdout_logger(void *filedes_ptr) {
+  int fd = reinterpret_cast<int *>(filedes_ptr)[0];
+  std::string buffer;
+  char bufchar;
+  while (int n = read(fd, &bufchar, 1)) {
+    if (bufchar == '\0') {
+      break;
+    }
+    buffer = buffer + bufchar;
+    if (bufchar == '\n') {
+      if (!should_filter(buffer.c_str())) {
+        app_framework::AddToTextView(buffer.c_str());
+      }
+      buffer.clear();
+    }
+  }
+  return nullptr;
+}
+
+void RunOnBackgroundThread(void* (*func)(void*), void* data) {
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+      func(data);
+    });
+}
+
+}  // namespace app_framework
+
 int main(int argc, char* argv[]) {
+  // Pipe stdout to call LogToTextView so we can see the gtest output.
+  int filedes[2];
+  assert(pipe(filedes) != -1);
+  assert(dup2(filedes[1], STDOUT_FILENO) != -1);
+  pthread_t thread;
+  pthread_create(&thread, nullptr, app_framework::stdout_logger, reinterpret_cast<void *>(filedes));
   @autoreleasepool {
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
   }
+  // Signal to stdout_logger to exit.
+  write(filedes[1], "\0", 1);
+  pthread_join(thread, nullptr);
+  close(filedes[0]);
+  close(filedes[1]);
+
+  NSLog(@"Application Exit");
   return g_exit_status;
 }
 
@@ -114,7 +187,7 @@ int main(int argc, char* argv[]) {
   g_text_view.editable = NO;
   g_text_view.scrollEnabled = YES;
   g_text_view.userInteractionEnabled = YES;
-
+  g_text_view.font = [UIFont fontWithName:@"Courier" size:10];
   [viewController.view addSubview:g_text_view];
 
   return YES;
@@ -125,5 +198,4 @@ int main(int argc, char* argv[]) {
   [g_shutdown_signal signal];
   [g_shutdown_complete wait];
 }
-
 @end

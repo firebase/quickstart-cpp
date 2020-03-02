@@ -52,7 +52,7 @@ class SampleValueListener : public firebase::database::ValueListener {
   std::vector<firebase::Variant> seen_values_;
 };
 
-// An example ChildListener class. TODO(jsimantov) implement.
+// An example ChildListener class.
 class SampleChildListener : public firebase::database::ChildListener {
  public:
   void OnChildAdded(const firebase::database::DataSnapshot& snapshot,
@@ -311,10 +311,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
             static_cast<int64_t>(time(nullptr)) * 1000L;
         int64_t time_difference = f5.result()->value().AsInt64().int64_value() -
                                   current_time_milliseconds;
-        // As long as our timestamp is within a day, it's correct enough for our
-        // purposes.
-        const int64_t kAllowedTimeDifferenceMilliseconds =
-            1000L * 60L * 60L * 24L;
+        // As long as our timestamp is within 15 minutes, it's correct enough
+        // for our purposes.
+        const int64_t kAllowedTimeDifferenceMilliseconds = 1000L * 60L * 15L;
 
         if (f1.result()->value().AsString() != kSimpleString ||
             f2.result()->value().AsInt64() != kSimpleInt ||

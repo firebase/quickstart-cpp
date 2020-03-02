@@ -28,75 +28,92 @@ set(FIREBASE_SAMPLE_COMMON_SRCS
   src/common_main.cc
 )
 
-# Platform abstraction layer for the sample.
-set(FIREBASE_SAMPLE_DESKTOP_SRCS
-  src/desktop/desktop_main.cc
-)
+# The include directory for the testapp.
+include_directories(src)
 
 # Sample uses some features that require C++ 11, such as lambdas.
 set (CMAKE_CXX_STANDARD 11)
 
-# Determine the path to the library based on the platform and configuration.
-if(APPLE)
-  set(FIREBASE_SDK_LIBDIR ${FIREBASE_CPP_SDK_DIR}/libs/darwin/universal)
-  set(ADDITIONAL_LIBS pthread)
-elseif(MSVC)
-  if(${CMAKE_CL_64})
-  set(MSVC_CPU x64)
-  else()
-  set(MSVC_CPU x86)
-  endif()
-  if(CMAKE_BUILD_TYPE EQUAL Release)
-    set(MSVC_CONFIG Release)
-  else()
-    set(MSVC_CONFIG Debug)
-  endif()
-  set(MSVC_VS_VERSION VS2015)
-  set(FIREBASE_SDK_LIBDIR
-      ${FIREBASE_CPP_SDK_DIR}/libs/windows/${MSVC_VS_VERSION}/${MSVC_RUNTIME_MODE}/${MSVC_CPU}/${MSVC_CONFIG})
+if(ANDROID)
+  # Build an Android application.
+
+  # Source files used for the Android build.
+  set(FIREBASE_SAMPLE_ANDROID_SRCS
+    src/android/android_main.cc
+  )
+
+  # Build native_app_glue as a static lib
+  add_library(native_app_glue STATIC
+    ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c)
+
+  # Export ANativeActivity_onCreate(),
+  # Refer to: https://github.com/android-ndk/ndk/issues/381.
+  set(CMAKE_SHARED_LINKER_FLAGS
+      "${CMAKE_SHARED_LINKER_FLAGS} -u ANativeActivity_onCreate")
+
+  # Define the target as a shared library, as that is what gradle expects.
+  set(target_name "android_main")
+  add_library(${target_name} SHARED
+    ${FIREBASE_SAMPLE_ANDROID_SRCS}
+    ${FIREBASE_SAMPLE_COMMON_SRCS}
+  )
+
+  target_link_libraries(${target_name}
+    log android atomic native_app_glue
+  )
+
+  target_include_directories(${target_name} PRIVATE
+    ${ANDROID_NDK}/sources/android/native_app_glue)
+
   set(ADDITIONAL_LIBS)
 else()
-  # The Firebase libraries are not built with glibcxx11, so disable the ABI.
-  add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-  set(LINUX_CPU x86_64)
-  set(FIREBASE_SDK_LIBDIR ${FIREBASE_CPP_SDK_DIR}/libs/linux/${LINUX_CPU})
-  set(ADDITIONAL_LIBS pthread)
-endif()
+  # Build a desktop application.
 
-# Link Firebase libraries.
-# NOTE: firebase_app needs to be after all other Firebase libraries.
-link_directories(${FIREBASE_SDK_LIBDIR})
-set(FIREBASE_LIBS firebase_analytics firebase_app)
+  # Windows runtime mode, either MD or MT depending on whether you are using
+  # /MD or /MT. For more information see:
+  # https://msdn.microsoft.com/en-us/library/2kzt1wy3.aspx
+  set(MSVC_RUNTIME_MODE MD)
 
-# Add the Firebase include directory.
-set(FIREBASE_SDK_INCLUDEDIR ${FIREBASE_CPP_SDK_DIR}/include)
-include_directories(${FIREBASE_SDK_INCLUDEDIR})
+  # Platform abstraction layer for the desktop sample.
+  set(FIREBASE_SAMPLE_DESKTOP_SRCS
+    src/desktop/desktop_main.cc
+  )
 
-# The include directory for the testapp.
-include_directories(src)
+  set(target_name "desktop_testapp")
+  add_executable(${target_name}
+    ${FIREBASE_SAMPLE_DESKTOP_SRCS}
+    ${FIREBASE_SAMPLE_COMMON_SRCS}
+  )
 
-add_executable(desktop_testapp
-  ${FIREBASE_SAMPLE_DESKTOP_SRCS}
-  ${FIREBASE_SAMPLE_COMMON_SRCS}
-)
-target_link_libraries(desktop_testapp
-  ${FIREBASE_LIBS}
-  ${ADDITIONAL_LIBS}
-)
-
-# If a config file is present, copy it into the binary location so that it's
-# possible to create the default Firebase app.
-set(FOUND_JSON_FILE FALSE)
-foreach(config "google-services-desktop.json" "google-services.json")
-  if (EXISTS ${config})
-    add_custom_command(
-      TARGET desktop_testapp POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy
-        ${config} $<TARGET_FILE_DIR:desktop_testapp>)
-    set(FOUND_JSON_FILE TRUE)
-    break()
+  if(APPLE)
+    set(ADDITIONAL_LIBS pthread)
+  elseif(MSVC)
+    set(ADDITIONAL_LIBS)
+  else()
+    set(ADDITIONAL_LIBS pthread)
   endif()
-endforeach()
-if(NOT FOUND_JSON_FILE)
-  message(WARNING "Failed to find either google-services-desktop.json or google-services.json. See the readme.md for more information.")
+
+  # If a config file is present, copy it into the binary location so that it's
+  # possible to create the default Firebase app.
+  set(FOUND_JSON_FILE FALSE)
+  foreach(config "google-services-desktop.json" "google-services.json")
+    if (EXISTS ${config})
+      add_custom_command(
+        TARGET ${target_name} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+          ${config} $<TARGET_FILE_DIR:${target_name}>)
+      set(FOUND_JSON_FILE TRUE)
+      break()
+    endif()
+  endforeach()
+  if(NOT FOUND_JSON_FILE)
+    message(WARNING "Failed to find either google-services-desktop.json or google-services.json. See the readme.md for more information.")
+  endif()
 endif()
+
+# Add the Firebase libraries to the target using the function from the SDK.
+add_subdirectory(${FIREBASE_CPP_SDK_DIR} bin/ EXCLUDE_FROM_ALL)
+# Note that firebase_app needs to be last in the list.
+set(firebase_libs firebase_analytics firebase_app)
+target_link_libraries(${target_name} "${firebase_libs}" ${ADDITIONAL_LIBS})
+
