@@ -2,5 +2,5 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # AdMob test application.
 target 'testapp' do
-  pod 'Firebase/AdMob', '6.16.0'
+  pod 'Firebase/AdMob', '6.17.0'
 end
