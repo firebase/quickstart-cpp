@@ -21,7 +21,6 @@
 #include "firebase/future.h"
 #include "firebase/util.h"
 
-
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
 
@@ -45,19 +44,19 @@
 class SampleValueListener : public firebase::database::ValueListener {
  public:
   void OnValueChanged(
-      const firebase::database::DataSnapshot &snapshot) override {
+      const firebase::database::DataSnapshot& snapshot) override {
     LogMessage("  ValueListener.OnValueChanged(%s)",
                snapshot.value().AsString().string_value());
     last_seen_value_ = snapshot.value();
     seen_values_.push_back(snapshot.value());
   }
-  void OnCancelled(const firebase::database::Error &error_code,
-                   const char *error_message) override {
+  void OnCancelled(const firebase::database::Error& error_code,
+                   const char* error_message) override {
     LogMessage("ERROR: SampleValueListener canceled: %d: %s", error_code,
                error_message);
   }
-  const firebase::Variant &last_seen_value() { return last_seen_value_; }
-  bool seen_value(const firebase::Variant &value) {
+  const firebase::Variant& last_seen_value() { return last_seen_value_; }
+  bool seen_value(const firebase::Variant& value) {
     return std::find(seen_values_.begin(), seen_values_.end(), value) !=
            seen_values_.end();
   }
@@ -71,28 +70,28 @@ class SampleValueListener : public firebase::database::ValueListener {
 // An example ChildListener class.
 class SampleChildListener : public firebase::database::ChildListener {
  public:
-  void OnChildAdded(const firebase::database::DataSnapshot &snapshot,
-                    const char *previous_sibling) override {
+  void OnChildAdded(const firebase::database::DataSnapshot& snapshot,
+                    const char* previous_sibling) override {
     LogMessage("  ChildListener.OnChildAdded(%s)", snapshot.key());
     events_.push_back(std::string("added ") + snapshot.key());
   }
-  void OnChildChanged(const firebase::database::DataSnapshot &snapshot,
-                      const char *previous_sibling) override {
+  void OnChildChanged(const firebase::database::DataSnapshot& snapshot,
+                      const char* previous_sibling) override {
     LogMessage("  ChildListener.OnChildChanged(%s)", snapshot.key());
     events_.push_back(std::string("changed ") + snapshot.key());
   }
-  void OnChildMoved(const firebase::database::DataSnapshot &snapshot,
-                    const char *previous_sibling) override {
+  void OnChildMoved(const firebase::database::DataSnapshot& snapshot,
+                    const char* previous_sibling) override {
     LogMessage("  ChildListener.OnChildMoved(%s)", snapshot.key());
     events_.push_back(std::string("moved ") + snapshot.key());
   }
   void OnChildRemoved(
-      const firebase::database::DataSnapshot &snapshot) override {
+      const firebase::database::DataSnapshot& snapshot) override {
     LogMessage("  ChildListener.OnChildRemoved(%s)", snapshot.key());
     events_.push_back(std::string("removed ") + snapshot.key());
   }
-  void OnCancelled(const firebase::database::Error &error_code,
-                   const char *error_message) override {
+  void OnCancelled(const firebase::database::Error& error_code,
+                   const char* error_message) override {
     LogMessage("ERROR: SampleChildListener canceled: %d: %s", error_code,
                error_message);
   }
@@ -101,7 +100,7 @@ class SampleChildListener : public firebase::database::ChildListener {
   size_t total_events() { return events_.size(); }
 
   // Get the number of times this event was seen.
-  int num_events(const std::string &event) {
+  int num_events(const std::string& event) {
     int count = 0;
     for (int i = 0; i < events_.size(); i++) {
       if (events_[i] == event) {
@@ -122,7 +121,7 @@ class ExpectValueListener : public firebase::database::ValueListener {
   explicit ExpectValueListener(firebase::Variant wait_value)
       : wait_value_(wait_value.AsString()), got_value_(false) {}
   void OnValueChanged(
-      const firebase::database::DataSnapshot &snapshot) override {
+      const firebase::database::DataSnapshot& snapshot) override {
     if (snapshot.value().AsString() == wait_value_) {
       got_value_ = true;
     } else {
@@ -130,8 +129,8 @@ class ExpectValueListener : public firebase::database::ValueListener {
           "FAILURE: ExpectValueListener did not receive the expected result.");
     }
   }
-  void OnCancelled(const firebase::database::Error &error_code,
-                   const char *error_message) override {
+  void OnCancelled(const firebase::database::Error& error_code,
+                   const char* error_message) override {
     LogMessage("ERROR: ExpectValueListener canceled: %d: %s", error_code,
                error_message);
   }
@@ -145,7 +144,7 @@ class ExpectValueListener : public firebase::database::ValueListener {
 
 // Wait for a Future to be completed. If the Future returns an error, it will
 // be logged.
-void WaitForCompletion(const firebase::FutureBase &future, const char *name) {
+void WaitForCompletion(const firebase::FutureBase& future, const char* name) {
   while (future.status() == firebase::kFutureStatusPending) {
     ProcessEvents(100);
   }
@@ -188,7 +187,7 @@ void showInstructions() {
   return;
 }
 
-void printSet(std::unordered_set<int> const &us) {
+void printSet(std::unordered_set<int> const& us) {
   std::set<int> s;
   for (auto move : us) {
     s.insert(move);
@@ -197,7 +196,7 @@ void printSet(std::unordered_set<int> const &us) {
 }
 
 // A function to initialise the game
-void initialise(char board[][SIDE], std::unordered_set<int> &us) {
+void initialise(char board[][SIDE], std::unordered_set<int>& us) {
   // Initiate the random number generator so that
   // the same configuration doesn't arises
   int moves[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -267,7 +266,7 @@ bool gameOver(char board[][SIDE]) {
   return (rowCrossed(board) || columnCrossed(board) || diagonalCrossed(board));
 }
 
-int inputMove(std::unordered_set<int> &us) {
+int inputMove(std::unordered_set<int>& us) {
   int num;
   std::cout << "Enter a move { ";
   printSet(us);
@@ -289,7 +288,7 @@ int inputMove(std::unordered_set<int> &us) {
 
 // A function to play Tic-Tac-Toe
 void playTicTacToe(int playerNumber,
-                   firebase::database::DatabaseReference &ref) {
+                   firebase::database::DatabaseReference& ref) {
   int whoseTurn = HUMAN;
   const std::map<int, char> playerMove{{0, 'O'}, {1, 'X'}};
   firebase::Future<void> fLastMove, fWhoseTurn;
@@ -302,10 +301,10 @@ void playTicTacToe(int playerNumber,
   // connectedUsersListener and whoseTurnListener listener is set up to
   // recognise when the desired players have connected & when turns alternate
   LogMessage("connectedUsersListener");
-  ExpectValueListener *connectedUsersListener =
+  ExpectValueListener* connectedUsersListener =
       new ExpectValueListener(COMPUTER);
-  SampleValueListener *whoseTurnListener = new SampleValueListener();
-  SampleValueListener *lastMoveListener = new SampleValueListener();
+  SampleValueListener* whoseTurnListener = new SampleValueListener();
+  SampleValueListener* lastMoveListener = new SampleValueListener();
 
   ref.Child("connectedUsers").AddValueListener(connectedUsersListener);
   ref.Child("whoseTurn").AddValueListener(whoseTurnListener);
@@ -395,8 +394,8 @@ void playTicTacToe(int playerNumber,
   return;
 }
 
-extern "C" int common_main(int argc, const char *argv[]) {
-  ::firebase::App *app;
+extern "C" int common_main(int argc, const char* argv[]) {
+  ::firebase::App* app;
 
 #if defined(__ANDROID__)
   app = ::firebase::App::Create(GetJniEnv(), GetActivity());
@@ -410,24 +409,24 @@ extern "C" int common_main(int argc, const char *argv[]) {
 
   // Use ModuleInitializer to initialize both Auth and Database, ensuring no
   // dependencies are missing.
-  ::firebase::database::Database *database = nullptr;
-  ::firebase::auth::Auth *auth = nullptr;
-  void *initialize_targets[] = {&auth, &database};
+  ::firebase::database::Database* database = nullptr;
+  ::firebase::auth::Auth* auth = nullptr;
+  void* initialize_targets[] = {&auth, &database};
 
   const firebase::ModuleInitializer::InitializerFn initializers[] = {
-      [](::firebase::App *app, void *data) {
+      [](::firebase::App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Auth.");
-        void **targets = reinterpret_cast<void **>(data);
+        void** targets = reinterpret_cast<void**>(data);
         ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::auth::Auth **>(targets[0]) =
+        *reinterpret_cast<::firebase::auth::Auth**>(targets[0]) =
             ::firebase::auth::Auth::GetAuth(app, &result);
         return result;
       },
-      [](::firebase::App *app, void *data) {
+      [](::firebase::App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Database.");
-        void **targets = reinterpret_cast<void **>(data);
+        void** targets = reinterpret_cast<void**>(data);
         ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::database::Database **>(targets[1]) =
+        *reinterpret_cast<::firebase::database::Database**>(targets[1]) =
             ::firebase::database::Database::GetInstance(app, &result);
         return result;
       }};
@@ -453,7 +452,7 @@ extern "C" int common_main(int argc, const char *argv[]) {
   // work as long as your project's Authentication permissions allow anonymous
   // signin.
   {
-    firebase::Future<firebase::auth::User *> sign_in_future =
+    firebase::Future<firebase::auth::User*> sign_in_future =
         auth->SignInAnonymously();
     WaitForCompletion(sign_in_future, "SignInAnonymously");
     if (sign_in_future.error() == firebase::auth::kAuthErrorNone) {
