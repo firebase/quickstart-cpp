@@ -21,7 +21,6 @@
 #include "firebase/future.h"
 #include "firebase/util.h"
 
-
 // Thin OS abstraction layer.
 #include "main.h"  // NOLINT
 
