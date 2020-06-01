@@ -2,7 +2,6 @@
 
 #include <array>
 #include <cstdlib>
-#include <iostream>
 
 #include "cocos2d.h"
 

@@ -4,8 +4,8 @@
 
 USING_NS_CC;
 
-extern const float kFrameWidth = 600;
-extern const float kFrameHeight = 600;
+const float kFrameWidth = 600;
+const float kFrameHeight = 600;
 
 AppDelegate::AppDelegate() {}
 

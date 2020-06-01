@@ -14,7 +14,6 @@
 
 #include <algorithm>
 #include <ctime>
-
 #include "firebase/app.h"
 #include "firebase/auth.h"
 #include "firebase/database.h"

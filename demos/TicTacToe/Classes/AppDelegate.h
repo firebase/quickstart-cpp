@@ -5,9 +5,9 @@
 class AppDelegate : private cocos2d::Application {
  public:
   AppDelegate();
-  virtual ~AppDelegate();
+  ~AppDelegate() override;
 
-  virtual bool applicationDidFinishLaunching();
-  virtual void applicationDidEnterBackground();
-  virtual void applicationWillEnterForeground();
+  bool applicationDidFinishLaunching() override;
+  void applicationDidEnterBackground() override;
+  void applicationWillEnterForeground() override;
 };
