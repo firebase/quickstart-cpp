@@ -170,7 +170,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
   LogMessage("Successfully initialized Firebase Firestore.");
 
-  firestore->set_log_level(firebase::LogLevel::kLogLevelVerbose);
+  firestore->set_log_level(firebase::LogLevel::kLogLevelWarning);
 
   if (firestore->app() != app) {
     LogMessage("ERROR: failed to get App the Firestore was created with.");
