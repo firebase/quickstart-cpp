@@ -219,7 +219,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   LogMessage("Testing Set().");
-  auto setResult=document.Set(firebase::firestore::MapFieldValue{
+  auto setResult = document.Set(firebase::firestore::MapFieldValue{
       {"str", firebase::firestore::FieldValue::String("foo")},
       {"int", firebase::firestore::FieldValue::Integer(123LL)}});
   Await(setResult, "document.Set");
@@ -228,7 +228,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   LogMessage("Testing Update().");
-  auto updateResult=document.Update(firebase::firestore::MapFieldValue{
+  auto updateResult = document.Update(firebase::firestore::MapFieldValue{
       {"int", firebase::firestore::FieldValue::Integer(321LL)}});
   Await(updateResult, "document.Update");
   if (updateResult.status() != firebase::kFutureStatusComplete) {
@@ -236,7 +236,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   LogMessage("Testing Get().");
-  auto getDocumentResult=document.Get();
+  auto getDocumentResult = document.Get();
   Await(getDocumentResult, "document.Get");
   if (getDocumentResult.status() == firebase::kFutureStatusComplete) {
     const firebase::firestore::DocumentSnapshot* snapshot =
@@ -263,7 +263,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   LogMessage("Testing Delete().");
-  auto deleteResult=document.Delete();
+  auto deleteResult = document.Delete();
   Await(deleteResult, "document.Delete");
   if (deleteResult.status() != firebase::kFutureStatusComplete) {
     LogMessage("ERROR: failed to delete document.");
@@ -286,7 +286,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   batch.Set(collection.Document("two"),
             firebase::firestore::MapFieldValue{
                 {"int", firebase::firestore::FieldValue::Integer(123LL)}});
-  auto commitResult=batch.Commit();
+  auto commitResult = batch.Commit();
   Await(commitResult, "batch.Commit");
   if (commitResult.status() != firebase::kFutureStatusComplete) {
     LogMessage("ERROR: failed to write batch.");
@@ -294,7 +294,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   LogMessage("Tested batch write.");
 
   LogMessage("Testing transaction.");
-  auto runTransactionResult=firestore->RunTransaction(
+  auto runTransactionResult = firestore->RunTransaction(
       [collection](firebase::firestore::Transaction& transaction,
                    std::string& error_message) -> firebase::firestore::Error {
         transaction.Update(
@@ -321,7 +321,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
           .WhereGreaterThan("int",
                             firebase::firestore::FieldValue::Boolean(true))
           .Limit(3);
-  auto getQueryResult=query.Get();
+  auto getQueryResult = query.Get();
   Await(getQueryResult, "query.Get");
   if (getQueryResult.status() == firebase::kFutureStatusComplete) {
     const firebase::firestore::QuerySnapshot* snapshot =
