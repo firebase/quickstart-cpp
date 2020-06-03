@@ -17,14 +17,22 @@ static const double kTileWidth = (kScreenWidth / kTilesX);
 static const double kTileHeight = (kScreenHeight / kTilesY);
 static const int kNumberOfPlayers = 2;
 static const char* kBoardImageFileName = "tic_tac_toe_board.png";
-std::array<const char*, kNumberOfPlayers> kMoveImageFileNames = {
+std::array<const char*, kNumberOfPlayers> kPlayerTokenFileNames = {
     "tic_tac_toe_x.png", "tic_tac_toe_o.png"};
 
 Scene* TicTacToe::createScene() {
-  auto scene = Scene::create();
-  auto layer = TicTacToe::create();
+  // Builds a simple scene that uses the bottom left cordinate point as (0,0)
+  // and can have sprites, labels and layers added onto it.
+  Scene* scene = Scene::create();
+  // Builds a layer to be placed onto the scene which has access to TouchEvents.
+  TicTacToe* tic_tac_toe_layer = TicTacToe::create();
 
-  scene->addChild(layer);
+  if (scene == nullptr || tic_tac_toe_layer == nullptr) {
+    log("Error while creating the scene and tictactoe layer.");
+    exit(true);
+  }
+
+  scene->addChild(tic_tac_toe_layer);
 
   return scene;
 }
@@ -34,34 +42,48 @@ bool TicTacToe::init() {
     return false;
   }
   int current_player_index = 0;
-  auto file_names_it = std::begin(kMoveImageFileNames);
+  auto file_names_it = std::begin(kPlayerTokenFileNames);
 
   // TODO(grantpostma): This should reflect the size that is set in AppDelegate.
-  // Should modify kTileWidth and kTileHeight based on that size auto
+  // Should modify kTileWidth and kTileHeight based on that size. auto
   // kScreenWidth = Director::getInstance()->getWinSize().width; auto
   // kScreenHeight =  Director::getInstance()->getWinSize().height;
 
-  auto board_sprite = Sprite::create(kBoardImageFileName);
+  // Creating the board sprite , setting the position to the bottom left of the
+  // frame (0,0), and finally moving the anchor point from the center of the
+  // image(default) to the bottom left, Vec2(0.0,0.0).
+  Sprite* board_sprite = Sprite::create("notFoundImage.png");
+  if (!board_sprite) {
+    log("kBoardImageFileName: %s file not found.", kBoardImageFileName);
+    exit(true);
+  }
   board_sprite->setPosition(0, 0);
   board_sprite->setAnchorPoint(Vec2(0.0, 0.0));
 
   auto touchListener = EventListenerTouchOneByOne::create();
+  // Adding a function to determine which tile was selected to the onTouchBegan
+  // listener.
   touchListener->onTouchBegan = [board_sprite, current_player_index](
                                     Touch* touch,
                                     Event* event) mutable -> bool {
     auto bounds = event->getCurrentTarget()->getBoundingBox();
 
     if (bounds.containsPoint(touch->getLocation())) {
-      // This takes the touch location and calculates which tile number [0-8]
-      // corresponds to that location
-      int move_tile = floor(touch->getLocation().x / kTileWidth) +
-                      kTilesX * floor(touch->getLocation().y / kTileHeight);
+      // Calculates the tile number [0-8] which corresponds to the touch
+      // location.
+      int selected_tile = floor(touch->getLocation().x / kTileWidth) +
+                          kTilesX * floor(touch->getLocation().y / kTileHeight);
 
-      auto sprite = Sprite::create(kMoveImageFileNames[current_player_index]);
+      auto sprite = Sprite::create(kPlayerTokenFileNames[current_player_index]);
+      if (!sprite) {
+        log("kPlayerTokenFileNames: %s file not found.",
+            kPlayerTokenFileNames[current_player_index]);
+        exit(true);
+      }
       // This calculates and sets the position of the sprite based on the
       // move_tile and the constant screen variables.
-      sprite->setPosition((.5 + move_tile % kTilesX) * kTileWidth,
-                          (.5 + move_tile / kTilesY) * kTileHeight);
+      sprite->setPosition((.5 + selected_tile % kTilesX) * kTileWidth,
+                          (.5 + selected_tile / kTilesY) * kTileHeight);
       board_sprite->addChild(sprite);
       current_player_index = (current_player_index + 1) % kNumberOfPlayers;
     }

@@ -14,7 +14,7 @@ AppDelegate::~AppDelegate() {}
 bool AppDelegate::applicationDidFinishLaunching() {
   auto director = Director::getInstance();
   auto glview = director->getOpenGLView();
-  if (!glview) {
+  if (glview == nullptr) {
     glview = GLViewImpl::create("Tic-Tac-Toe");
     glview->setFrameSize(kFrameWidth, kFrameHeight);
     director->setOpenGLView(glview);
