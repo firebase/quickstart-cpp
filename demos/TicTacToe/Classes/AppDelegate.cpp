@@ -21,6 +21,9 @@ bool AppDelegate::applicationDidFinishLaunching() {
   }
 
   auto scene = TicTacToe::createScene();
+  if (scene == NULL) {
+    exit(true);
+  }
   director->runWithScene(scene);
 
   return true;

@@ -24,12 +24,17 @@ Scene* TicTacToe::createScene() {
   // Builds a simple scene that uses the bottom left cordinate point as (0,0)
   // and can have sprites, labels and layers added onto it.
   Scene* scene = Scene::create();
+  if (scene == nullptr) {
+    log("Error while creating the scene.");
+    return NULL;
+  }
   // Builds a layer to be placed onto the scene which has access to TouchEvents.
   TicTacToe* tic_tac_toe_layer = TicTacToe::create();
 
-  if (scene == nullptr || tic_tac_toe_layer == nullptr) {
-    log("Error while creating the scene and tictactoe layer.");
-    exit(true);
+  if (tic_tac_toe_layer == nullptr) {
+    free(scene);
+    log("Error while creating the tictactoe layer.");
+    return NULL;
   }
 
   scene->addChild(tic_tac_toe_layer);
@@ -52,7 +57,7 @@ bool TicTacToe::init() {
   // Creating the board sprite , setting the position to the bottom left of the
   // frame (0,0), and finally moving the anchor point from the center of the
   // image(default) to the bottom left, Vec2(0.0,0.0).
-  Sprite* board_sprite = Sprite::create("notFoundImage.png");
+  Sprite* board_sprite = Sprite::create(kBoardImageFileName);
   if (!board_sprite) {
     log("kBoardImageFileName: %s file not found.", kBoardImageFileName);
     exit(true);
