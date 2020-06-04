@@ -22,7 +22,9 @@ bool AppDelegate::applicationDidFinishLaunching() {
 
   auto scene = TicTacToe::createScene();
   if (scene == NULL) {
-    exit(true);
+    free(director);
+    free(glview);
+    return false;
   }
   director->runWithScene(scene);
 
