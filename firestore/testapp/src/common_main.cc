@@ -65,7 +65,7 @@ class TestEventListener : public Countable,
   void OnEvent(const T& value,
                const firebase::firestore::Error error) override {
     event_count_++;
-    if (error != firebase::firestore::Ok) {
+    if (error != firebase::firestore::kOk) {
       LogMessage("ERROR: EventListener %s got %d.", name_.c_str(), error);
     }
   }
@@ -170,7 +170,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
   LogMessage("Successfully initialized Firebase Firestore.");
 
-  firestore->set_logging_enabled(true);
+  firestore->set_log_level(firebase::LogLevel::kLogLevelWarning);
 
   if (firestore->app() != app) {
     LogMessage("ERROR: failed to get App the Firestore was created with.");
@@ -219,28 +219,28 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   LogMessage("Testing Set().");
-  document.Set(firebase::firestore::MapFieldValue{
-      {"str", firebase::firestore::FieldValue::FromString("foo")},
-      {"int", firebase::firestore::FieldValue::FromInteger(123LL)}});
-  Await(document.SetLastResult(), "document.Set");
-  if (document.SetLastResult().status() != firebase::kFutureStatusComplete) {
+  auto setResult = document.Set(firebase::firestore::MapFieldValue{
+      {"str", firebase::firestore::FieldValue::String("foo")},
+      {"int", firebase::firestore::FieldValue::Integer(123LL)}});
+  Await(setResult, "document.Set");
+  if (setResult.status() != firebase::kFutureStatusComplete) {
     LogMessage("ERROR: failed to write document.");
   }
 
   LogMessage("Testing Update().");
-  document.Update(firebase::firestore::MapFieldValue{
-      {"int", firebase::firestore::FieldValue::FromInteger(321LL)}});
-  Await(document.UpdateLastResult(), "document.Update");
-  if (document.UpdateLastResult().status() != firebase::kFutureStatusComplete) {
+  auto updateResult = document.Update(firebase::firestore::MapFieldValue{
+      {"int", firebase::firestore::FieldValue::Integer(321LL)}});
+  Await(updateResult, "document.Update");
+  if (updateResult.status() != firebase::kFutureStatusComplete) {
     LogMessage("ERROR: failed to write document.");
   }
 
   LogMessage("Testing Get().");
-  document.Get();
-  Await(document.GetLastResult(), "document.Get");
-  if (document.GetLastResult().status() == firebase::kFutureStatusComplete) {
+  auto getDocumentResult = document.Get();
+  Await(getDocumentResult, "document.Get");
+  if (getDocumentResult.status() == firebase::kFutureStatusComplete) {
     const firebase::firestore::DocumentSnapshot* snapshot =
-        document.GetLastResult().result();
+        getDocumentResult.result();
     if (snapshot == nullptr) {
       LogMessage("ERROR: failed to read document.");
     } else {
@@ -263,9 +263,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   LogMessage("Testing Delete().");
-  document.Delete();
-  Await(document.DeleteLastResult(), "document.Delete");
-  if (document.DeleteLastResult().status() != firebase::kFutureStatusComplete) {
+  auto deleteResult = document.Delete();
+  Await(deleteResult, "document.Delete");
+  if (deleteResult.status() != firebase::kFutureStatusComplete) {
     LogMessage("ERROR: failed to delete document.");
   }
   LogMessage("Tested document operations.");
@@ -282,34 +282,34 @@ extern "C" int common_main(int argc, const char* argv[]) {
   firebase::firestore::WriteBatch batch = firestore->batch();
   batch.Set(collection.Document("one"),
             firebase::firestore::MapFieldValue{
-                {"str", firebase::firestore::FieldValue::FromString("foo")}});
+                {"str", firebase::firestore::FieldValue::String("foo")}});
   batch.Set(collection.Document("two"),
             firebase::firestore::MapFieldValue{
-                {"int", firebase::firestore::FieldValue::FromInteger(123LL)}});
-  batch.Commit();
-  Await(batch.CommitLastResult(), "batch.Commit");
-  if (batch.CommitLastResult().status() != firebase::kFutureStatusComplete) {
+                {"int", firebase::firestore::FieldValue::Integer(123LL)}});
+  auto commitResult = batch.Commit();
+  Await(commitResult, "batch.Commit");
+  if (commitResult.status() != firebase::kFutureStatusComplete) {
     LogMessage("ERROR: failed to write batch.");
   }
   LogMessage("Tested batch write.");
 
   LogMessage("Testing transaction.");
-  firestore->RunTransaction(
-      [collection](firebase::firestore::Transaction* transaction,
-                   std::string* error_message) -> firebase::firestore::Error {
-        transaction->Update(
+  auto runTransactionResult = firestore->RunTransaction(
+      [collection](firebase::firestore::Transaction& transaction,
+                   std::string& error_message) -> firebase::firestore::Error {
+        transaction.Update(
             collection.Document("one"),
             firebase::firestore::MapFieldValue{
-                {"int", firebase::firestore::FieldValue::FromInteger(123LL)}});
-        transaction->Delete(collection.Document("two"));
-        transaction->Set(
+                {"int", firebase::firestore::FieldValue::Integer(123LL)}});
+        transaction.Delete(collection.Document("two"));
+        transaction.Set(
             collection.Document("three"),
             firebase::firestore::MapFieldValue{
-                {"int", firebase::firestore::FieldValue::FromInteger(321LL)}});
-        return firebase::firestore::Ok;
+                {"int", firebase::firestore::FieldValue::Integer(321LL)}});
+        return firebase::firestore::kOk;
       });
-  Await(firestore->RunTransactionLastResult(), "firestore.RunTransaction");
-  if (firestore->RunTransactionLastResult().status() !=
+  Await(runTransactionResult, "firestore.RunTransaction");
+  if (runTransactionResult.status() !=
       firebase::kFutureStatusComplete) {
     LogMessage("ERROR: failed to run transaction.");
   }
@@ -319,13 +319,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
   firebase::firestore::Query query =
       collection
           .WhereGreaterThan("int",
-                            firebase::firestore::FieldValue::FromBoolean(true))
+                            firebase::firestore::FieldValue::Boolean(true))
           .Limit(3);
-  query.Get();
-  Await(query.GetLastResult(), "query.Get");
-  if (query.GetLastResult().status() == firebase::kFutureStatusComplete) {
+  auto getQueryResult = query.Get();
+  Await(getQueryResult, "query.Get");
+  if (getQueryResult.status() == firebase::kFutureStatusComplete) {
     const firebase::firestore::QuerySnapshot* snapshot =
-        query.GetLastResult().result();
+        getQueryResult.result();
     if (snapshot == nullptr) {
       LogMessage("ERROR: failed to fetch query result.");
     } else {
