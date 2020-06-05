@@ -56,12 +56,12 @@ bool TicTacToe::init() {
   board_sprite->setPosition(0, 0);
   board_sprite->setAnchorPoint(Vec2(0.0, 0.0));
 
-  auto touchListener = EventListenerTouchOneByOne::create();
   // Adding a function to determine which tile was selected to the onTouchBegan
   // listener.
-  touchListener->onTouchBegan = [board_sprite, current_player_index](
-                                    Touch* touch,
-                                    Event* event) mutable -> bool {
+  auto touch_listener = EventListenerTouchOneByOne::create();
+  touch_listener->onTouchBegan = [board_sprite, current_player_index](
+                                     Touch* touch,
+                                     Event* event) mutable -> bool {
     auto bounds = event->getCurrentTarget()->getBoundingBox();
 
     if (bounds.containsPoint(touch->getLocation())) {
@@ -88,7 +88,7 @@ bool TicTacToe::init() {
 
   Director::getInstance()
       ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(touchListener, board_sprite);
+      ->addEventListenerWithSceneGraphPriority(touch_listener, board_sprite);
 
   this->addChild(board_sprite);
 
