@@ -1,8 +1,3 @@
-#pragma once
-
-#include <array>
-#include <cstdlib>
-
 #include "cocos2d.h"
 
 class TicTacToe : public cocos2d::Layer {
