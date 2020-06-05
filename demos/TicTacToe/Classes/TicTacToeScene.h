@@ -1,8 +1,5 @@
-#pragma once
-
-#include <array>
-#include <cstdlib>
-
+#ifndef TICTACTOE_DEMO_CLASSES_TICTACTOE_SCENE_H_
+#define TICTACTOE_DEMO_CLASSES_TICTACTOE_SCENE_H_
 #include "cocos2d.h"
 
 class TicTacToe : public cocos2d::Layer {
@@ -16,3 +13,4 @@ class TicTacToe : public cocos2d::Layer {
   // Defines a create type for a specific type, in this case a Layer.
   CREATE_FUNC(TicTacToe);
 };
+#endif  // TICTACTOE_DEMO_CLASSES_TICTACTOE_SCENE_H_

@@ -14,18 +14,13 @@ AppDelegate::~AppDelegate() {}
 bool AppDelegate::applicationDidFinishLaunching() {
   auto director = Director::getInstance();
   auto glview = director->getOpenGLView();
-  if (glview == nullptr) {
+  if (glview == NULL) {
     glview = GLViewImpl::create("Tic-Tac-Toe");
     glview->setFrameSize(kFrameWidth, kFrameHeight);
     director->setOpenGLView(glview);
   }
 
   auto scene = TicTacToe::createScene();
-  if (scene == NULL) {
-    free(director);
-    free(glview);
-    return false;
-  }
   director->runWithScene(scene);
 
   return true;

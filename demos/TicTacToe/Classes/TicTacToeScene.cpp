@@ -24,18 +24,9 @@ Scene* TicTacToe::createScene() {
   // Builds a simple scene that uses the bottom left cordinate point as (0,0)
   // and can have sprites, labels and layers added onto it.
   Scene* scene = Scene::create();
-  if (scene == nullptr) {
-    log("Error while creating the scene.");
-    return NULL;
-  }
+
   // Builds a layer to be placed onto the scene which has access to TouchEvents.
   TicTacToe* tic_tac_toe_layer = TicTacToe::create();
-
-  if (tic_tac_toe_layer == nullptr) {
-    free(scene);
-    log("Error while creating the tictactoe layer.");
-    return NULL;
-  }
 
   scene->addChild(tic_tac_toe_layer);
 
@@ -50,8 +41,8 @@ bool TicTacToe::init() {
   auto file_names_it = std::begin(kPlayerTokenFileNames);
 
   // TODO(grantpostma): This should reflect the size that is set in AppDelegate.
-  // Should modify kTileWidth and kTileHeight based on that size. auto
-  // kScreenWidth = Director::getInstance()->getWinSize().width; auto
+  // (GetVisableSize) Should modify kTileWidth and kTileHeight based on that
+  // size. auto kScreenWidth = Director::getInstance()->getWinSize().width; auto
   // kScreenHeight =  Director::getInstance()->getWinSize().height;
 
   // Creating the board sprite , setting the position to the bottom left of the
@@ -80,7 +71,7 @@ bool TicTacToe::init() {
                           kTilesX * floor(touch->getLocation().y / kTileHeight);
 
       auto sprite = Sprite::create(kPlayerTokenFileNames[current_player_index]);
-      if (!sprite) {
+      if (sprite == NULL) {
         log("kPlayerTokenFileNames: %s file not found.",
             kPlayerTokenFileNames[current_player_index]);
         exit(true);
