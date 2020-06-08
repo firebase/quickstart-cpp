@@ -30,9 +30,9 @@
 const int kTimeoutMs = 5000;
 const int kSleepMs = 100;
 
-// Wait for a Future to be completed. If the Future returns an error, it will
-// be logged.
-void Await(const firebase::FutureBase& future, const char* name) {
+// Waits for a Future to be completed and returns whether the future has
+// completed successfully. If the Future returns an error, it will be logged.
+bool Await(const firebase::FutureBase& future, const char* name) {
   int remaining_timeout = kTimeoutMs;
   while (future.status() == firebase::kFutureStatusPending &&
          remaining_timeout > 0) {
@@ -42,10 +42,13 @@ void Await(const firebase::FutureBase& future, const char* name) {
 
   if (future.status() != firebase::kFutureStatusComplete) {
     LogMessage("ERROR: %s returned an invalid result.", name);
+    return false;
   } else if (future.error() != 0) {
     LogMessage("ERROR: %s returned error %d: %s", name, future.error(),
                future.error_message());
+    return false;
   }
+  return true;
 }
 
 class Countable {
@@ -124,11 +127,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
   // Auth caches the previously signed-in user, which can be annoying when
   // trying to test for sign-in failures.
   auth->SignOut();
-  auto future_login = auth->SignInAnonymously();
-  Await(future_login, "Auth sign-in");
-  auto* future_login_result = future_login.result();
-  if (future_login_result && *future_login_result) {
-    const firebase::auth::User* user = *future_login_result;
+  auto login_future = auth->SignInAnonymously();
+  Await(login_future, "Auth sign-in");
+  auto* login_result = login_future.result();
+  if (login_result && *login_result) {
+    const firebase::auth::User* user = *login_result;
     LogMessage("Signed in as %s user, uid: %s, email: %s.\n",
                user->is_anonymous() ? "an anonymous" : "a non-anonymous",
                user->uid().c_str(), user->email().c_str());
@@ -138,7 +141,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   // Note: Auth cannot be deleted while any of the futures issued by it are
   // still valid.
-  future_login.Release();
+  login_future.Release();
 
   LogMessage("Initialize Firebase Firestore.");
 
@@ -170,7 +173,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
   LogMessage("Successfully initialized Firebase Firestore.");
 
-  firestore->set_log_level(firebase::LogLevel::kLogLevelWarning);
+  firestore->set_log_level(firebase::kLogLevelDebug);
 
   if (firestore->app() != app) {
     LogMessage("ERROR: failed to get App the Firestore was created with.");
@@ -219,28 +222,20 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   LogMessage("Testing Set().");
-  auto setResult = document.Set(firebase::firestore::MapFieldValue{
-      {"str", firebase::firestore::FieldValue::String("foo")},
-      {"int", firebase::firestore::FieldValue::Integer(123LL)}});
-  Await(setResult, "document.Set");
-  if (setResult.status() != firebase::kFutureStatusComplete) {
-    LogMessage("ERROR: failed to write document.");
-  }
+  Await(document.Set(firebase::firestore::MapFieldValue{
+            {"str", firebase::firestore::FieldValue::String("foo")},
+            {"int", firebase::firestore::FieldValue::Integer(123)}}),
+        "document.Set");
 
   LogMessage("Testing Update().");
-  auto updateResult = document.Update(firebase::firestore::MapFieldValue{
-      {"int", firebase::firestore::FieldValue::Integer(321LL)}});
-  Await(updateResult, "document.Update");
-  if (updateResult.status() != firebase::kFutureStatusComplete) {
-    LogMessage("ERROR: failed to write document.");
-  }
+  Await(document.Update(firebase::firestore::MapFieldValue{
+            {"int", firebase::firestore::FieldValue::Integer(321)}}),
+        "document.Update");
 
   LogMessage("Testing Get().");
-  auto getDocumentResult = document.Get();
-  Await(getDocumentResult, "document.Get");
-  if (getDocumentResult.status() == firebase::kFutureStatusComplete) {
-    const firebase::firestore::DocumentSnapshot* snapshot =
-        getDocumentResult.result();
+  auto doc_future = document.Get();
+  if (Await(doc_future, "document.Get")) {
+    const firebase::firestore::DocumentSnapshot* snapshot = doc_future.result();
     if (snapshot == nullptr) {
       LogMessage("ERROR: failed to read document.");
     } else {
@@ -263,11 +258,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   }
 
   LogMessage("Testing Delete().");
-  auto deleteResult = document.Delete();
-  Await(deleteResult, "document.Delete");
-  if (deleteResult.status() != firebase::kFutureStatusComplete) {
-    LogMessage("ERROR: failed to delete document.");
-  }
+  Await(document.Delete(), "document.Delete");
   LogMessage("Tested document operations.");
 
   TestEventListener<firebase::firestore::DocumentSnapshot>
@@ -285,34 +276,27 @@ extern "C" int common_main(int argc, const char* argv[]) {
                 {"str", firebase::firestore::FieldValue::String("foo")}});
   batch.Set(collection.Document("two"),
             firebase::firestore::MapFieldValue{
-                {"int", firebase::firestore::FieldValue::Integer(123LL)}});
-  auto commitResult = batch.Commit();
-  Await(commitResult, "batch.Commit");
-  if (commitResult.status() != firebase::kFutureStatusComplete) {
-    LogMessage("ERROR: failed to write batch.");
-  }
+                {"int", firebase::firestore::FieldValue::Integer(123)}});
+  Await(batch.Commit(), "batch.Commit");
   LogMessage("Tested batch write.");
 
   LogMessage("Testing transaction.");
-  auto runTransactionResult = firestore->RunTransaction(
-      [collection](firebase::firestore::Transaction& transaction,
-                   std::string& error_message) -> firebase::firestore::Error {
-        transaction.Update(
-            collection.Document("one"),
-            firebase::firestore::MapFieldValue{
-                {"int", firebase::firestore::FieldValue::Integer(123LL)}});
-        transaction.Delete(collection.Document("two"));
-        transaction.Set(
-            collection.Document("three"),
-            firebase::firestore::MapFieldValue{
-                {"int", firebase::firestore::FieldValue::Integer(321LL)}});
-        return firebase::firestore::kOk;
-      });
-  Await(runTransactionResult, "firestore.RunTransaction");
-  if (runTransactionResult.status() !=
-      firebase::kFutureStatusComplete) {
-    LogMessage("ERROR: failed to run transaction.");
-  }
+  Await(
+      firestore->RunTransaction(
+          [collection](firebase::firestore::Transaction& transaction,
+                       std::string&) -> firebase::firestore::Error {
+            transaction.Update(
+                collection.Document("one"),
+                firebase::firestore::MapFieldValue{
+                    {"int", firebase::firestore::FieldValue::Integer(123)}});
+            transaction.Delete(collection.Document("two"));
+            transaction.Set(
+                collection.Document("three"),
+                firebase::firestore::MapFieldValue{
+                    {"int", firebase::firestore::FieldValue::Integer(321)}});
+            return firebase::firestore::kOk;
+          }),
+      "firestore.RunTransaction");
   LogMessage("Tested transaction.");
 
   LogMessage("Testing query.");
@@ -321,11 +305,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
           .WhereGreaterThan("int",
                             firebase::firestore::FieldValue::Boolean(true))
           .Limit(3);
-  auto getQueryResult = query.Get();
-  Await(getQueryResult, "query.Get");
-  if (getQueryResult.status() == firebase::kFutureStatusComplete) {
-    const firebase::firestore::QuerySnapshot* snapshot =
-        getQueryResult.result();
+  auto query_future = query.Get();
+  if (Await(query_future, "query.Get")) {
+    const firebase::firestore::QuerySnapshot* snapshot = query_future.result();
     if (snapshot == nullptr) {
       LogMessage("ERROR: failed to fetch query result.");
     } else {
