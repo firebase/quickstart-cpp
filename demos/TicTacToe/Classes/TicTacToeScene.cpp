@@ -76,7 +76,7 @@ bool TicTacToe::init() {
             kPlayerTokenFileNames[current_player_index]);
         exit(true);
       }
-      // This calculates and sets the position of the sprite based on the
+      // Calculate and set the position of the sprite based on the
       // move_tile and the constant screen variables.
       sprite->setPosition((.5 + selected_tile % kTilesX) * kTileWidth,
                           (.5 + selected_tile / kTilesY) * kTileHeight);
