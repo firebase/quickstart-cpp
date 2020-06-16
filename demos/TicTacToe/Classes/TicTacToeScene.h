@@ -7,12 +7,7 @@ class TicTacToe : public cocos2d::Layer {
  public:
   // Builds a simple scene that uses the bottom left cordinate point as (0,0)
   // and can have sprites, labels and nodes added onto it.
-  static cocos2d::Scene* createScene(char*);
-  // Initializes the instance of a Node and returns a boolean based on if it was
-  // successful in doing so.
-  bool init() override;
-  // Called automatically every frame. The update is scheduled in `init()`.
-  void update(float) override;
+  static cocos2d::Scene* createScene(std::string );
   // Defines a create type for a specific type, in this case a Layer.
   CREATE_FUNC(TicTacToe);
 };

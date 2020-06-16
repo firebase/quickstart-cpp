@@ -20,22 +20,22 @@ bool MainMenuScene::init() {
     return false;
   }
   // Creates a sprite for the create button and sets its position to the center
-  // of the screen. TODO(grantpostma@): Dynamically choose the location.
+  // of the screen. TODO(grantpostma): Dynamically choose the location.
   auto create_button = Sprite::create("create_game.png");
   create_button->setPosition(300, 350);
   // Create a button listener to handle the touch event.
   auto create_button_touch_listener = EventListenerTouchOneByOne::create();
   // Setting the onTouchBegan event up to a lambda tha will replace the MainMenu
   // scene with a TicTacToe scene.
-  create_button_touch_listener->onTouchBegan = [=](Touch* touch,
-                                                   Event* event) -> bool {
+  create_button_touch_listener->onTouchBegan = [](Touch* touch,
+                                                  Event* event) -> bool {
     auto bounds = event->getCurrentTarget()->getBoundingBox();
     auto point = touch->getLocation();
     // Replaces the scene with a new TicTacToe scene if the touched point is
     // within the bounds of the button.
     if (bounds.containsPoint(point)) {
-      auto tic_tac_toe_scene = TicTacToe::createScene(NULL);
-      Director::getInstance()->replaceScene(tic_tac_toe_scene);
+      Director::getInstance()->replaceScene(
+          TicTacToe::createScene(std::string()));
     }
 
     return true;
@@ -60,19 +60,19 @@ bool MainMenuScene::init() {
   // focus bar when selecting inside the text field's bounding box.
   auto text_field_touch_listener = EventListenerTouchOneByOne::create();
 
-  text_field_touch_listener->onTouchBegan = [=](cocos2d::Touch* touch,
-                                                cocos2d::Event* event) -> bool {
-      auto bounds = event->getCurrentTarget()->getBoundingBox();
-      auto point = touch->getLocation();
-      if (bounds.containsPoint(point)) {
-        // Show the on screen keyboard and places character inputs into the text
-        // field.
-        auto str = join_text_field->getString();
-        auto textField = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
-        textField->attachWithIME();
-      }
+  text_field_touch_listener->onTouchBegan =
+      [join_text_field](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
+    auto bounds = event->getCurrentTarget()->getBoundingBox();
+    auto point = touch->getLocation();
+    if (bounds.containsPoint(point)) {
+      // Show the on screen keyboard and places character inputs into the text
+      // field.
+      auto str = join_text_field->getString();
+      auto textField = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
+      textField->attachWithIME();
+    }
 
-      return true;
+    return true;
   };
 
   // Attaching the touch listener to the text field.
@@ -82,7 +82,7 @@ bool MainMenuScene::init() {
                                                join_text_field);
 
   // Creates a sprite for the join button and sets its position to the center
-  // of the screen. TODO(grantpostma@): Dynamically choose the location.
+  // of the screen. TODO(grantpostma): Dynamically choose the location.
   auto join_button = Sprite::create("join_game.png");
   join_button->setPosition(450, 100);
 
@@ -90,21 +90,17 @@ bool MainMenuScene::init() {
   auto join_button_touch_listener = EventListenerTouchOneByOne::create();
   // Setting the onTouchBegan event up to a lambda tha will replace the MainMenu
   // scene with a TicTacToe scene and pass in join_text_field string.
-  join_button_touch_listener->onTouchBegan = [=](Touch* touch,
-                                                 Event* event) -> bool {
+  join_button_touch_listener->onTouchBegan =
+      [join_text_field](Touch* touch, Event* event) -> bool {
     auto bounds = event->getCurrentTarget()->getBoundingBox();
     auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
       // Getting and converting the join_text_field string to a char*.
       std::string join_text_field_string = join_text_field->getString();
-      int x = join_text_field_string.length();
-      char* game_uuid = new char[join_text_field_string.length() + 1];
-      strcpy(game_uuid, join_text_field_string.c_str());
 
-      auto tic_tac_toe_scene = TicTacToe::createScene(game_uuid);
-      Director::getInstance()->replaceScene(tic_tac_toe_scene);
+      Director::getInstance()->replaceScene(
+          TicTacToe::createScene(join_text_field_string));
     }
-
     return true;
   };
   // Attaching the touch listener to the join button.

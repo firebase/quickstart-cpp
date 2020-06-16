@@ -1,7 +1,7 @@
 #include "AppDelegate.h"
 
-#include "TicTacToeScene.h"
 #include "MainMenuScene.h"
+#include "TicTacToeScene.h"
 USING_NS_CC;
 
 const float kFrameWidth = 600;

@@ -2,7 +2,7 @@
 #define TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 
 #include "cocos2d.h"
-#include "ui\CocosGUI.h"
+#include "ui/CocosGUI.h"
 
 class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
  public:
