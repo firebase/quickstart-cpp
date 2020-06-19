@@ -212,7 +212,7 @@ std::string GenerateGameUuid(std::size_t length) {
 
 // A function that returns true if any of the row
 // is crossed with the same player's move
-bool RowCrossed(int board[][kTilesY]) {
+static bool RowCrossed(int board[][kTilesY]) {
   for (int i = 0; i < kTilesY; i++) {
     if (board[i][0] == board[i][1] && board[i][1] == board[i][2] &&
         board[i][0] != kEmptyTile)
@@ -223,7 +223,7 @@ bool RowCrossed(int board[][kTilesY]) {
 
 // A function that returns true if any of the column
 // is crossed with the same player's move
-bool ColumnCrossed(int board[][kTilesY]) {
+static bool ColumnCrossed(int board[][kTilesY]) {
   for (int i = 0; i < kTilesX; i++) {
     if (board[0][i] == board[1][i] && board[1][i] == board[2][i] &&
         board[0][i] != kEmptyTile)
@@ -234,7 +234,7 @@ bool ColumnCrossed(int board[][kTilesY]) {
 
 // A function that returns true if any of the diagonal
 // is crossed with the same player's move
-bool DiagonalCrossed(int board[][kTilesY]) {
+static bool DiagonalCrossed(int board[][kTilesY]) {
   if (board[0][0] == board[1][1] && board[1][1] == board[2][2] &&
       board[0][0] != kEmptyTile)
     return (true);
@@ -248,7 +248,7 @@ bool DiagonalCrossed(int board[][kTilesY]) {
 
 // A function that returns true if the game is over
 // else it returns a false
-bool gameOver(int board[][kTilesY]) {
+static bool GameOver(int board[][kTilesY]) {
   return (RowCrossed(board) || ColumnCrossed(board) || DiagonalCrossed(board));
 }
 
@@ -504,10 +504,9 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
       WaitForCompletion(future_current_player_index, "setCurrentPlayerIndex");
       awaiting_opponenet_move = true;
       waiting_label->setString("waiting");
-      if (gameOver(board)) {
-        // Update game_outcome to reflect the use won.
-        WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
-        game_outcome = kGameWon;
+      if (GameOver(board)) {
+        // Set game_over_label to reflect the use won.
+        game_over_label->setString("you won!");
       } else if (remaining_tiles.size() == 0) {
         // Update game_outcome to reflect the use tied.
         WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
@@ -558,7 +557,7 @@ void TicTacToeLayer::update(float /*delta*/) {
     remaining_tiles.erase(last_move);
     awaiting_opponenet_move = false;
     current_player_index = player_index;
-    if (gameOver(board)) {
+    if (GameOver(board)) {
       // Set game_outcome to reflect the use lost.
       game_outcome = kGameLost;
     } else if (remaining_tiles.size() == 0) {

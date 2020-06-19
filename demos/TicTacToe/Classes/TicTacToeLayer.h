@@ -1,8 +1,16 @@
 #ifndef TICTACTOE_DEMO_CLASSES_TICTACTOELAYER_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_TICTACTOELAYER_SCENE_H_
 
+#include <unordered_set>
+
 #include "TicTacToeScene.h"
 #include "cocos2d.h"
+#include "firebase/app.h"
+#include "firebase/auth.h"
+#include "firebase/database.h"
+#include "firebase/future.h"
+#include "firebase/util.h"
+
 using cocos2d::Director;
 using cocos2d::Event;
 using cocos2d::Layer;
@@ -10,19 +18,10 @@ using cocos2d::LayerColor;
 using cocos2d::Point;
 using cocos2d::Sprite;
 using cocos2d::Touch;
-
-#include "firebase/app.h"
-#include "firebase/auth.h"
-#include "firebase/database.h"
-
+using firebase::Future;
 using firebase::database::DataSnapshot;
 using firebase::database::MutableData;
 using firebase::database::TransactionResult;
-#include <unordered_set>
-
-#include "firebase/future.h"
-#include "firebase/util.h"
-using firebase::Future;
 
 static const int kTilesX = 3;
 static const int kTilesY = 3;
