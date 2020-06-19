@@ -5,10 +5,6 @@
 #include "firebase/app.h"
 #include "firebase/auth.h"
 #include "firebase/database.h"
-
-using firebase::database::DataSnapshot;
-using firebase::database::MutableData;
-using firebase::database::TransactionResult;
 #include "firebase/future.h"
 #include "firebase/util.h"
 
@@ -23,8 +19,12 @@ using firebase::database::TransactionResult;
 #include <set>
 #include <sstream>
 #include <string>
-using std::string;
 #include <unordered_set>
+
+using firebase::database::DataSnapshot;
+using firebase::database::MutableData;
+using firebase::database::TransactionResult;
+using std::string;
 
 USING_NS_CC;
 
@@ -298,7 +298,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
   // Sign in using Auth before accessing the database.
   // The default Database permissions allow anonymous users access. This will
   // work as long as your project's Authentication permissions allow anonymous
-  // signin.
+  // sign-in.
   {
     firebase::Future<firebase::auth::User*> sign_in_future =
         auth->SignInAnonymously();
@@ -334,12 +334,14 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
     ref = database->GetReference("game_data").Child(join_game_uuid);
     auto fIncrementTotalUsers = ref.RunTransaction([](MutableData* data) {
       auto total_players = data->Child("total_players").value();
-      if (total_players.type() == NULL) {
-        return TransactionResult::kTransactionResultSuccess;
+      // Completing the transaction based on the returned mutable data value.
+      if (total_players.is_null()) {
+        // Must return this if the transaction was unsuccessful.
+        return TransactionResult::kTransactionResultAbort;
       }
       int new_total_players = total_players.int64_value() + 1;
       if (new_total_players > kNumberOfPlayers) {
-        // Callback function needs to replace Scenes
+        // Must return this if the transaction was unsuccessful.
         return TransactionResult::kTransactionResultAbort;
       }
       data->Child("total_players").set_value(new_total_players);
@@ -514,7 +516,7 @@ void TicTacToeLayer::update(float /*delta*/) {
 }
 
 TicTacToeLayer::~TicTacToeLayer() {
-  // release our sprite and layer so that it gets dealloced
+  // release our sprite and layer so that it gets deallocated
   CC_SAFE_RELEASE_NULL(this->board_sprite);
   CC_SAFE_RELEASE_NULL(this->game_over_label);
   CC_SAFE_RELEASE_NULL(this->waiting_label);
