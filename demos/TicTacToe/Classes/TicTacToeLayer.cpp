@@ -348,23 +348,25 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
       initialization_failed = true;
     } else {
       ref = database->GetReference("game_data").Child(join_game_uuid);
-      auto fIncrementTotalUsers = ref.RunTransaction([](MutableData* data) {
-        auto total_players = data->Child("total_players").value();
-        // Completing the transaction based on the returned mutable data value.
-        if (total_players.is_null()) {
-          // Must return this if the transaction was unsuccessful.
-          return TransactionResult::kTransactionResultAbort;
-        }
-        int new_total_players = total_players.int64_value() + 1;
-        if (new_total_players > kNumberOfPlayers) {
-          // Must return this if the transaction was unsuccessful.
-          return TransactionResult::kTransactionResultAbort;
-        }
-        data->Child("total_players").set_value(new_total_players);
-        // Must call this if the transaction was successful.
-        return TransactionResult::kTransactionResultSuccess;
-      });
-      WaitForCompletion(fIncrementTotalUsers, "JoinGameTransaction");
+      auto future_increment_total_users =
+          ref.RunTransaction([](MutableData* data) {
+            auto total_players = data->Child("total_players").value();
+            // Completing the transaction based on the returned mutable data
+            // value.
+            if (total_players.is_null()) {
+              // Must return this if the transaction was unsuccessful.
+              return TransactionResult::kTransactionResultAbort;
+            }
+            int new_total_players = total_players.int64_value() + 1;
+            if (new_total_players > kNumberOfPlayers) {
+              // Must return this if the transaction was unsuccessful.
+              return TransactionResult::kTransactionResultAbort;
+            }
+            data->Child("total_players").set_value(new_total_players);
+            // Must call this if the transaction was successful.
+            return TransactionResult::kTransactionResultSuccess;
+          });
+      WaitForCompletion(future_increment_total_users, "JoinGameTransaction");
 
       player_index = kPlayerTwo;
       awaiting_opponenet_move = true;
@@ -405,10 +407,11 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
     if (bounds.containsPoint(point)) {
       // Update the game_outcome to reflect if the you rage quit or left
       // pre-match.
-      if (remaining_tiles.size() == kNumberOfTiles)
+      if (remaining_tiles.size() == kNumberOfTiles) {
         game_outcome = kGameDisbanded;
-      else
+      } else {
         game_outcome = kGameLost;
+      }
 
       WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
     }
@@ -569,8 +572,9 @@ void TicTacToeLayer::update(float /*delta*/) {
   // game.
   else if (game_over_listener->got_value()) {
     if (game_outcome == kGameDisbanded &&
-        remaining_tiles.size() != kNumberOfTiles)
+        remaining_tiles.size() != kNumberOfTiles) {
       game_outcome = kGameWon;
+    }
     game_over_label->setString(kGameOverStrings[game_outcome]);
     end_game_frames++;
     if (end_game_frames > kEndGameFramesMax) {
