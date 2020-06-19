@@ -9,7 +9,6 @@ Scene* MainMenuScene::createScene() {
   // and can have sprites, labels and layers added onto it.
   auto scene = Scene::create();
   auto layer = MainMenuScene::create();
-
   scene->addChild(layer);
 
   return scene;
@@ -22,7 +21,8 @@ bool MainMenuScene::init() {
   // Creates a sprite for the create button and sets its position to the center
   // of the screen. TODO(grantpostma): Dynamically choose the location.
   auto create_button = Sprite::create("create_game.png");
-  create_button->setPosition(300, 350);
+  create_button->setPosition(25, 200);
+  create_button->setAnchorPoint(Vec2(0, 0));
   // Create a button listener to handle the touch event.
   auto create_button_touch_listener = EventListenerTouchOneByOne::create();
   // Setting the onTouchBegan event up to a lambda tha will replace the MainMenu
@@ -45,17 +45,21 @@ bool MainMenuScene::init() {
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(create_button_touch_listener,
                                                create_button);
-
   // Creating, setting the position and assigning a placeholder to the text
   // field for entering the join game uuid.
   TextFieldTTF* join_text_field =
       cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
-          "Join Game url", cocos2d::Size(400, 200), TextHAlignment::RIGHT,
-          "Arial", 42.0);
-  join_text_field->setPosition(100, 100);
-  join_text_field->setColorSpaceHolder(Color3B::GRAY);
+          "code", cocos2d::Size(200, 100), TextHAlignment::LEFT, "Arial", 55.0);
+  join_text_field->setPosition(420, 45);
+  join_text_field->setAnchorPoint(Vec2(0, 0));
+  join_text_field->setColorSpaceHolder(Color3B::WHITE);
   join_text_field->setDelegate(this);
 
+  auto text_field_border = Sprite::create("text_field_border.png");
+  text_field_border->setPosition(390, 50);
+  text_field_border->setAnchorPoint(Vec2(0, 0));
+  text_field_border->setScale(.53f);
+  this->addChild(text_field_border, 0);
   // Create a touch listener to handle the touch event. TODO(grantpostma): add a
   // focus bar when selecting inside the text field's bounding box.
   auto text_field_touch_listener = EventListenerTouchOneByOne::create();
@@ -68,8 +72,13 @@ bool MainMenuScene::init() {
       // Show the on screen keyboard and places character inputs into the text
       // field.
       auto str = join_text_field->getString();
-      auto textField = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
-      textField->attachWithIME();
+      auto text_field = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
+      text_field->setCursorEnabled(true);
+      text_field->attachWithIME();
+    } else {
+      auto text_field = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
+      text_field->setCursorEnabled(false);
+      text_field->detachWithIME();
     }
 
     return true;
@@ -82,10 +91,12 @@ bool MainMenuScene::init() {
                                                join_text_field);
 
   // Creates a sprite for the join button and sets its position to the center
-  // of the screen. TODO(grantpostma): Dynamically choose the location.
+  // of the screen. TODO(grantpostma): Dynamically choose the location and set
+  // size().
   auto join_button = Sprite::create("join_game.png");
-  join_button->setPosition(450, 100);
-
+  join_button->setPosition(25, 50);
+  join_button->setAnchorPoint(Vec2(0, 0));
+  join_button->setScale(1.3f);
   // Create a button listener to handle the touch event.
   auto join_button_touch_listener = EventListenerTouchOneByOne::create();
   // Setting the onTouchBegan event up to a lambda tha will replace the MainMenu
@@ -95,11 +106,14 @@ bool MainMenuScene::init() {
     auto bounds = event->getCurrentTarget()->getBoundingBox();
     auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
-      // Getting and converting the join_text_field string to a char*.
+      // Getting the string from join_text_field.
       std::string join_text_field_string = join_text_field->getString();
-
-      Director::getInstance()->replaceScene(
-          TicTacToe::createScene(join_text_field_string));
+      if (join_text_field_string.length() == 4) {
+        Director::getInstance()->replaceScene(
+            TicTacToe::createScene(join_text_field_string));
+      } else {
+        join_text_field->setString("");
+      }
     }
     return true;
   };
@@ -112,7 +126,7 @@ bool MainMenuScene::init() {
   // MainMenu scene.
   this->addChild(create_button);
   this->addChild(join_button);
-  this->addChild(join_text_field);
+  this->addChild(join_text_field, 1);
 
   return true;
 }
