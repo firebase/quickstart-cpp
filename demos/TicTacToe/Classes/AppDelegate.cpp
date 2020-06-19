@@ -10,7 +10,6 @@ const float kFrameHeight = 600;
 AppDelegate::AppDelegate() {}
 
 AppDelegate::~AppDelegate() {}
-
 bool AppDelegate::applicationDidFinishLaunching() {
   auto director = Director::getInstance();
   auto glview = director->getOpenGLView();

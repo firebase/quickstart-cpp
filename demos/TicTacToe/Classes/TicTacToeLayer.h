@@ -41,7 +41,7 @@ class TicTacToeLayer : public Layer {
   std::string join_game_uuid;
   firebase::database::DatabaseReference ref;
   // Creating listeners for database values.
-  // The databse schema has a top level game_uuid object which includes
+  // The database schema has a top level game_uuid object which includes
   // last_move, total_players and current_player_index fields.
   std::unique_ptr<SampleValueListener> current_player_index_listener;
   std::unique_ptr<SampleValueListener> last_move_listener;
