@@ -1,7 +1,7 @@
 #include "AppDelegate.h"
 
+#include "MainMenuScene.h"
 #include "TicTacToeScene.h"
-
 USING_NS_CC;
 
 const float kFrameWidth = 600;
@@ -10,7 +10,6 @@ const float kFrameHeight = 600;
 AppDelegate::AppDelegate() {}
 
 AppDelegate::~AppDelegate() {}
-
 bool AppDelegate::applicationDidFinishLaunching() {
   auto director = Director::getInstance();
   auto glview = director->getOpenGLView();
@@ -20,7 +19,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     director->setOpenGLView(glview);
   }
 
-  auto scene = TicTacToe::createScene();
+  auto scene = MainMenuScene::createScene();
   director->runWithScene(scene);
 
   return true;
