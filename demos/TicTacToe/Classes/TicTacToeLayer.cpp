@@ -35,10 +35,12 @@ static const int kPlayerTwo = 1;
 static const int kNumberOfPlayers = 2;
 
 // End game outcomes.
-static const int kGameWon = 0;
-static const int kGameLost = 1;
-static const int kGameTied = 2;
-static const int kGameDisbanded = 3;
+static const enum kGameOutcome {
+  kGameWon = 0,
+  kGameLost,
+  kGameTied,
+  kGameDisbanded
+};
 static const std::array<string, 4> kGameOverStrings = {
     "you won!", "you lost.", "you tied.", "user left."};
 
@@ -511,7 +513,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
         // Set game_over_label to reflect the use won.
         game_over_label->setString("you won!");
       } else if (remaining_tiles.size() == 0) {
-        // Update game_outcome to reflect the use tied.
+        // Update game_outcome to reflect the user tied.
         WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
         game_outcome = kGameTied;
       }

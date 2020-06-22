@@ -36,9 +36,9 @@ class TicTacToeLayer : public Layer {
   TicTacToeLayer(std::string);
   ~TicTacToeLayer();
   virtual void TicTacToeLayer::update(float);
-  // Tracks whether the board was unable to build
+  // Tracks whether the board was unable to build.
   bool initialization_failed = false;
-  // Tracks the game outcome
+  // Tracks the game outcome.
   int game_outcome;
   // Creating a string for the join game code and initializing the database
   // reference.

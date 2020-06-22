@@ -2,6 +2,10 @@
 
 #include "TicTacToeScene.h"
 
+static const char* kCreateGameImage = "create_game.png";
+static const char* kTextFieldBorderImage = "text_field_border.png";
+static const char* kJoinButtonImage = "join_game.png";
+
 USING_NS_CC;
 
 Scene* MainMenuScene::createScene() {
@@ -20,7 +24,7 @@ bool MainMenuScene::init() {
   }
   // Creates a sprite for the create button and sets its position to the center
   // of the screen. TODO(grantpostma): Dynamically choose the location.
-  auto create_button = Sprite::create("create_game.png");
+  auto create_button = Sprite::create(kCreateGameImage);
   create_button->setPosition(25, 200);
   create_button->setAnchorPoint(Vec2(0, 0));
   // Create a button listener to handle the touch event.
@@ -55,7 +59,7 @@ bool MainMenuScene::init() {
   join_text_field->setColorSpaceHolder(Color3B::WHITE);
   join_text_field->setDelegate(this);
 
-  auto text_field_border = Sprite::create("text_field_border.png");
+  auto text_field_border = Sprite::create(kTextFieldBorderImage);
   text_field_border->setPosition(390, 50);
   text_field_border->setAnchorPoint(Vec2(0, 0));
   text_field_border->setScale(.53f);
@@ -93,7 +97,7 @@ bool MainMenuScene::init() {
   // Creates a sprite for the join button and sets its position to the center
   // of the screen. TODO(grantpostma): Dynamically choose the location and set
   // size().
-  auto join_button = Sprite::create("join_game.png");
+  auto join_button = Sprite::create(kJoinButtonImage);
   join_button->setPosition(25, 50);
   join_button->setAnchorPoint(Vec2(0, 0));
   join_button->setScale(1.3f);
