@@ -50,7 +50,7 @@ class TicTacToeLayer : public Layer {
   cocos2d::Label* game_over_label;
   cocos2d::Label* waiting_label;
   // Creating firebase futures for last_move and current_player_index
-  firebase::Future<void> fLastMove;
+  firebase::Future<void> future_last_move;
   firebase::Future<void> future_current_player_index;
   // Creating the board, remaining available tile set and player index
   // variables.

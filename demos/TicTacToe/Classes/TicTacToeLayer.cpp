@@ -436,10 +436,10 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
           current_player_index;
       remaining_tiles.erase(selected_tile);
       current_player_index = (current_player_index + 1) % kNumberOfPlayers;
-      fLastMove = ref.Child("last_move").SetValue(selected_tile);
+      future_last_move = ref.Child("last_move").SetValue(selected_tile);
       future_current_player_index =
           ref.Child("current_player_index").SetValue(current_player_index);
-      WaitForCompletion(fLastMove, "setLastMove");
+      WaitForCompletion(future_last_move, "setLastMove");
       WaitForCompletion(future_current_player_index, "setCurrentPlayerIndex");
       awaiting_opponenet_move = true;
       waiting_label->setString("waiting");
