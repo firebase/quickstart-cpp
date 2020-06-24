@@ -4,8 +4,10 @@
 #include "TicTacToeScene.h"
 USING_NS_CC;
 
+// Set based on the image width.
 const float kFrameWidth = 600;
-const float kFrameHeight = 600;
+// Set based on the image height plus 40 for windows bar.
+const float kFrameHeight = 640;
 
 AppDelegate::AppDelegate() {}
 
