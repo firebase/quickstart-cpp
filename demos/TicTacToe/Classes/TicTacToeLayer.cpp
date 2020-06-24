@@ -1,31 +1,5 @@
 #include "TicTacToeLayer.h"
 
-#include "MainMenuScene.h"
-#include "TicTacToeScene.h"
-#include "firebase/app.h"
-#include "firebase/auth.h"
-#include "firebase/database.h"
-#include "firebase/future.h"
-#include "firebase/util.h"
-
-// Thin OS abstraction layer.
-#include <algorithm>
-#include <array>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <iterator>
-#include <map>
-#include <set>
-#include <sstream>
-#include <string>
-#include <unordered_set>
-
-using firebase::database::DataSnapshot;
-using firebase::database::MutableData;
-using firebase::database::TransactionResult;
-using std::string;
-
 USING_NS_CC;
 
 // Player constants.
@@ -41,6 +15,10 @@ static const enum kGameOutcome {
   kGameTied,
   kGameDisbanded
 };
+// creating an array that has indicies of enum kGameOutcome and maps that to the
+// database outcome key.
+static const const char* kGameOutcomeStrings[] = {"wins", "loses", "ties",
+                                                  "disbanded"};
 static const std::array<string, 4> kGameOverStrings = {
     "you won!", "you lost.", "you tied.", "user left."};
 
@@ -60,24 +38,6 @@ static const char* kBoardImageFileName = "tic_tac_toe_board.png";
 static const char* kLeaveButtonFileName = "leave_button.png";
 static std::array<const char*, kNumberOfPlayers> kPlayerTokenFileNames = {
     "tic_tac_toe_x.png", "tic_tac_toe_o.png"};
-
-void LogMessage(const char* format, ...) {
-  va_list list;
-  va_start(list, format);
-  vprintf(format, list);
-  va_end(list);
-  printf("\n");
-  fflush(stdout);
-}
-
-bool ProcessEvents(int msec) {
-#ifdef _WIN32
-  Sleep(msec);
-#else
-  usleep(msec * 1000);
-#endif  // _WIN32
-  return false;
-}
 
 // An example of a ValueListener object. This specific version will
 // simply log every value it sees, and store them in a list so we can
@@ -183,35 +143,6 @@ class ExpectValueListener : public firebase::database::ValueListener {
   bool got_value_;
 };
 
-// Wait for a Future to be completed. If the Future returns an error, it will
-// be logged.
-void WaitForCompletion(const firebase::FutureBase& future, const char* name) {
-  while (future.status() == firebase::kFutureStatusPending) {
-    ProcessEvents(100);
-  }
-  if (future.status() != firebase::kFutureStatusComplete) {
-    LogMessage("ERROR: %s returned an invalid result.", name);
-  } else if (future.error() != 0) {
-    LogMessage("ERROR: %s returned error %d: %s", name, future.error(),
-               future.error_message());
-  }
-}
-std::string GenerateGameUuid(std::size_t length) {
-  const std::string kCharacters = "0123456789abcdefghjkmnpqrstuvwxyz";
-
-  std::random_device random_device;
-  std::mt19937 generator(random_device());
-  std::uniform_int_distribution<> distribution(0, kCharacters.size() - 1);
-
-  std::string GenerateGameUuid;
-
-  for (std::size_t i = 0; i < length; ++i) {
-    GenerateGameUuid += kCharacters[distribution(generator)];
-  }
-
-  return GenerateGameUuid;
-}
-
 // A function that returns true if any of the row
 // is crossed with the same player's move
 static bool RowCrossed(int board[][kTilesY]) {
@@ -254,80 +185,19 @@ static bool GameOver(int board[][kTilesY]) {
   return (RowCrossed(board) || ColumnCrossed(board) || DiagonalCrossed(board));
 }
 
-TicTacToeLayer::TicTacToeLayer(string game_uuid) {
+TicTacToeLayer::TicTacToeLayer(string game_uuid,
+                               firebase::database::Database* main_menu_database,
+                               string main_menu_user) {
   join_game_uuid = game_uuid;
   current_player_index = kPlayerOne;
   game_outcome = kGameWon;
-  LogMessage("Initialized Firebase App.");
-  auto app = ::firebase::App::Create();
-  LogMessage("Initialize Firebase Auth and Firebase Database.");
-  // Use ModuleInitializer to initialize both Auth and Database, ensuring no
-  // dependencies are missing.
-  firebase::ModuleInitializer initializer;
-
-  database = nullptr;
-  auth = nullptr;
-  void* initialize_targets[] = {&auth, &database};
-
-  const firebase::ModuleInitializer::InitializerFn initializers[] = {
-      [](::firebase::App* app, void* data) {
-        LogMessage("Attempt to initialize Firebase Auth.");
-        void** targets = reinterpret_cast<void**>(data);
-        ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::auth::Auth**>(targets[0]) =
-            ::firebase::auth::Auth::GetAuth(app, &result);
-        return result;
-      },
-      [](::firebase::App* app, void* data) {
-        LogMessage("Attempt to initialize Firebase Database.");
-        void** targets = reinterpret_cast<void**>(data);
-        ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::database::Database**>(targets[1]) =
-            ::firebase::database::Database::GetInstance(app, &result);
-        return result;
-      }};
-
-  initializer.Initialize(app, initialize_targets, initializers,
-                         sizeof(initializers) / sizeof(initializers[0]));
-
-  WaitForCompletion(initializer.InitializeLastResult(), "Initialize");
-
-  if (initializer.InitializeLastResult().error() != 0) {
-    LogMessage("Failed to initialize Firebase libraries: %s",
-               initializer.InitializeLastResult().error_message());
-    ProcessEvents(2000);
-    return;
-  }
-  LogMessage("Successfully initialized Firebase Auth and Firebase Database.");
-
-  database->set_persistence_enabled(true);
-
-  // Sign in using Auth before accessing the database.
-  // The default Database permissions allow anonymous users access. This will
-  // work as long as your project's Authentication permissions allow anonymous
-  // sign-in.
-  {
-    firebase::Future<firebase::auth::User*> sign_in_future =
-        auth->SignInAnonymously();
-    WaitForCompletion(sign_in_future, "SignInAnonymously");
-    if (sign_in_future.error() == firebase::auth::kAuthErrorNone) {
-      LogMessage("Auth: Signed in anonymously.");
-    } else {
-      LogMessage("ERROR: Could not sign in anonymously. Error %d: %s",
-                 sign_in_future.error(), sign_in_future.error_message());
-      LogMessage(
-          "  Ensure your application has the Anonymous sign-in provider "
-          "enabled in Firebase Console.");
-      LogMessage(
-          "  Attempting to connect to the database anyway. This may fail "
-          "depending on the security settings.");
-    }
-  }
+  database = main_menu_database;
+  user_uid = main_menu_user;
   // Splits on the if depending on if the player created or joined the game.
   // Additionally sets the player_index and total_players based on joining or
   // creating a game.
   if (join_game_uuid.empty()) {
-    join_game_uuid = GenerateGameUuid(4);
+    join_game_uuid = GenerateUid(4);
     ref = database->GetReference("game_data").Child(join_game_uuid);
     firebase::Future<void> future_create_game =
         ref.Child("total_players").SetValue(1);
@@ -512,10 +382,12 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
       if (GameOver(board)) {
         // Set game_over_label to reflect the use won.
         game_over_label->setString("you won!");
+        game_outcome = kGameWon;
+        WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
       } else if (remaining_tiles.size() == 0) {
         // Update game_outcome to reflect the user tied.
-        WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
         game_outcome = kGameTied;
+        WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
       }
     }
     return true;
@@ -534,7 +406,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid) {
 void TicTacToeLayer::update(float /*delta*/) {
   // Replacing the scene with MainMenuScene if the initialization fails.
   if (initialization_failed == true) {
-    Director::getInstance()->replaceScene(MainMenuScene::createScene());
+    Director::getInstance()->popScene();
   }
   // Performs the actions of the other player when the
   // current_player_index_listener is equal to the player index.
@@ -565,9 +437,11 @@ void TicTacToeLayer::update(float /*delta*/) {
     if (GameOver(board)) {
       // Set game_outcome to reflect the use lost.
       game_outcome = kGameLost;
+      WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
     } else if (remaining_tiles.size() == 0) {
       // Set game_outcome to reflect the game ended in a tie.
       game_outcome = kGameTied;
+      WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
     }
   }
   // Shows the end game label for kEndGameFramesMax to show the result of the
@@ -580,12 +454,21 @@ void TicTacToeLayer::update(float /*delta*/) {
     game_over_label->setString(kGameOverStrings[game_outcome]);
     end_game_frames++;
     if (end_game_frames > kEndGameFramesMax) {
-      // TODO(grantpostma): Update authenticated users record.
+      // Removing the game from existence and updating the user's record before
+      // swapping back scenes.
       WaitForCompletion(database->GetReference("game_data")
                             .Child(join_game_uuid)
                             .RemoveValue(),
                         "removeGameUuid");
-      Director::getInstance()->replaceScene(MainMenuScene::createScene());
+      ref = database->GetReference("users").Child(user_uid);
+      auto future_record =
+          ref.Child(kGameOutcomeStrings[game_outcome]).GetValue();
+      WaitForCompletion(future_record, "getPreviousOutcomeRecord");
+      WaitForCompletion(
+          ref.Child(kGameOutcomeStrings[game_outcome])
+              .SetValue(future_record.result()->value().int64_value() + 1),
+          "setGameOutcomeRecord");
+      Director::getInstance()->popScene();
     }
   }
   // Updates the waiting label to signify it is this players move.

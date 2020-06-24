@@ -3,13 +3,22 @@
 
 #include <unordered_set>
 
+#include "MainMenuScene.h"
 #include "TicTacToeScene.h"
 #include "cocos2d.h"
-#include "firebase/app.h"
-#include "firebase/auth.h"
-#include "firebase/database.h"
-#include "firebase/future.h"
-#include "firebase/util.h"
+
+// Thin OS abstraction layer.
+#include <algorithm>
+#include <array>
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <iterator>
+#include <map>
+#include <set>
+#include <sstream>
+#include <string>
+#include <unordered_set>
 
 using cocos2d::Director;
 using cocos2d::Event;
@@ -22,6 +31,7 @@ using firebase::Future;
 using firebase::database::DataSnapshot;
 using firebase::database::MutableData;
 using firebase::database::TransactionResult;
+using std::string;
 
 static const int kTilesX = 3;
 static const int kTilesY = 3;
@@ -33,7 +43,7 @@ class TicTacToeLayer : public Layer {
   typedef Layer super;
 
  public:
-  TicTacToeLayer(std::string);
+  TicTacToeLayer(std::string, firebase::database::Database*, std::string);
   ~TicTacToeLayer();
   virtual void TicTacToeLayer::update(float);
   // Tracks whether the board was unable to build.
@@ -43,8 +53,8 @@ class TicTacToeLayer : public Layer {
   // Creating a string for the join game code and initializing the database
   // reference.
   std::string join_game_uuid;
-  /// Firebase Auth, used for logging into Firebase.
-  firebase::auth::Auth* auth;
+  // User uid for updating the user's record after the game is over.
+  std::string user_uid;
 
   /// Firebase Realtime Database, the entry point to all database operations.
   firebase::database::Database* database;
