@@ -1,3 +1,17 @@
+// Copyright 2020 Google Inc. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 #include "TicTacToeLayer.h"
 
 USING_NS_CC;
@@ -15,7 +29,8 @@ static const enum kGameOutcome {
   kGameTied,
   kGameDisbanded
 };
-// creating an array that has indicies of enum kGameOutcome and maps that to the
+
+// create an array that has indicies of enum kGameOutcome and maps that to the
 // database outcome key.
 static const const char* kGameOutcomeStrings[] = {"wins", "loses", "ties",
                                                   "disbanded"};
@@ -26,13 +41,16 @@ static const std::array<string, 4> kGameOverStrings = {
 extern const int kTilesX;
 extern const int kTilesY;
 static const int kNumberOfTiles = kTilesX * kTilesY;
+
 // Screen dimensions.
 static const double kScreenWidth = 600;
 static const double kScreenHeight = 600;
 static const double kTileWidth = (kScreenWidth / kTilesX);
 static const double kTileHeight = (kScreenHeight / kTilesY);
+
 // The screen will display the end game text for 2 seconds (120frames/60fps).
 static const int kEndGameFramesMax = 120;
+
 // Image file paths.
 static const char* kBoardImageFileName = "tic_tac_toe_board.png";
 static const char* kLeaveButtonFileName = "leave_button.png";
@@ -112,7 +130,7 @@ class SampleChildListener : public firebase::database::ChildListener {
   }
 
  public:
-  // Vector of strings defining the events we saw, in order.
+  // Vector of strings that define the events we saw, in order.
   std::vector<std::string> events_;
 };
 
@@ -193,9 +211,10 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   game_outcome = kGameWon;
   database = main_menu_database;
   user_uid = main_menu_user;
-  // Splits on the if depending on if the player created or joined the game.
-  // Additionally sets the player_index and total_players based on joining or
-  // creating a game.
+
+  // If the join_game_uuid is present, initialize game varibales, otherwise
+  // alter the game variables to signify a user joined. Additionally sets the
+  // player_index and total_players based on joining or creating a game.
   if (join_game_uuid.empty()) {
     join_game_uuid = GenerateUid(4);
     ref = database->GetReference("game_data").Child(join_game_uuid);
@@ -223,7 +242,8 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
       auto future_increment_total_users =
           ref.RunTransaction([](MutableData* data) {
             auto total_players = data->Child("total_players").value();
-            // Completing the transaction based on the returned mutable data
+
+            // Complete the transaction based on the returned mutable data
             // value.
             if (total_players.is_null()) {
               // Must return this if the transaction was unsuccessful.
@@ -235,6 +255,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
               return TransactionResult::kTransactionResultAbort;
             }
             data->Child("total_players").set_value(new_total_players);
+
             // Must call this if the transaction was successful.
             return TransactionResult::kTransactionResultSuccess;
           });
@@ -245,8 +266,8 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
     }
   }
 
-  // Creating the board sprite , setting the position to the bottom left of the
-  // frame (0,0), and finally moving the anchor point from the center of the
+  // Create the board sprite , set the position to the bottom left of the
+  // frame (0,0), and finally move the anchor point from the center of the
   // image(default) to the bottom left, Vec2(0.0,0.0).
   board_sprite = Sprite::create(kBoardImageFileName);
   if (!board_sprite) {
@@ -268,12 +289,14 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   // Create a button listener to handle the touch event.
   auto leave_button_sprite_touch_listener =
       EventListenerTouchOneByOne::create();
-  // Setting the onTouchBegan event up to a lambda will swap scenes and modify
+
+  // Set the onTouchBegan event up to a lambda will swap scenes and modify
   // total_players
   leave_button_sprite_touch_listener->onTouchBegan =
       [this](Touch* touch, Event* event) -> bool {
-    auto bounds = event->getCurrentTarget()->getBoundingBox();
-    auto point = touch->getLocation();
+    const auto bounds = event->getCurrentTarget()->getBoundingBox();
+    const auto point = touch->getLocation();
+
     // Replaces the scene with a new TicTacToe scene if the touched point is
     // within the bounds of the button.
     if (bounds.containsPoint(point)) {
@@ -290,27 +313,28 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
 
     return true;
   };
-  // Attaching the touch listener to the create game button.
+
+  // Attach the touch listener to the create game button.
   Director::getInstance()
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(
           leave_button_sprite_touch_listener, leave_button_sprite);
 
-  board_sprite->addChild(leave_button_sprite, 1);
+  board_sprite->addChild(leave_button_sprite, /*layer_index=*/1);
 
   // TODO(grantpostma@): Modify these numbers to be based on the extern window
   // size & label size dimensions.
   cocos2d::Label* game_uuid_label =
       Label::createWithSystemFont(join_game_uuid, "Arial", 30);
   game_uuid_label->setPosition(Vec2(40, 20));
-  board_sprite->addChild(game_uuid_label, 1);
+  board_sprite->addChild(game_uuid_label, /*layer_index=*/1);
   waiting_label = Label::createWithSystemFont("waiting", "Arial", 30);
   waiting_label->setPosition(Vec2(530, 20));
 
-  board_sprite->addChild(waiting_label, 1);
+  board_sprite->addChild(waiting_label, /*layer_index=*/1);
   game_over_label = Label::createWithSystemFont("", "Arial", 80);
   game_over_label->setPosition(Vec2(300, 300));
-  board_sprite->addChild(game_over_label, 1);
+  board_sprite->addChild(game_over_label, /*layer_index=*/1);
 
   // total_player_listener and CurrentPlayerIndexListener listener is set up
   // to recognise when the desired players have connected & when turns
@@ -329,14 +353,15 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
       .AddValueListener(current_player_index_listener.get());
   ref.Child("last_move").AddValueListener(last_move_listener.get());
 
-  // A 3*3 Tic-Tac-Toe board for playing
+  // Set up a 3*3 Tic-Tac-Toe board for tracking results.
   for (int i = 0; i < kTilesY; i++) {
     for (int j = 0; j < kTilesX; j++) {
       board[i][j] = kEmptyTile;
       remaining_tiles.insert((i * kTilesX) + j);
     };
   }
-  // Adding a function to determine which tile was selected to the onTouchBegan
+
+  // Add a function to determine which tile was selected to the onTouchBegan
   // listener.
   auto touch_listener = EventListenerTouchOneByOne::create();
   touch_listener->onTouchBegan = [this](Touch* touch,
@@ -345,8 +370,9 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
     if (current_player_index_listener->last_seen_value() != player_index)
       return true;
 
-    auto bounds = event->getCurrentTarget()->getBoundingBox();
-    // Checking to make sure the touch location is within the bounds of the
+    const auto bounds = event->getCurrentTarget()->getBoundingBox();
+
+    // Check to make sure the touch location is within the bounds of the
     // board.
     if (bounds.containsPoint(touch->getLocation())) {
       // Calculates the tile number [0-8] which corresponds to the touch
@@ -362,12 +388,14 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
             kPlayerTokenFileNames[current_player_index]);
         exit(true);
       }
+
       // Calculates and sets the position of the sprite based on the
       // move_tile and the constant screen variables.
       sprite->setPosition((.5 + selected_tile % kTilesX) * kTileWidth,
                           (.5 + selected_tile / kTilesY) * kTileHeight);
       board_sprite->addChild(sprite);
-      // Modifying local game state variables to reflect this most recent move
+
+      // Modify local game state variables to reflect this most recent move
       board[selected_tile / kTilesX][selected_tile % kTilesX] =
           current_player_index;
       remaining_tiles.erase(selected_tile);
@@ -398,25 +426,29 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
       ->addEventListenerWithSceneGraphPriority(touch_listener, board_sprite);
 
   this->addChild(board_sprite);
+
   // Schedule the update method for this scene.
   this->scheduleUpdate();
 }
 
 // Called automatically every frame. The update is scheduled in constructor.
 void TicTacToeLayer::update(float /*delta*/) {
-  // Replacing the scene with MainMenuScene if the initialization fails.
+  // Replace the scene with MainMenuScene if the initialization fails.
   if (initialization_failed == true) {
     Director::getInstance()->popScene();
   }
+
   // Performs the actions of the other player when the
   // current_player_index_listener is equal to the player index.
   else if (current_player_index_listener->last_seen_value() == player_index &&
            awaiting_opponenet_move == true) {
     int last_move =
         last_move_listener->last_seen_value().AsInt64().int64_value();
-    // Placing the players move on the board.
+
+    // Place the player's move on the board.
     board[last_move / kTilesX][last_move % kTilesX] = current_player_index;
-    // Removing the tile from the tile unordered set.
+
+    // Remove the tile from the tile unordered set.
     remaining_tiles.erase(last_move);
     auto sprite = Sprite::create(kPlayerTokenFileNames[current_player_index]);
     if (sprite == NULL) {
@@ -424,12 +456,14 @@ void TicTacToeLayer::update(float /*delta*/) {
           kPlayerTokenFileNames[current_player_index]);
       exit(true);
     }
+
     // Calculates and sets the position of the sprite based on the
     // move_tile and the constant screen variables.
     sprite->setPosition((.5 + last_move % kTilesX) * kTileWidth,
                         (.5 + last_move / kTilesY) * kTileHeight);
     board_sprite->addChild(sprite);
-    // Modifying local game state variables to reflect this most recent move.
+
+    // Modify local game state variables to reflect this most recent move.
     board[last_move / kTilesX][last_move % kTilesX] = current_player_index;
     remaining_tiles.erase(last_move);
     awaiting_opponenet_move = false;
@@ -444,6 +478,7 @@ void TicTacToeLayer::update(float /*delta*/) {
       WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
     }
   }
+
   // Shows the end game label for kEndGameFramesMax to show the result of the
   // game.
   else if (game_over_listener->got_value()) {
@@ -454,8 +489,8 @@ void TicTacToeLayer::update(float /*delta*/) {
     game_over_label->setString(kGameOverStrings[game_outcome]);
     end_game_frames++;
     if (end_game_frames > kEndGameFramesMax) {
-      // Removing the game from existence and updating the user's record before
-      // swapping back scenes.
+      // Remove the game from existence and update the user's record before
+      // swap back scenes.
       WaitForCompletion(database->GetReference("game_data")
                             .Child(join_game_uuid)
                             .RemoveValue(),
@@ -471,6 +506,7 @@ void TicTacToeLayer::update(float /*delta*/) {
       Director::getInstance()->popScene();
     }
   }
+
   // Updates the waiting label to signify it is this players move.
   else if (total_player_listener->got_value() &&
            awaiting_opponenet_move == false) {
