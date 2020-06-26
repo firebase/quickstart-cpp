@@ -30,6 +30,18 @@ std::string GenerateUid(std::size_t);
 
 class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
  public:
+  // Build a simple scene that uses the bottom left cordinate point as (0,0)
+  // and can have sprites, labels and nodes added onto it.
+  static cocos2d::Scene* createScene();
+  void MainMenuScene::update(float) override;
+  void MainMenuScene::onEnter() override;
+
+  // Initialize the instance of a Node and returns a boolean based on if it was
+  // successful in doing so.
+  virtual bool init();
+  CREATE_FUNC(MainMenuScene);
+
+ private:
   // Defines the state the class is currently in, which updates the sprites in
   // the MainMenuScene::update(float) method.
   enum kSceneState {
@@ -41,12 +53,6 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
     kWaitingGameOutcome
   };
 
-  // Build a simple scene that uses the bottom left cordinate point as (0,0)
-  // and can have sprites, labels and nodes added onto it.
-  static cocos2d::Scene* createScene();
-  void MainMenuScene::update(float) override;
-  void MainMenuScene::onEnter() override;
-
   // Updates the user record (wins,loses and ties) and displays it to the
   // screen.
   void MainMenuScene::UpdateUserRecord();
@@ -56,37 +62,31 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   void MainMenuScene::InitializeUserRecord();
   void MainMenuScene::InitializeFirebase();
 
-  // Initialize the instance of a Node and returns a boolean based on if it was
-  // successful in doing so.
-  virtual bool init();
-  CREATE_FUNC(MainMenuScene);
-
   // Creates node to be used as a background for the authentication menu.
-  cocos2d::DrawNode* auth_background;
-  cocos2d::Node auth_node;
+  cocos2d::DrawNode* auth_background_;
 
   // Labels and textfields for the authentication menu.
-  cocos2d::Label* invalid_login_label;
-  cocos2d::Label* user_record_label;
-  cocos2d::TextFieldTTF* email_text_field;
-  cocos2d::TextFieldTTF* password_text_field;
+  cocos2d::Label* invalid_login_label_;
+  cocos2d::Label* user_record_label_;
+  cocos2d::TextFieldTTF* email_text_field_;
+  cocos2d::TextFieldTTF* password_text_field_;
 
   // Variable to track the current state and previous state to check against to
   // see if the state change.
-  kSceneState current_state = kAuthState;
-  kSceneState previous_state = kAuthState;
+  kSceneState current_state_ = kAuthState;
+  kSceneState previous_state_ = kAuthState;
 
-  // User record varibales that are stored in firebase database.
-  int user_wins;
-  int user_loses;
-  int user_ties;
+  // User record variabales that are stored in firebase database.
+  int user_wins_;
+  int user_loses_;
+  int user_ties_;
 
-  std::string user_uid;
-  firebase::auth::User* user;
-  firebase::Future<firebase::auth::User*> user_result;
-  firebase::database::Database* database;
-  firebase::auth::Auth* auth;
-  firebase::database::DatabaseReference ref;
+  std::string user_uid_;
+  firebase::auth::User* user_;
+  firebase::Future<firebase::auth::User*> user_result_;
+  firebase::database::Database* database_;
+  firebase::auth::Auth* auth_;
+  firebase::database::DatabaseReference ref_;
 };
 
 #endif  // TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_

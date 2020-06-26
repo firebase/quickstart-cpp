@@ -206,41 +206,41 @@ static bool GameOver(int board[][kTilesY]) {
 TicTacToeLayer::TicTacToeLayer(string game_uuid,
                                firebase::database::Database* main_menu_database,
                                string main_menu_user) {
-  join_game_uuid = game_uuid;
-  current_player_index = kPlayerOne;
-  game_outcome = kGameWon;
-  database = main_menu_database;
-  user_uid = main_menu_user;
+  join_game_uuid_ = game_uuid;
+  current_player_index_ = kPlayerOne;
+  game_outcome_ = kGameWon;
+  database_ = main_menu_database;
+  user_uid_ = main_menu_user;
 
-  // If the join_game_uuid is present, initialize game varibales, otherwise
+  // If the join_game_uuid_ is present, initialize game varibales, otherwise
   // alter the game variables to signify a user joined. Additionally sets the
-  // player_index and total_players based on joining or creating a game.
-  if (join_game_uuid.empty()) {
-    join_game_uuid = GenerateUid(4);
-    ref = database->GetReference("game_data").Child(join_game_uuid);
+  // player_index_ and total_players based on joining or creating a game.
+  if (join_game_uuid_.empty()) {
+    join_game_uuid_ = GenerateUid(4);
+    ref_ = database_->GetReference("game_data").Child(join_game_uuid_);
     firebase::Future<void> future_create_game =
-        ref.Child("total_players").SetValue(1);
-    future_current_player_index =
-        ref.Child("current_player_index").SetValue(kPlayerOne);
-    future_game_over = ref.Child("game_over").SetValue(false);
-    WaitForCompletion(future_game_over, "setGameOver");
-    WaitForCompletion(future_current_player_index, "setCurrentPlayerIndex");
+        ref_.Child("total_players").SetValue(1);
+    future_current_player_index_ =
+        ref_.Child("current_player_index_").SetValue(kPlayerOne);
+    future_game_over_ = ref_.Child("game_over").SetValue(false);
+    WaitForCompletion(future_game_over_, "setGameOver");
+    WaitForCompletion(future_current_player_index_, "setCurrentPlayerIndex");
     WaitForCompletion(future_create_game, "createGame");
-    player_index = kPlayerOne;
-    awaiting_opponenet_move = false;
+    player_index_ = kPlayerOne;
+    awaiting_opponenet_move_ = false;
   } else {
     // Checks whether the join_uuid map exists. If it does not it set the
     // initialization to failed.
     auto future_game_uuid =
-        database->GetReference("game_data").Child(join_game_uuid).GetValue();
+        database_->GetReference("game_data").Child(join_game_uuid_).GetValue();
     WaitForCompletion(future_game_uuid, "GetGameDataMap");
     auto game_uuid_snapshot = future_game_uuid.result();
     if (!game_uuid_snapshot->value().is_map()) {
-      initialization_failed = true;
+      initialization_failed_ = true;
     } else {
-      ref = database->GetReference("game_data").Child(join_game_uuid);
+      ref_ = database_->GetReference("game_data").Child(join_game_uuid_);
       auto future_increment_total_users =
-          ref.RunTransaction([](MutableData* data) {
+          ref_.RunTransaction([](MutableData* data) {
             auto total_players = data->Child("total_players").value();
 
             // Complete the transaction based on the returned mutable data
@@ -261,30 +261,30 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
           });
       WaitForCompletion(future_increment_total_users, "JoinGameTransaction");
 
-      player_index = kPlayerTwo;
-      awaiting_opponenet_move = true;
+      player_index_ = kPlayerTwo;
+      awaiting_opponenet_move_ = true;
     }
   }
 
   // Create the board sprite , set the position to the bottom left of the
   // frame (0,0), and finally move the anchor point from the center of the
   // image(default) to the bottom left, Vec2(0.0,0.0).
-  board_sprite = Sprite::create(kBoardImageFileName);
-  if (!board_sprite) {
+  board_sprite_ = Sprite::create(kBoardImageFileName);
+  if (!board_sprite_) {
     log("kBoardImageFileName: %s file not found.", kBoardImageFileName);
     exit(true);
   }
-  board_sprite->setPosition(0, 0);
-  board_sprite->setAnchorPoint(Vec2(0.0, 0.0));
+  board_sprite_->setPosition(0, 0);
+  board_sprite_->setAnchorPoint(Vec2(0.0, 0.0));
 
-  leave_button_sprite = Sprite::create(kLeaveButtonFileName);
-  if (!leave_button_sprite) {
+  leave_button_sprite_ = Sprite::create(kLeaveButtonFileName);
+  if (!leave_button_sprite_) {
     log("kLeaveButtonSprite: %s file not found.", kLeaveButtonFileName);
     exit(true);
   }
-  leave_button_sprite->setPosition(450, 585);
-  leave_button_sprite->setAnchorPoint(Vec2(0.0, 0.0));
-  leave_button_sprite->setScale(.35);
+  leave_button_sprite_->setPosition(450, 585);
+  leave_button_sprite_->setAnchorPoint(Vec2(0.0, 0.0));
+  leave_button_sprite_->setScale(.35);
 
   // Create a button listener to handle the touch event.
   auto leave_button_sprite_touch_listener =
@@ -300,15 +300,15 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
     // Replaces the scene with a new TicTacToe scene if the touched point is
     // within the bounds of the button.
     if (bounds.containsPoint(point)) {
-      // Update the game_outcome to reflect if the you rage quit or left
+      // Update the game_outcome_ to reflect if the you rage quit or left
       // pre-match.
-      if (remaining_tiles.size() == kNumberOfTiles) {
-        game_outcome = kGameDisbanded;
+      if (remaining_tiles_.size() == kNumberOfTiles) {
+        game_outcome_ = kGameDisbanded;
       } else {
-        game_outcome = kGameLost;
+        game_outcome_ = kGameLost;
       }
 
-      WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
+      WaitForCompletion(ref_.Child("game_over").SetValue(true), "setGameOver");
     }
 
     return true;
@@ -318,46 +318,46 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   Director::getInstance()
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(
-          leave_button_sprite_touch_listener, leave_button_sprite);
+          leave_button_sprite_touch_listener, leave_button_sprite_);
 
-  board_sprite->addChild(leave_button_sprite, /*layer_index=*/1);
+  board_sprite_->addChild(leave_button_sprite_, /*layer_index=*/1);
 
   // TODO(grantpostma@): Modify these numbers to be based on the extern window
   // size & label size dimensions.
   cocos2d::Label* game_uuid_label =
-      Label::createWithSystemFont(join_game_uuid, "Arial", 30);
+      Label::createWithSystemFont(join_game_uuid_, "Arial", 30);
   game_uuid_label->setPosition(Vec2(40, 20));
-  board_sprite->addChild(game_uuid_label, /*layer_index=*/1);
-  waiting_label = Label::createWithSystemFont("waiting", "Arial", 30);
-  waiting_label->setPosition(Vec2(530, 20));
+  board_sprite_->addChild(game_uuid_label, /*layer_index=*/1);
+  waiting_label_ = Label::createWithSystemFont("waiting", "Arial", 30);
+  waiting_label_->setPosition(Vec2(530, 20));
 
-  board_sprite->addChild(waiting_label, /*layer_index=*/1);
-  game_over_label = Label::createWithSystemFont("", "Arial", 80);
-  game_over_label->setPosition(Vec2(300, 300));
-  board_sprite->addChild(game_over_label, /*layer_index=*/1);
+  board_sprite_->addChild(waiting_label_, /*layer_index=*/1);
+  game_over_label_ = Label::createWithSystemFont("", "Arial", 80);
+  game_over_label_->setPosition(Vec2(300, 300));
+  board_sprite_->addChild(game_over_label_, /*layer_index=*/1);
 
-  // total_player_listener and CurrentPlayerIndexListener listener is set up
+  // total_player_listener_ and CurrentPlayerIndexListener listener is set up
   // to recognise when the desired players have connected & when turns
   // alternate
-  LogMessage("total_player_listener");
-  total_player_listener =
+  LogMessage("total_player_listener_");
+  total_player_listener_ =
       std::make_unique<ExpectValueListener>(kNumberOfPlayers);
-  game_over_listener = std::make_unique<ExpectValueListener>(true);
+  game_over_listener_ = std::make_unique<ExpectValueListener>(true);
 
-  current_player_index_listener = std::make_unique<SampleValueListener>();
-  last_move_listener = std::make_unique<SampleValueListener>();
-  LogMessage("%i", total_player_listener->got_value());
-  ref.Child("total_players").AddValueListener(total_player_listener.get());
-  ref.Child("game_over").AddValueListener(game_over_listener.get());
-  ref.Child("current_player_index")
-      .AddValueListener(current_player_index_listener.get());
-  ref.Child("last_move").AddValueListener(last_move_listener.get());
+  current_player_index_listener_ = std::make_unique<SampleValueListener>();
+  last_move_listener_ = std::make_unique<SampleValueListener>();
+  LogMessage("%i", total_player_listener_->got_value());
+  ref_.Child("total_players").AddValueListener(total_player_listener_.get());
+  ref_.Child("game_over").AddValueListener(game_over_listener_.get());
+  ref_.Child("current_player_index_")
+      .AddValueListener(current_player_index_listener_.get());
+  ref_.Child("last_move").AddValueListener(last_move_listener_.get());
 
   // Set up a 3*3 Tic-Tac-Toe board for tracking results.
   for (int i = 0; i < kTilesY; i++) {
     for (int j = 0; j < kTilesX; j++) {
       board[i][j] = kEmptyTile;
-      remaining_tiles.insert((i * kTilesX) + j);
+      remaining_tiles_.insert((i * kTilesX) + j);
     };
   }
 
@@ -366,8 +366,8 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   auto touch_listener = EventListenerTouchOneByOne::create();
   touch_listener->onTouchBegan = [this](Touch* touch,
                                         Event* event) mutable -> bool {
-    if (!total_player_listener->got_value()) return true;
-    if (current_player_index_listener->last_seen_value() != player_index)
+    if (!total_player_listener_->got_value()) return true;
+    if (current_player_index_listener_->last_seen_value() != player_index_)
       return true;
 
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
@@ -379,13 +379,14 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
       // location.
       int selected_tile = floor(touch->getLocation().x / kTileWidth) +
                           kTilesX * floor(touch->getLocation().y / kTileHeight);
-      if (remaining_tiles.find(selected_tile) == remaining_tiles.end())
+      if (remaining_tiles_.find(selected_tile) == remaining_tiles_.end())
         return true;
 
-      auto sprite = Sprite::create(kPlayerTokenFileNames[current_player_index]);
+      auto sprite =
+          Sprite::create(kPlayerTokenFileNames[current_player_index_]);
       if (sprite == NULL) {
         log("kPlayerTokenFileNames: %s file not found.",
-            kPlayerTokenFileNames[current_player_index]);
+            kPlayerTokenFileNames[current_player_index_]);
         exit(true);
       }
 
@@ -393,29 +394,31 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
       // move_tile and the constant screen variables.
       sprite->setPosition((.5 + selected_tile % kTilesX) * kTileWidth,
                           (.5 + selected_tile / kTilesY) * kTileHeight);
-      board_sprite->addChild(sprite);
+      board_sprite_->addChild(sprite);
 
       // Modify local game state variables to reflect this most recent move
       board[selected_tile / kTilesX][selected_tile % kTilesX] =
-          current_player_index;
-      remaining_tiles.erase(selected_tile);
-      current_player_index = (current_player_index + 1) % kNumberOfPlayers;
-      future_last_move = ref.Child("last_move").SetValue(selected_tile);
-      future_current_player_index =
-          ref.Child("current_player_index").SetValue(current_player_index);
-      WaitForCompletion(future_last_move, "setLastMove");
-      WaitForCompletion(future_current_player_index, "setCurrentPlayerIndex");
-      awaiting_opponenet_move = true;
-      waiting_label->setString("waiting");
+          current_player_index_;
+      remaining_tiles_.erase(selected_tile);
+      current_player_index_ = (current_player_index_ + 1) % kNumberOfPlayers;
+      future_last_move_ = ref_.Child("last_move").SetValue(selected_tile);
+      future_current_player_index_ =
+          ref_.Child("current_player_index_").SetValue(current_player_index_);
+      WaitForCompletion(future_last_move_, "setLastMove");
+      WaitForCompletion(future_current_player_index_, "setCurrentPlayerIndex");
+      awaiting_opponenet_move_ = true;
+      waiting_label_->setString("waiting");
       if (GameOver(board)) {
-        // Set game_over_label to reflect the use won.
-        game_over_label->setString("you won!");
-        game_outcome = kGameWon;
-        WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
-      } else if (remaining_tiles.size() == 0) {
-        // Update game_outcome to reflect the user tied.
-        game_outcome = kGameTied;
-        WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
+        // Set game_over_label_ to reflect the use won.
+        game_over_label_->setString("you won!");
+        game_outcome_ = kGameWon;
+        WaitForCompletion(ref_.Child("game_over").SetValue(true),
+                          "setGameOver");
+      } else if (remaining_tiles_.size() == 0) {
+        // Update game_outcome_ to reflect the user tied.
+        game_outcome_ = kGameTied;
+        WaitForCompletion(ref_.Child("game_over").SetValue(true),
+                          "setGameOver");
       }
     }
     return true;
@@ -423,9 +426,9 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
 
   Director::getInstance()
       ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(touch_listener, board_sprite);
+      ->addEventListenerWithSceneGraphPriority(touch_listener, board_sprite_);
 
-  this->addChild(board_sprite);
+  this->addChild(board_sprite_);
 
   // Schedule the update method for this scene.
   this->scheduleUpdate();
@@ -434,26 +437,26 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
 // Called automatically every frame. The update is scheduled in constructor.
 void TicTacToeLayer::update(float /*delta*/) {
   // Replace the scene with MainMenuScene if the initialization fails.
-  if (initialization_failed == true) {
+  if (initialization_failed_ == true) {
     Director::getInstance()->popScene();
   }
 
   // Performs the actions of the other player when the
-  // current_player_index_listener is equal to the player index.
-  else if (current_player_index_listener->last_seen_value() == player_index &&
-           awaiting_opponenet_move == true) {
+  // current_player_index_listener_ is equal to the player index.
+  else if (current_player_index_listener_->last_seen_value() == player_index_ &&
+           awaiting_opponenet_move_ == true) {
     int last_move =
-        last_move_listener->last_seen_value().AsInt64().int64_value();
+        last_move_listener_->last_seen_value().AsInt64().int64_value();
 
-    // Place the player's move on the board.
-    board[last_move / kTilesX][last_move % kTilesX] = current_player_index;
+    // Place the players move on the board.
+    board[last_move / kTilesX][last_move % kTilesX] = current_player_index_;
 
     // Remove the tile from the tile unordered set.
-    remaining_tiles.erase(last_move);
-    auto sprite = Sprite::create(kPlayerTokenFileNames[current_player_index]);
+    remaining_tiles_.erase(last_move);
+    auto sprite = Sprite::create(kPlayerTokenFileNames[current_player_index_]);
     if (sprite == NULL) {
       log("kPlayerTokenFileNames: %s file not found.",
-          kPlayerTokenFileNames[current_player_index]);
+          kPlayerTokenFileNames[current_player_index_]);
       exit(true);
     }
 
@@ -461,62 +464,67 @@ void TicTacToeLayer::update(float /*delta*/) {
     // move_tile and the constant screen variables.
     sprite->setPosition((.5 + last_move % kTilesX) * kTileWidth,
                         (.5 + last_move / kTilesY) * kTileHeight);
-    board_sprite->addChild(sprite);
+    board_sprite_->addChild(sprite);
 
     // Modify local game state variables to reflect this most recent move.
-    board[last_move / kTilesX][last_move % kTilesX] = current_player_index;
-    remaining_tiles.erase(last_move);
-    awaiting_opponenet_move = false;
-    current_player_index = player_index;
+    board[last_move / kTilesX][last_move % kTilesX] = current_player_index_;
+    remaining_tiles_.erase(last_move);
+    awaiting_opponenet_move_ = false;
+    current_player_index_ = player_index_;
     if (GameOver(board)) {
-      // Set game_outcome to reflect the use lost.
-      game_outcome = kGameLost;
-      WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
-    } else if (remaining_tiles.size() == 0) {
-      // Set game_outcome to reflect the game ended in a tie.
-      game_outcome = kGameTied;
-      WaitForCompletion(ref.Child("game_over").SetValue(true), "setGameOver");
+      // Set game_outcome_ to reflect the use lost.
+      game_outcome_ = kGameLost;
+      WaitForCompletion(ref_.Child("game_over").SetValue(true), "setGameOver");
+    } else if (remaining_tiles_.size() == 0) {
+      // Set game_outcome_ to reflect the game ended in a tie.
+      game_outcome_ = kGameTied;
+      WaitForCompletion(ref_.Child("game_over").SetValue(true), "setGameOver");
     }
   }
 
   // Shows the end game label for kEndGameFramesMax to show the result of the
   // game.
-  else if (game_over_listener->got_value()) {
-    if (game_outcome == kGameDisbanded &&
-        remaining_tiles.size() != kNumberOfTiles) {
-      game_outcome = kGameWon;
+  else if (game_over_listener_->got_value()) {
+    if (game_outcome_ == kGameDisbanded &&
+        remaining_tiles_.size() != kNumberOfTiles) {
+      game_outcome_ = kGameWon;
     }
-    game_over_label->setString(kGameOverStrings[game_outcome]);
-    end_game_frames++;
-    if (end_game_frames > kEndGameFramesMax) {
+    game_over_label_->setString(kGameOverStrings[game_outcome_]);
+    end_game_frames_++;
+    if (end_game_frames_ > kEndGameFramesMax) {
       // Remove the game from existence and update the user's record before
       // swap back scenes.
-      WaitForCompletion(database->GetReference("game_data")
-                            .Child(join_game_uuid)
+      WaitForCompletion(database_->GetReference("game_data")
+                            .Child(join_game_uuid_)
                             .RemoveValue(),
                         "removeGameUuid");
-      ref = database->GetReference("users").Child(user_uid);
-      auto future_record =
-          ref.Child(kGameOutcomeStrings[game_outcome]).GetValue();
-      WaitForCompletion(future_record, "getPreviousOutcomeRecord");
-      WaitForCompletion(
-          ref.Child(kGameOutcomeStrings[game_outcome])
-              .SetValue(future_record.result()->value().int64_value() + 1),
-          "setGameOutcomeRecord");
+      ref_ = database_->GetReference("users").Child(user_uid_);
+
+      // Updates user record unless the game was disbanded.
+      if (game_outcome_ != kGameDisbanded) {
+        auto future_record =
+            ref_.Child(kGameOutcomeStrings[game_outcome_]).GetValue();
+        WaitForCompletion(future_record, "getPreviousOutcomeRecord");
+        WaitForCompletion(
+            ref_.Child(kGameOutcomeStrings[game_outcome_])
+                .SetValue(future_record.result()->value().int64_value() + 1),
+            "setGameOutcomeRecord");
+      }
+
       Director::getInstance()->popScene();
     }
   }
 
   // Updates the waiting label to signify it is this players move.
-  else if (total_player_listener->got_value() &&
-           awaiting_opponenet_move == false) {
-    waiting_label->setString("your move");
+  else if (total_player_listener_->got_value() &&
+           awaiting_opponenet_move_ == false) {
+    waiting_label_->setString("your move");
   }
 }
 
 TicTacToeLayer::~TicTacToeLayer() {
   // release our sprite and layer so that it gets deallocated
-  CC_SAFE_RELEASE_NULL(this->board_sprite);
-  CC_SAFE_RELEASE_NULL(this->game_over_label);
-  CC_SAFE_RELEASE_NULL(this->waiting_label);
+  CC_SAFE_RELEASE_NULL(this->board_sprite_);
+  CC_SAFE_RELEASE_NULL(this->game_over_label_);
+  CC_SAFE_RELEASE_NULL(this->waiting_label_);
 }

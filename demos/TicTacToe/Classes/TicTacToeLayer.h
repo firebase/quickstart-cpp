@@ -49,58 +49,58 @@ static const int kTilesY = 3;
 class SampleValueListener;
 class ExpectValueListener;
 class TicTacToeLayer : public Layer {
- private:
-  typedef TicTacToeLayer self;
-  typedef Layer super;
-
  public:
   TicTacToeLayer(std::string, firebase::database::Database*, std::string);
   ~TicTacToeLayer();
+
+ private:
+  typedef TicTacToeLayer self;
+  typedef Layer super;
   void TicTacToeLayer::update(float) override;
 
   // Tracks whether the board was unable to build.
-  bool initialization_failed = false;
+  bool initialization_failed_ = false;
 
   // Tracks the game outcome.
-  int game_outcome;
+  int game_outcome_;
 
   // Create a string for the join game code and initialize the database
   // reference.
-  std::string join_game_uuid;
+  std::string join_game_uuid_;
 
   // User uid to update the user's record after the game is over.
-  std::string user_uid;
+  std::string user_uid_;
 
   /// Firebase Realtime Database, the entry point to all database operations.
-  firebase::database::Database* database;
-  firebase::database::DatabaseReference ref;
+  firebase::database::Database* database_;
+  firebase::database::DatabaseReference ref_;
 
   // Create listeners for database values.
   // The database schema has a top level game_uuid object which includes
-  // last_move, total_players and current_player_index fields.
-  std::unique_ptr<SampleValueListener> current_player_index_listener;
-  std::unique_ptr<SampleValueListener> last_move_listener;
-  std::unique_ptr<ExpectValueListener> total_player_listener;
-  std::unique_ptr<ExpectValueListener> game_over_listener;
+  // last_move, total_players and current_player_index_ fields.
+  std::unique_ptr<SampleValueListener> current_player_index_listener_;
+  std::unique_ptr<SampleValueListener> last_move_listener_;
+  std::unique_ptr<ExpectValueListener> total_player_listener_;
+  std::unique_ptr<ExpectValueListener> game_over_listener_;
 
   // Create lables and a sprites.
-  Sprite* board_sprite;
-  Sprite* leave_button_sprite;
-  cocos2d::Label* game_over_label;
-  cocos2d::Label* waiting_label;
+  Sprite* board_sprite_;
+  Sprite* leave_button_sprite_;
+  cocos2d::Label* game_over_label_;
+  cocos2d::Label* waiting_label_;
 
-  // Create firebase futures for last_move and current_player_index
-  Future<void> future_last_move;
-  Future<void> future_current_player_index;
-  Future<void> future_game_over;
+  // Create firebase futures for last_move and current_player_index_
+  Future<void> future_last_move_;
+  Future<void> future_current_player_index_;
+  Future<void> future_game_over_;
 
   // Create the board, remain available tile set and player index
   // variables.
-  int current_player_index;
-  int player_index;
-  bool awaiting_opponenet_move;
+  int current_player_index_;
+  int player_index_;
+  bool awaiting_opponenet_move_;
   int board[kTilesX][kTilesY];
-  std::unordered_set<int> remaining_tiles;
-  int end_game_frames = 0;
+  std::unordered_set<int> remaining_tiles_;
+  int end_game_frames_ = 0;
 };
 #endif  // TICTACTOE_DEMO_CLASSES_TICTACTOELAYER_SCENE_H_

@@ -98,7 +98,7 @@ bool MainMenuScene::init() {
   // Create the background to add all of the authentication elements on. The
   // visiblity of this node should match kAuthState, disable any
   // touch_listeners when not in this state.
-  auth_background = DrawNode::create();
+  auth_background_ = DrawNode::create();
   auto auth_background_border = DrawNode::create();
 
   const auto auth_background_size = Size(500, 550);
@@ -117,31 +117,31 @@ bool MainMenuScene::init() {
            auth_background_origin.height + auth_background_size.height);
 
   Color4F white(1, 1, 1, 1);
-  auth_background->drawPolygon(auth_background_corners, 4, Color4F::BLACK, 1,
-                               Color4F::BLACK);
+  auth_background_->drawPolygon(auth_background_corners, 4, Color4F::BLACK, 1,
+                                Color4F::BLACK);
   auth_background_border->drawPolygon(auth_background_corners, 4,
                                       Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
-  auth_background->addChild(auth_background_border);
+  auth_background_->addChild(auth_background_border);
 
-  this->addChild(auth_background, 10);
+  this->addChild(auth_background_, 10);
 
   // Label the background as Authentication.
   auto auth_label = Label::createWithSystemFont("authentication", "Arial", 48);
   auth_label->setPosition(Vec2(300, 550));
-  auth_background->addChild(auth_label);
+  auth_background_->addChild(auth_label);
 
   // Label to print out all of the login errors.
-  invalid_login_label = Label::createWithSystemFont("", "Arial", 24);
-  invalid_login_label->setTextColor(Color4B::RED);
-  invalid_login_label->setPosition(Vec2(300, 220));
-  auth_background->addChild(invalid_login_label);
+  invalid_login_label_ = Label::createWithSystemFont("", "Arial", 24);
+  invalid_login_label_->setTextColor(Color4B::RED);
+  invalid_login_label_->setPosition(Vec2(300, 220));
+  auth_background_->addChild(invalid_login_label_);
 
   // Label to display the users record.
-  user_record_label = Label::createWithSystemFont("", "Arial", 24);
-  user_record_label->setAlignment(TextHAlignment::RIGHT);
-  user_record_label->setTextColor(Color4B::WHITE);
-  user_record_label->setPosition(Vec2(500, 600));
-  this->addChild(user_record_label);
+  user_record_label_ = Label::createWithSystemFont("", "Arial", 24);
+  user_record_label_->setAlignment(TextHAlignment::RIGHT);
+  user_record_label_->setTextColor(Color4B::WHITE);
+  user_record_label_->setPosition(Vec2(500, 600));
+  this->addChild(user_record_label_);
 
   // Label for anonymous sign in.
   auto anonymous_login_label =
@@ -154,14 +154,14 @@ bool MainMenuScene::init() {
   anonymous_label_touch_listener->onTouchBegan =
       [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
     // Returns if the layer is not in the auth state or is switching states.
-    if (previous_state != current_state || current_state != kAuthState)
+    if (previous_state_ != current_state_ || current_state_ != kAuthState)
       return true;
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
       // Use anonymous sign in for the user.
-      user_result = auth->SignInAnonymously();
-      current_state = kWaitingAnonymousState;
+      user_result_ = auth_->SignInAnonymously();
+      current_state_ = kWaitingAnonymousState;
     }
 
     return true;
@@ -172,7 +172,7 @@ bool MainMenuScene::init() {
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(anonymous_label_touch_listener,
                                                anonymous_login_label);
-  auth_background->addChild(anonymous_login_label);
+  auth_background_->addChild(anonymous_login_label);
 
   // Extract the origin, size and position of the text field so that the
   // border can be created based on those values.
@@ -199,20 +199,20 @@ bool MainMenuScene::init() {
                                        Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
 
   // Create a text field to enter the user's email.
-  email_text_field = cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
+  email_text_field_ = cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
       "enter an email address", email_text_field_size, TextHAlignment::LEFT,
       "Arial", email_font_size);
-  email_text_field->setPosition(email_text_field_position);
-  email_text_field->setAnchorPoint(Vec2(0, 0));
-  email_text_field->setColorSpaceHolder(Color3B::GRAY);
-  email_text_field->setDelegate(this);
+  email_text_field_->setPosition(email_text_field_position);
+  email_text_field_->setAnchorPoint(Vec2(0, 0));
+  email_text_field_->setColorSpaceHolder(Color3B::GRAY);
+  email_text_field_->setDelegate(this);
 
   auto email_text_field_touch_listener = EventListenerTouchOneByOne::create();
 
   email_text_field_touch_listener->onTouchBegan =
       [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
     // Returns if the layer is not in the auth state or is switching states.
-    if (previous_state != current_state || current_state != kAuthState) {
+    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
       return true;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
@@ -236,10 +236,10 @@ bool MainMenuScene::init() {
   Director::getInstance()
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(email_text_field_touch_listener,
-                                               email_text_field);
+                                               email_text_field_);
 
-  auth_background->addChild(email_text_field, 1);
-  auth_background->addChild(email_text_field_border, 1);
+  auth_background_->addChild(email_text_field_, 1);
+  auth_background_->addChild(email_text_field_border, 1);
 
   // Extract the origin, size and position of the text field so that the
   // border can be created based on those values.
@@ -267,14 +267,14 @@ bool MainMenuScene::init() {
       password_border_corners, 4, Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
 
   // Create a text field to enter the user's password.
-  password_text_field = cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
+  password_text_field_ = cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
       "enter a password", password_text_field_size, TextHAlignment::LEFT,
       "Arial", password_font_size);
-  password_text_field->setPosition(password_text_field_position);
-  password_text_field->setAnchorPoint(Vec2(0, 0));
-  password_text_field->setColorSpaceHolder(Color3B::GRAY);
-  password_text_field->setSecureTextEntry(true);
-  password_text_field->setDelegate(this);
+  password_text_field_->setPosition(password_text_field_position);
+  password_text_field_->setAnchorPoint(Vec2(0, 0));
+  password_text_field_->setColorSpaceHolder(Color3B::GRAY);
+  password_text_field_->setSecureTextEntry(true);
+  password_text_field_->setDelegate(this);
 
   auto password_text_field_touch_listener =
       EventListenerTouchOneByOne::create();
@@ -282,7 +282,7 @@ bool MainMenuScene::init() {
   password_text_field_touch_listener->onTouchBegan =
       [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
     // Returns if the layer is not in the auth state or is switching states.
-    if (previous_state != current_state || current_state != kAuthState) {
+    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
       return true;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
@@ -302,14 +302,14 @@ bool MainMenuScene::init() {
     return true;
   };
 
-  auth_background->addChild(password_text_field, 1);
-  auth_background->addChild(password_text_field_border, 1);
+  auth_background_->addChild(password_text_field_, 1);
+  auth_background_->addChild(password_text_field_border, 1);
 
   // Attach the touch listener to the text field.
   Director::getInstance()
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(
-          password_text_field_touch_listener, password_text_field);
+          password_text_field_touch_listener, password_text_field_);
 
   // Create the login button and give it a position, anchor point and
   // touch_listener.
@@ -322,27 +322,27 @@ bool MainMenuScene::init() {
   auto login_button_touch_listener = EventListenerTouchOneByOne::create();
 
   // Transition from kAuthState to kWaitingLoginState on button press and set
-  // user_result to SignInWithEmailAndPassword future result.
+  // user_result_ to SignInWithEmailAndPassword future result.
   login_button_touch_listener->onTouchBegan = [this](Touch* touch,
                                                      Event* event) -> bool {
     // Returns if the layer is not in the auth state or is switching states.
-    if (previous_state != current_state || current_state != kAuthState) {
+    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
       return true;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
       // Check the string for a valid email pattern.
-      if (!std::regex_match(email_text_field->getString(), email_pattern)) {
-        invalid_login_label->setString("invalid email address");
-      } else if (password_text_field->getString().length() < 8) {
-        invalid_login_label->setString(
+      if (!std::regex_match(email_text_field_->getString(), email_pattern)) {
+        invalid_login_label_->setString("invalid email address");
+      } else if (password_text_field_->getString().length() < 8) {
+        invalid_login_label_->setString(
             "password must be at least 8 characters long");
       } else {
-        user_result = auth->SignInWithEmailAndPassword(
-            email_text_field->getString().c_str(),
-            password_text_field->getString().c_str());
-        current_state = kWaitingLoginState;
+        user_result_ = auth_->SignInWithEmailAndPassword(
+            email_text_field_->getString().c_str(),
+            password_text_field_->getString().c_str());
+        current_state_ = kWaitingLoginState;
       }
     }
     return true;
@@ -353,7 +353,7 @@ bool MainMenuScene::init() {
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(login_button_touch_listener,
                                                login_button);
-  auth_background->addChild(login_button, 1);
+  auth_background_->addChild(login_button, 1);
 
   // Create the sign_up button and give it a position, anchor point and
   // touch_listener.
@@ -366,27 +366,27 @@ bool MainMenuScene::init() {
   auto sign_up_button_touch_listener = EventListenerTouchOneByOne::create();
 
   // Transition from kAuthState to kWaitingSignUpState on button press and set
-  // user_result to CreateUserWithEmailAndPassword future result.
+  // user_result_ to CreateUserWithEmailAndPassword future result.
   sign_up_button_touch_listener->onTouchBegan = [this](Touch* touch,
                                                        Event* event) -> bool {
     // Returns if the layer is not in the auth state or is switching states.
-    if (previous_state != current_state || current_state != kAuthState) {
+    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
       return true;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
       // Check the string for a valid email pattern.
-      if (!std::regex_match(email_text_field->getString(), email_pattern)) {
-        invalid_login_label->setString("invalid email address");
-      } else if (password_text_field->getString().length() < 8) {
-        invalid_login_label->setString(
+      if (!std::regex_match(email_text_field_->getString(), email_pattern)) {
+        invalid_login_label_->setString("invalid email address");
+      } else if (password_text_field_->getString().length() < 8) {
+        invalid_login_label_->setString(
             "password must be at least 8 characters long");
       } else {
-        user_result = auth->CreateUserWithEmailAndPassword(
-            email_text_field->getString().c_str(),
-            password_text_field->getString().c_str());
-        current_state = kWaitingSignUpState;
+        user_result_ = auth_->CreateUserWithEmailAndPassword(
+            email_text_field_->getString().c_str(),
+            password_text_field_->getString().c_str());
+        current_state_ = kWaitingSignUpState;
       }
     }
     return true;
@@ -397,7 +397,7 @@ bool MainMenuScene::init() {
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(sign_up_button_touch_listener,
                                                sign_up_button);
-  auth_background->addChild(sign_up_button, 1);
+  auth_background_->addChild(sign_up_button, 1);
 
   // Create, set the position and assign a placeholder to the text
   // field for the user to enter the join game uuid.
@@ -423,7 +423,7 @@ bool MainMenuScene::init() {
                               cocos2d::Event* event) -> bool {
     // Returns if the layer is not in the game menu state or is switching
     // states.
-    if (previous_state != current_state || current_state != kGameMenuState)
+    if (previous_state_ != current_state_ || current_state_ != kGameMenuState)
       return true;
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
@@ -462,7 +462,7 @@ bool MainMenuScene::init() {
   // MainMenu scene with a TicTacToe scene.
   create_button_touch_listener->onTouchBegan =
       [this, join_text_field](Touch* touch, Event* event) -> bool {
-    if (current_state != kGameMenuState) return true;
+    if (current_state_ != kGameMenuState) return true;
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
 
@@ -470,9 +470,9 @@ bool MainMenuScene::init() {
     // within the bounds of the button.
     if (bounds.containsPoint(point)) {
       Director::getInstance()->pushScene(
-          TicTacToe::createScene(std::string(), database, user_uid));
+          TicTacToe::createScene(std::string(), database_, user_uid_));
       join_text_field->setString("");
-      current_state = kWaitingGameOutcome;
+      current_state_ = kWaitingGameOutcome;
     }
 
     return true;
@@ -499,7 +499,7 @@ bool MainMenuScene::init() {
                                                       Event* event) -> bool {
     // Returns if the layer is not in the game menu state or is switching
     // states.
-    if (previous_state != current_state || current_state != kGameMenuState) {
+    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
       return true;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
@@ -508,13 +508,13 @@ bool MainMenuScene::init() {
     // Replaces the scene with a new TicTacToe scene if the touched point is
     // within the bounds of the button.
     if (bounds.containsPoint(point)) {
-      current_state = kAuthState;
-      user_uid = "";
-      user = nullptr;
-      invalid_login_label->setString("");
-      email_text_field->setString("");
-      password_text_field->setString("");
-      user_record_label->setString("");
+      current_state_ = kAuthState;
+      user_uid_ = "";
+      user_ = nullptr;
+      invalid_login_label_->setString("");
+      email_text_field_->setString("");
+      password_text_field_->setString("");
+      user_record_label_->setString("");
     }
 
     return true;
@@ -543,7 +543,7 @@ bool MainMenuScene::init() {
       [join_text_field, this](Touch* touch, Event* event) -> bool {
     // Returns if the layer is not in the game menu state or is switching
     // states.
-    if (previous_state != current_state || current_state != kGameMenuState) {
+    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
       return true;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
@@ -552,9 +552,9 @@ bool MainMenuScene::init() {
       // Get the string from join_text_field.
       std::string join_text_field_string = join_text_field->getString();
       if (join_text_field_string.length() == 4) {
-        Director::getInstance()->pushScene(
-            TicTacToe::createScene(join_text_field_string, database, user_uid));
-        current_state = kWaitingGameOutcome;
+        Director::getInstance()->pushScene(TicTacToe::createScene(
+            join_text_field_string, database_, user_uid_));
+        current_state_ = kWaitingGameOutcome;
         join_text_field->setString("");
       } else {
         join_text_field->setString("");
@@ -586,7 +586,7 @@ void MainMenuScene::InitializeFirebase() {
   LogMessage("Initialize Firebase App.");
   ::firebase::App* app;
 
-#if defined(__ANDROID__)
+#if defined(_ANDROID_)
   app = ::firebase::App::Create(GetJniEnv(), GetActivity());
 #else
   app = ::firebase::App::Create();
@@ -596,9 +596,9 @@ void MainMenuScene::InitializeFirebase() {
 
   // Use ModuleInitializer to initialize both Auth and Database, ensuring no
   // dependencies are missing.
-  database = nullptr;
-  auth = nullptr;
-  void* initialize_targets[] = {&auth, &database};
+  database_ = nullptr;
+  auth_ = nullptr;
+  void* initialize_targets[] = {&auth_, &database_};
 
   const firebase::ModuleInitializer::InitializerFn initializers[] = {
       [](::firebase::App* app, void* data) {
@@ -631,50 +631,50 @@ void MainMenuScene::InitializeFirebase() {
   }
   LogMessage("Successfully initialized Firebase Auth and Firebase Database.");
 
-  database->set_persistence_enabled(true);
+  database_->set_persistence_enabled(true);
 }
 
 // Updates the user record variables to reflect what is in the database.
 void MainMenuScene::UpdateUserRecord() {
-  ref = database->GetReference("users").Child(user_uid);
-  auto future_wins = ref.Child("wins").GetValue();
-  auto future_loses = ref.Child("loses").GetValue();
-  auto future_ties = ref.Child("ties").GetValue();
+  ref_ = database_->GetReference("users").Child(user_uid_);
+  auto future_wins = ref_.Child("wins").GetValue();
+  auto future_loses = ref_.Child("loses").GetValue();
+  auto future_ties = ref_.Child("ties").GetValue();
   WaitForCompletion(future_wins, "getUserWinsData");
   WaitForCompletion(future_loses, "getUserLosesData");
   WaitForCompletion(future_ties, "getUserTiesData");
-  user_wins = future_wins.result()->value().int64_value();
-  user_loses = future_loses.result()->value().int64_value();
-  user_ties = future_ties.result()->value().int64_value();
-  user_record_label->setString("W:" + to_string(user_wins) +
-                               " L:" + to_string(user_loses) +
-                               " T:" + to_string(user_ties));
+  user_wins_ = future_wins.result()->value().int64_value();
+  user_loses_ = future_loses.result()->value().int64_value();
+  user_ties_ = future_ties.result()->value().int64_value();
+  user_record_label_->setString("W:" + to_string(user_wins_) +
+                                " L:" + to_string(user_loses_) +
+                                " T:" + to_string(user_ties_));
 }
 
 // Initialize the user records in the database.
 void MainMenuScene::InitializeUserRecord() {
-  ref = database->GetReference("users").Child(user_uid);
-  auto future_wins = ref.Child("wins").SetValue(0);
-  auto future_loses = ref.Child("loses").SetValue(0);
-  auto future_ties = ref.Child("ties").SetValue(0);
+  ref_ = database_->GetReference("users").Child(user_uid_);
+  auto future_wins = ref_.Child("wins").SetValue(0);
+  auto future_loses = ref_.Child("loses").SetValue(0);
+  auto future_ties = ref_.Child("ties").SetValue(0);
   WaitForCompletion(future_wins, "setUserWinsData");
   WaitForCompletion(future_loses, "setUserLosesData");
   WaitForCompletion(future_ties, "setUserTiesData");
-  user_wins = 0;
-  user_loses = 0;
-  user_ties = 0;
-  user_record_label->setString("W:" + to_string(user_wins) +
-                               " L:" + to_string(user_loses) +
-                               " T:" + to_string(user_ties));
+  user_wins_ = 0;
+  user_loses_ = 0;
+  user_ties_ = 0;
+  user_record_label_->setString("W:" + to_string(user_wins_) +
+                                " L:" + to_string(user_loses_) +
+                                " T:" + to_string(user_ties_));
 }
 
-// Overriding the onEnter method to udate the user record on reenter.
+// Overriding the onEnter method to udate the user_record on reenter.
 void MainMenuScene::onEnter() {
   // if the scene enter is from the game, updateUserRecords and change
-  // current_state.
-  if (current_state == kWaitingGameOutcome) {
+  // current_state_.
+  if (current_state_ == kWaitingGameOutcome) {
     this->UpdateUserRecord();
-    current_state = kGameMenuState;
+    current_state_ = kGameMenuState;
   }
   Layer::onEnter();
 }
@@ -682,59 +682,59 @@ void MainMenuScene::onEnter() {
 // Update loop that gets called every frame and was set of by scheduleUpdate().
 // Acts as the state manager for this scene.
 void MainMenuScene::update(float /*delta*/) {
-  if (current_state != previous_state) {
-    if (current_state == kWaitingAnonymousState) {
-      if (user_result.status() == firebase::kFutureStatusComplete) {
-        if (user_result.error() == firebase::auth::kAuthErrorNone) {
-          user = *user_result.result();
-          user_uid = GenerateUid(10);
+  if (current_state_ != previous_state_) {
+    if (current_state_ == kWaitingAnonymousState) {
+      if (user_result_.status() == firebase::kFutureStatusComplete) {
+        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+          user_ = *user_result_.result();
+          user_uid_ = GenerateUid(10);
 
           this->InitializeUserRecord();
 
-          current_state = kGameMenuState;
+          current_state_ = kGameMenuState;
         }
       }
-    } else if (current_state == kWaitingSignUpState) {
-      if (user_result.status() == firebase::kFutureStatusComplete) {
-        if (user_result.error() == firebase::auth::kAuthErrorNone) {
-          user = *user_result.result();
-          user_uid = user->uid();
+    } else if (current_state_ == kWaitingSignUpState) {
+      if (user_result_.status() == firebase::kFutureStatusComplete) {
+        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+          user_ = *user_result_.result();
+          user_uid_ = user_->uid();
 
           this->InitializeUserRecord();
 
-          current_state = kGameMenuState;
+          current_state_ = kGameMenuState;
 
         } else {
-          // Change invalid_login_label to display the user create failed.
-          invalid_login_label->setString("invalid sign up");
-          current_state = kAuthState;
+          // Change invalid_login_label_ to display the user_create failed.
+          invalid_login_label_->setString("invalid sign up");
+          current_state_ = kAuthState;
         }
       }
-    } else if (current_state == kWaitingLoginState) {
-      if (user_result.status() == firebase::kFutureStatusComplete) {
-        if (user_result.error() == firebase::auth::kAuthErrorNone) {
-          user = *user_result.result();
-          user_uid = user->uid();
+    } else if (current_state_ == kWaitingLoginState) {
+      if (user_result_.status() == firebase::kFutureStatusComplete) {
+        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+          user_ = *user_result_.result();
+          user_uid_ = user_->uid();
 
           this->UpdateUserRecord();
 
-          current_state = kGameMenuState;
+          current_state_ = kGameMenuState;
         } else {
-          // Change invalid_login_label to display the auth_result errored.
-          auto err = user_result.error_message();
-          invalid_login_label->setString("invalid login");
-          current_state = kAuthState;
+          // Change invalid_login_label_ to display the auth_result errored.
+          auto err = user_result_.error_message();
+          invalid_login_label_->setString("invalid login");
+          current_state_ = kAuthState;
         }
       }
-    } else if (current_state == kAuthState) {
+    } else if (current_state_ == kAuthState) {
       // Sign out logic, adding auth screen.
-      auth_background->setVisible(true);
-      user = nullptr;
-      previous_state = current_state;
-    } else if (current_state == kGameMenuState) {
+      auth_background_->setVisible(true);
+      user_ = nullptr;
+      previous_state_ = current_state_;
+    } else if (current_state_ == kGameMenuState) {
       // Removes the authentication screen.
-      auth_background->setVisible(false);
-      previous_state = current_state;
+      auth_background_->setVisible(false);
+      previous_state_ = current_state_;
     }
   }
   return;
