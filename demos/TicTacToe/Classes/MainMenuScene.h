@@ -23,6 +23,7 @@
 #include "ui/CocosGUI.h"
 using std::to_string;
 
+// TODO(grantpostma): Create a common util.h & util.cpp file.
 void LogMessage(const char*, ...);
 void ProcessEvents(int);
 void WaitForCompletion(const firebase::FutureBase&, const char*);
@@ -33,12 +34,18 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Build a simple scene that uses the bottom left cordinate point as (0,0)
   // and can have sprites, labels and nodes added onto it.
   static cocos2d::Scene* createScene();
+
+  // The game loop method for this layer which runs every frame once scheduled
+  // using this->scheduleUpdate(). Acts as the state manager for this scene.
   void MainMenuScene::update(float) override;
+
+  // If the scene is re-entered from TicTacToeScene, then call
+  // UpdateUserRecord() and swap current_state_ to kGameMenuState.
   void MainMenuScene::onEnter() override;
 
-  // Initialize the instance of a Node and returns a boolean based on if it was
+  // Initializes the instance of a Node and returns a boolean based on if it was
   // successful in doing so.
-  virtual bool init();
+  bool init() override;
   CREATE_FUNC(MainMenuScene);
 
  private:
@@ -60,9 +67,10 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Initializes the user record (wins,loses and ties) and displays it to the
   // screen.
   void MainMenuScene::InitializeUserRecord();
+  // Initializes the the firebase app, auth, and database.
   void MainMenuScene::InitializeFirebase();
 
-  // Creates node to be used as a background for the authentication menu.
+  // Node to be used as a background for the authentication menu.
   cocos2d::DrawNode* auth_background_;
 
   // Labels and textfields for the authentication menu.
@@ -72,7 +80,7 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   cocos2d::TextFieldTTF* password_text_field_;
 
   // Variable to track the current state and previous state to check against to
-  // see if the state change.
+  // see if the state changed.
   kSceneState current_state_ = kAuthState;
   kSceneState previous_state_ = kAuthState;
 

@@ -248,7 +248,7 @@ bool MainMenuScene::init() {
   const auto password_font_size = 36.0;
   const auto password_text_field_size = Size(400, 2 * password_font_size);
 
-  // Set up the constraints of the border so it surronds the text box.
+  // Set up the constraints of the border so it surrounds the text box.
   Vec2 password_border_corners[4] = {
       Vec2(password_text_field_position.width - text_field_padding,
            password_text_field_position.height),
@@ -668,7 +668,7 @@ void MainMenuScene::InitializeUserRecord() {
                                 " T:" + to_string(user_ties_));
 }
 
-// Overriding the onEnter method to udate the user_record on reenter.
+// Overriding the onEnter method to update the user_record on reenter.
 void MainMenuScene::onEnter() {
   // if the scene enter is from the game, updateUserRecords and change
   // current_state_.
@@ -679,8 +679,17 @@ void MainMenuScene::onEnter() {
   Layer::onEnter();
 }
 
-// Update loop that gets called every frame and was set of by scheduleUpdate().
-// Acts as the state manager for this scene.
+// Updates the previous_state_ when current_state_ != previous_state_:
+//
+// switch (current_state_)
+// (1) kAuthState: makes the auth_background_ visable.
+// (2) kGameMenuState: makes the auth_background_ invisable.
+// (3) kWaitingAnonymousState: waits for anonymous sign in then swaps to (1).
+// (4) kWaitingSignUpState: waits for sign up future completion,
+//     updates user variables, and swaps to (2).
+// (5) kWaitingLoginState: waits for login future completion,
+//     updates user variables, and swaps to (2).
+// (6) kWaitingGameOutcome: waits for director to pop the TicTacToeScene.
 void MainMenuScene::update(float /*delta*/) {
   if (current_state_ != previous_state_) {
     if (current_state_ == kWaitingAnonymousState) {
