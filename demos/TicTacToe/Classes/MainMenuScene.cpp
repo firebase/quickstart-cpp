@@ -123,7 +123,7 @@ bool MainMenuScene::init() {
                                       Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
   auth_background_->addChild(auth_background_border);
 
-  this->addChild(auth_background_, 10);
+  this->addChild(auth_background_, /*layer_index=*/10);
 
   // Label the background as Authentication.
   auto auth_label = Label::createWithSystemFont("authentication", "Arial", 48);
@@ -153,9 +153,11 @@ bool MainMenuScene::init() {
 
   anonymous_label_touch_listener->onTouchBegan =
       [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
-    // Returns if the layer is not in the auth state or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kAuthState)
-      return true;
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kAuthState or is switching states.
+    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
+      return false;
+    }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -211,9 +213,10 @@ bool MainMenuScene::init() {
 
   email_text_field_touch_listener->onTouchBegan =
       [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
-    // Returns if the layer is not in the auth state or is switching states.
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kAuthState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return true;
+      return false;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
@@ -238,8 +241,8 @@ bool MainMenuScene::init() {
       ->addEventListenerWithSceneGraphPriority(email_text_field_touch_listener,
                                                email_text_field_);
 
-  auth_background_->addChild(email_text_field_, 1);
-  auth_background_->addChild(email_text_field_border, 1);
+  auth_background_->addChild(email_text_field_, /*layer_index=*/1);
+  auth_background_->addChild(email_text_field_border, /*layer_index=*/1);
 
   // Extract the origin, size and position of the text field so that the
   // border can be created based on those values.
@@ -281,9 +284,10 @@ bool MainMenuScene::init() {
 
   password_text_field_touch_listener->onTouchBegan =
       [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
-    // Returns if the layer is not in the auth state or is switching states.
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kAuthState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return true;
+      return false;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
@@ -302,8 +306,8 @@ bool MainMenuScene::init() {
     return true;
   };
 
-  auth_background_->addChild(password_text_field_, 1);
-  auth_background_->addChild(password_text_field_border, 1);
+  auth_background_->addChild(password_text_field_, /*layer_index=*/1);
+  auth_background_->addChild(password_text_field_border, /*layer_index=*/1);
 
   // Attach the touch listener to the text field.
   Director::getInstance()
@@ -325,9 +329,10 @@ bool MainMenuScene::init() {
   // user_result_ to SignInWithEmailAndPassword future result.
   login_button_touch_listener->onTouchBegan = [this](Touch* touch,
                                                      Event* event) -> bool {
-    // Returns if the layer is not in the auth state or is switching states.
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kAuthState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return true;
+      return false;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
@@ -353,7 +358,7 @@ bool MainMenuScene::init() {
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(login_button_touch_listener,
                                                login_button);
-  auth_background_->addChild(login_button, 1);
+  auth_background_->addChild(login_button, /*layer_index=*/1);
 
   // Create the sign_up button and give it a position, anchor point and
   // touch_listener.
@@ -369,9 +374,10 @@ bool MainMenuScene::init() {
   // user_result_ to CreateUserWithEmailAndPassword future result.
   sign_up_button_touch_listener->onTouchBegan = [this](Touch* touch,
                                                        Event* event) -> bool {
-    // Returns if the layer is not in the auth state or is switching states.
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kAuthState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return true;
+      return false;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
@@ -397,7 +403,7 @@ bool MainMenuScene::init() {
       ->getEventDispatcher()
       ->addEventListenerWithSceneGraphPriority(sign_up_button_touch_listener,
                                                sign_up_button);
-  auth_background_->addChild(sign_up_button, 1);
+  auth_background_->addChild(sign_up_button, /*layer_index=*/1);
 
   // Create, set the position and assign a placeholder to the text
   // field for the user to enter the join game uuid.
@@ -413,7 +419,7 @@ bool MainMenuScene::init() {
   join_text_field_border->setPosition(390, 50);
   join_text_field_border->setAnchorPoint(Vec2(0, 0));
   join_text_field_border->setScale(.53f);
-  this->addChild(join_text_field_border, 0);
+  this->addChild(join_text_field_border, /*layer_index=*/0);
 
   // Create a touch listener to handle the touch event.
   auto join_text_field_touch_listener = EventListenerTouchOneByOne::create();
@@ -421,10 +427,11 @@ bool MainMenuScene::init() {
   join_text_field_touch_listener->onTouchBegan =
       [join_text_field, this](cocos2d::Touch* touch,
                               cocos2d::Event* event) -> bool {
-    // Returns if the layer is not in the game menu state or is switching
-    // states.
-    if (previous_state_ != current_state_ || current_state_ != kGameMenuState)
-      return true;
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kGameMenuState or is switching states.
+    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
+      return false;
+    }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -462,7 +469,11 @@ bool MainMenuScene::init() {
   // MainMenu scene with a TicTacToe scene.
   create_button_touch_listener->onTouchBegan =
       [this, join_text_field](Touch* touch, Event* event) -> bool {
-    if (current_state_ != kGameMenuState) return true;
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kGameMenuState or is switching states.
+    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
+      return false;
+    };
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
 
@@ -497,10 +508,10 @@ bool MainMenuScene::init() {
   // MainMenu scene with a TicTacToe scene.
   logout_button_touch_listener->onTouchBegan = [this](Touch* touch,
                                                       Event* event) -> bool {
-    // Returns if the layer is not in the game menu state or is switching
-    // states.
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kGameMenuState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
-      return true;
+      return false;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
@@ -541,10 +552,10 @@ bool MainMenuScene::init() {
   // MainMenu scene with a TicTacToe scene and pass in join_text_field string.
   join_button_touch_listener->onTouchBegan =
       [join_text_field, this](Touch* touch, Event* event) -> bool {
-    // Returns if the layer is not in the game menu state or is switching
-    // states.
+    // Returns false, not consuming the event, to exit the layer if
+    // current_state_ is not in the kGameMenuState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
-      return true;
+      return false;
     }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
@@ -574,7 +585,7 @@ bool MainMenuScene::init() {
   this->addChild(create_button);
   this->addChild(join_button);
   this->addChild(logout_button);
-  this->addChild(join_text_field, 1);
+  this->addChild(join_text_field, /*layer_index=*/1);
 
   this->scheduleUpdate();
 

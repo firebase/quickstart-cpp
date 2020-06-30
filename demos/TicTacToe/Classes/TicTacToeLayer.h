@@ -78,7 +78,7 @@ class TicTacToeLayer : public Layer {
   // User uid to update the user's record after the game is over.
   std::string user_uid_;
 
-  /// Firebase Realtime Database, the entry point to all database operations.
+  // Firebase Realtime Database, the entry point to all database operations.
   firebase::database::Database* database_;
   firebase::database::DatabaseReference ref_;
 
