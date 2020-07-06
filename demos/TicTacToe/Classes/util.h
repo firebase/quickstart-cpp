@@ -14,15 +14,7 @@
 #ifndef TICTACTOE_DEMO_CLASSES_UTIL_H_
 #define TICTACTOE_DEMO_CLASSES_UTIL_H_
 
-#include <random>
-#include <string>
-
-#include "cocos2d.h"
-#include "firebase/auth.h"
-#include "firebase/database.h"
 #include "firebase/future.h"
-#include "firebase/util.h"
-#include "ui/CocosGUI.h"
 
 // inputs: const char* as the message that will be displayed.
 //

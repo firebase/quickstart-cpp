@@ -14,6 +14,8 @@
 
 #include "util.h"
 
+#include <random>
+
 // Logs the message passed in to the console.
 void LogMessage(const char* format, ...) {
   va_list list;

@@ -31,7 +31,6 @@
 #include "cocos2d.h"
 #include "util.h"
 
-
 using cocos2d::Director;
 using cocos2d::Event;
 using cocos2d::Layer;

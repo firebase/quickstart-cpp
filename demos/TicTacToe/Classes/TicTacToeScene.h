@@ -20,7 +20,6 @@
 #include "cocos2d.h"
 #include "util.h"
 
-
 class TicTacToe : public cocos2d::Layer {
  public:
   // Builds a simple scene that uses the bottom left cordinate point as (0,0)
