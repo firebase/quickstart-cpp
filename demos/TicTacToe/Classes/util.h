@@ -29,7 +29,7 @@
 // Logs the message to the user through the console.
 void LogMessage(const char*, ...);
 
-// inputs: integer for number of miliseconds
+// inputs: integer for number of miliseconds.
 //
 // Acts as a blocking statement to wait for the specified time.
 void ProcessEvents(int);
