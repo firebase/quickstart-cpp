@@ -182,7 +182,6 @@ static bool ColumnCrossed(int board[][kTilesY]) {
   }
   return (false);
 }
-
 // A function that returns true if any of the diagonal
 // is crossed with the same player's move
 static bool DiagonalCrossed(int board[][kTilesY]) {
@@ -212,7 +211,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   database_ = main_menu_database;
   user_uid_ = main_menu_user;
 
-  // If the join_game_uuid_ is present, initialize game varibales, otherwise
+  // If the join_game_uuid_ is present, initialize game variables, otherwise
   // alter the game variables to signify a user joined. Additionally sets the
   // player_index_ and total_players based on joining or creating a game.
   if (join_game_uuid_.empty()) {
@@ -229,8 +228,8 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
     player_index_ = kPlayerOne;
     awaiting_opponenet_move_ = false;
   } else {
-    // Checks whether the join_uuid map exists. If it does not it set the
-    // initialization to failed.
+    // Checks whether the join_uuid map exists. If it does not then set
+    // the initialization to failed.
     auto future_game_uuid =
         database_->GetReference("game_data").Child(join_game_uuid_).GetValue();
     WaitForCompletion(future_game_uuid, "GetGameDataMap");
@@ -338,15 +337,13 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
 
   // total_player_listener_ and CurrentPlayerIndexListener listener is set up
   // to recognise when the desired players have connected & when turns
-  // alternate
-  LogMessage("total_player_listener_");
+  // alternate.
   total_player_listener_ =
       std::make_unique<ExpectValueListener>(kNumberOfPlayers);
   game_over_listener_ = std::make_unique<ExpectValueListener>(true);
 
   current_player_index_listener_ = std::make_unique<SampleValueListener>();
   last_move_listener_ = std::make_unique<SampleValueListener>();
-  LogMessage("%i", total_player_listener_->got_value());
   ref_.Child("total_players").AddValueListener(total_player_listener_.get());
   ref_.Child("game_over").AddValueListener(game_over_listener_.get());
   ref_.Child("current_player_index_")
@@ -409,7 +406,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
       awaiting_opponenet_move_ = true;
       waiting_label_->setString("waiting");
       if (GameOver(board)) {
-        // Set game_over_label_ to reflect the use won.
+        // Set game_over_label_ to reflect the user won.
         game_over_label_->setString("you won!");
         game_outcome_ = kGameWon;
         WaitForCompletion(ref_.Child("game_over").SetValue(true),
