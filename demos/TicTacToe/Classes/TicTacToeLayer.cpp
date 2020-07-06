@@ -130,7 +130,8 @@ class SampleChildListener : public firebase::database::ChildListener {
   }
 
  public:
-  // Vector of strings that define the events we saw, in order.
+  // Vector of strings that contains the events in the order in which they
+  // occurred.
   std::vector<std::string> events_;
 };
 
@@ -182,6 +183,7 @@ static bool ColumnCrossed(int board[][kTilesY]) {
   }
   return (false);
 }
+
 // A function that returns true if any of the diagonal
 // is crossed with the same player's move
 static bool DiagonalCrossed(int board[][kTilesY]) {
