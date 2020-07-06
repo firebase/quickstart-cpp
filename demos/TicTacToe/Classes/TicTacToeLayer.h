@@ -27,9 +27,10 @@
 #include <string>
 #include <unordered_set>
 
-#include "MainMenuScene.h"
 #include "TicTacToeScene.h"
 #include "cocos2d.h"
+#include "util.h"
+
 
 using cocos2d::Director;
 using cocos2d::Event;
