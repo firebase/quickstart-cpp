@@ -27,7 +27,6 @@
 #include <string>
 #include <unordered_set>
 
-#include "TicTacToeScene.h"
 #include "cocos2d.h"
 #include "tic_tac_toe_scene.h"
 #include "util.h"
