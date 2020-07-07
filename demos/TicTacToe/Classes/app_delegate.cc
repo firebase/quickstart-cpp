@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "AppDelegate.h"
+#include "app_delegate.h"
 
-#include "MainMenuScene.h"
-#include "TicTacToeScene.h"
+#include "main_menu_scene.h"
+#include "tic_tac_toe_scene.h"
+
 USING_NS_CC;
 
 // Set based on the image width.

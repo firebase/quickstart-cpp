@@ -14,6 +14,8 @@
 #ifndef TICTACTOE_DEMO_CLASSES_UTIL_H_
 #define TICTACTOE_DEMO_CLASSES_UTIL_H_
 
+#include <string>
+
 #include "firebase/future.h"
 
 // inputs: const char* as the message that will be displayed.

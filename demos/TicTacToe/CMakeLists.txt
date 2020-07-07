@@ -10,10 +10,10 @@
   # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
   # copies of the Software, and to permit persons to whom the Software is
   # furnished to do so, subject to the following conditions:
-  
+
   # The above copyright notice and this permission notice shall be included in
   # all copies or substantial portions of the Software.
-  
+
   # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -90,7 +90,6 @@ endif()
 if(NOT DEFINED BUILD_ENGINE_DONE) # to test install_test into root project
   set(COCOS2DX_ROOT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cocos2d)
   set(CMAKE_MODULE_PATH ${COCOS2DX_ROOT_PATH}/cmake/Modules/)
-
   include(CocosBuildSet)
   add_subdirectory(${COCOS2DX_ROOT_PATH}/cocos ${ENGINE_BINARY_PATH}/cocos/core)
 endif()
@@ -105,8 +104,8 @@ if(APPLE OR WINDOWS)
 endif()
 
 # add cross-platforms source files and header files 
-list(APPEND GAME_SOURCE Classes/AppDelegate.cpp Classes/TicTacToeScene.cpp)
-list(APPEND GAME_HEADER Classes/AppDelegate.h Classes/TicTacToeScene.h)
+list(APPEND GAME_SOURCE Classes/app_delegate.cc )
+list(APPEND GAME_HEADER Classes/app_delegate.h )
 
 if(ANDROID)
   # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml
