@@ -17,10 +17,10 @@
 
 #include <string.h>
 
-#include "firebase/auth.h"
-#include "firebase/future.h"
-#include "firebase/database.h"
 #include "cocos2d.h"
+#include "firebase/auth.h"
+#include "firebase/database.h"
+#include "firebase/future.h"
 
 using std::to_string;
 

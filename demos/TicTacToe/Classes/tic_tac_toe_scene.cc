@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "TicTacToeScene.h"
+#include "tic_tac_toe_scene.h"
 
 using cocos2d::Scene;
 
