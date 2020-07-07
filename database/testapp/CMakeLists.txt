@@ -95,7 +95,7 @@ else()
       "-framework Security"
     )
   elseif(MSVC)
-    set(ADDITIONAL_LIBS advapi32 ws2_32 crypt32 iphlpapi psapi userenv)
+    set(ADDITIONAL_LIBS advapi32 ws2_32 crypt32 iphlpapi psapi userenv shell32)
   else()
     set(ADDITIONAL_LIBS pthread)
   endif()
