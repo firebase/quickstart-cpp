@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "MainMenuScene.h"
+#include "main_menu_scene.h"
 
 #include <regex>
 
 #include "cocos2d.h"
+#include "firebase/util.h"
+#include "tic_tac_toe_scene.h"
 #include "util.h"
-#include "TicTacToeScene.h"
 
 static const char* kCreateGameImage = "create_game.png";
 static const char* kTextFieldBorderImage = "text_field_border.png";

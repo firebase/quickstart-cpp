@@ -14,6 +14,9 @@
 
 #include "util.h"
 
+#include <Windows.h>
+#include <synchapi.h>
+
 #include <random>
 
 // Logs the message passed in to the console.
