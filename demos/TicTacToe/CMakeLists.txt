@@ -10,8 +10,10 @@
   # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
   # copies of the Software, and to permit persons to whom the Software is
   # furnished to do so, subject to the following conditions:
+
   # The above copyright notice and this permission notice shall be included in
   # all copies or substantial portions of the Software.
+
   # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
   # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
   # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -61,7 +63,8 @@ endif()
 set(FOUND_JSON_FILE FALSE)
 foreach(config "google-services-desktop.json" "google-services.json")
   if (EXISTS ${config})
-    add_custom_command( TARGET ${APP_NAME} POST_BUILD
+    add_custom_command(
+      TARGET ${APP_NAME} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy
       ${config} $<TARGET_FILE_DIR:${APP_NAME}>)
     set(FOUND_JSON_FILE TRUE)
@@ -71,7 +74,6 @@ endforeach()
 if(NOT FOUND_JSON_FILE)
   message(WARNING "Failed to find either google-services-desktop.json or google-services.json. See the readme.md for more information.")
 endif()
-
 #Target name change to cocos
 # Add the Firebase libraries to the target using the function from the SDK.
 add_subdirectory(${FIREBASE_CPP_SDK_DIR} bin/ EXCLUDE_FROM_ALL)
@@ -96,7 +98,6 @@ endif()
 set(GAME_HEADER)
 
 set(GAME_RES_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/Resources")
-set(GAME_ClASSES_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/Classes")
     
 if(APPLE OR WINDOWS)
   cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})
@@ -146,7 +147,7 @@ endif()
 
 target_link_libraries(${APP_NAME} cocos2d "${firebase_libs}" ${ADDITIONAL_LIBS})
 target_include_directories(${APP_NAME} PRIVATE Classes 
-  PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/ )
+  PRIVATE ${COCOS2DX_ROOT_PATH}/cocos/audio/include/)
 
 # mark app resources
 setup_cocos_app_config(${APP_NAME})
