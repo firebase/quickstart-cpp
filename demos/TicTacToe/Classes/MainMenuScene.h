@@ -15,19 +15,14 @@
 #ifndef TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 
-#include "cocos2d.h"
-#include "firebase/auth.h"
-#include "firebase/database.h"
-#include "firebase/future.h"
-#include "firebase/util.h"
-#include "ui/CocosGUI.h"
-using std::to_string;
+#include <string.h>
 
-// TODO(grantpostma): Create a common util.h & util.cpp file.
-void LogMessage(const char*, ...);
-void ProcessEvents(int);
-void WaitForCompletion(const firebase::FutureBase&, const char*);
-std::string GenerateUid(std::size_t);
+#include "firebase/auth.h"
+#include "firebase/future.h"
+#include "firebase/database.h"
+#include "cocos2d.h"
+
+using std::to_string;
 
 class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
  public:
