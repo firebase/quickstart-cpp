@@ -118,6 +118,6 @@ int64_t WinGetCurrentTimeInMicroseconds() {
 
   // Windows file time is expressed in 100s of nanoseconds.
   // To convert to microseconds, multiply x10.
-  return now.QuadPart * 10LL;
+  return now.QuadPart * 10;
 }
 #endif
