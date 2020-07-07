@@ -14,6 +14,12 @@
 
 #include "tic_tac_toe_scene.h"
 
+#include <string>
+
+#include "cocos2d.h"
+#include "firebase/database.h"
+#include "tic_tac_toe_layer.h"
+
 using cocos2d::Scene;
 
 Scene* TicTacToe::createScene(const std::string& game_uuid,

@@ -16,9 +16,7 @@
 #define TICTACTOE_DEMO_CLASSES_TICTACTOE_SCENE_H_
 
 #include "cocos2d.h"
-#include "main_menu_scene.h"
-#include "tic_tac_toe_layer.h"
-#include "util.h"
+#include "firebase/database.h"
 
 class TicTacToe : public cocos2d::Layer {
  public:

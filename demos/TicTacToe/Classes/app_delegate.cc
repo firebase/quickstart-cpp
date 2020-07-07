@@ -15,7 +15,6 @@
 #include "app_delegate.h"
 
 #include "main_menu_scene.h"
-#include "tic_tac_toe_scene.h"
 
 USING_NS_CC;
 
