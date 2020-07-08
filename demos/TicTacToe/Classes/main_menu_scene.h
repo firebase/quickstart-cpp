@@ -15,7 +15,7 @@
 #ifndef TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 
-#include <string>
+#include <string.h>
 
 #include "cocos2d.h"
 #include "firebase/auth.h"
