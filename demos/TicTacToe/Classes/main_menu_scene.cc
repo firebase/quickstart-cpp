@@ -15,11 +15,32 @@
 #include "main_menu_scene.h"
 
 #include <regex>
+#include <string>
 
 #include "cocos2d.h"
+#include "firebase/auth.h"
+#include "firebase/database.h"
+#include "firebase/future.h"
 #include "firebase/util.h"
 #include "tic_tac_toe_scene.h"
 #include "util.h"
+
+using cocos2d::Event;
+using cocos2d::Label;
+using cocos2d::Scene;
+using cocos2d::Size;
+using cocos2d::Sprite;
+using cocos2d::TextFieldTTF;
+using cocos2d::Touch;
+using cocos2d::Vec2;
+using firebase::App;
+using firebase::InitResult;
+using firebase::kFutureStatusComplete;
+using firebase::ModuleInitializer;
+using firebase::auth::Auth;
+using firebase::auth::kAuthErrorNone;
+using firebase::database::Database;
+using std::to_string;
 
 static const char* kCreateGameImage = "create_game.png";
 static const char* kTextFieldBorderImage = "text_field_border.png";
@@ -106,8 +127,8 @@ bool MainMenuScene::init() {
 
   auto anonymous_label_touch_listener = EventListenerTouchOneByOne::create();
 
-  anonymous_label_touch_listener->onTouchBegan =
-      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
+  anonymous_label_touch_listener->onTouchBegan = [this](Touch* touch,
+                                                        Event* event) -> bool {
     // Returns false, not consuming the event, to exit the layer if
     // current_state_ is not in the kAuthState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kAuthState) {
@@ -156,7 +177,7 @@ bool MainMenuScene::init() {
                                        Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
 
   // Create a text field to enter the user's email.
-  email_text_field_ = cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
+  email_text_field_ = TextFieldTTF::textFieldWithPlaceHolder(
       "enter an email address", email_text_field_size, TextHAlignment::LEFT,
       "Arial", email_font_size);
   email_text_field_->setPosition(email_text_field_position);
@@ -166,8 +187,8 @@ bool MainMenuScene::init() {
 
   auto email_text_field_touch_listener = EventListenerTouchOneByOne::create();
 
-  email_text_field_touch_listener->onTouchBegan =
-      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
+  email_text_field_touch_listener->onTouchBegan = [this](Touch* touch,
+                                                         Event* event) -> bool {
     // Returns false, not consuming the event, to exit the layer if
     // current_state_ is not in the kAuthState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kAuthState) {
@@ -225,7 +246,7 @@ bool MainMenuScene::init() {
       password_border_corners, 4, Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
 
   // Create a text field to enter the user's password.
-  password_text_field_ = cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
+  password_text_field_ = TextFieldTTF::textFieldWithPlaceHolder(
       "enter a password", password_text_field_size, TextHAlignment::LEFT,
       "Arial", password_font_size);
   password_text_field_->setPosition(password_text_field_position);
@@ -238,7 +259,7 @@ bool MainMenuScene::init() {
       EventListenerTouchOneByOne::create();
 
   password_text_field_touch_listener->onTouchBegan =
-      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
+      [this](Touch* touch, Event* event) -> bool {
     // Returns false, not consuming the event, to exit the layer if
     // current_state_ is not in the kAuthState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kAuthState) {
@@ -362,9 +383,8 @@ bool MainMenuScene::init() {
 
   // Create, set the position and assign a placeholder to the text
   // field for the user to enter the join game uuid.
-  TextFieldTTF* join_text_field =
-      cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
-          "code", cocos2d::Size(200, 100), TextHAlignment::LEFT, "Arial", 55.0);
+  TextFieldTTF* join_text_field = TextFieldTTF::textFieldWithPlaceHolder(
+      "code", Size(200, 100), TextHAlignment::LEFT, "Arial", 55.0);
   join_text_field->setPosition(420, 45);
   join_text_field->setAnchorPoint(Vec2(0, 0));
   join_text_field->setColorSpaceHolder(Color3B::WHITE);
@@ -380,8 +400,7 @@ bool MainMenuScene::init() {
   auto join_text_field_touch_listener = EventListenerTouchOneByOne::create();
 
   join_text_field_touch_listener->onTouchBegan =
-      [join_text_field, this](cocos2d::Touch* touch,
-                              cocos2d::Event* event) -> bool {
+      [join_text_field, this](Touch* touch, Event* event) -> bool {
     // Returns false, not consuming the event, to exit the layer if
     // current_state_ is not in the kGameMenuState or is switching states.
     if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
@@ -550,12 +569,12 @@ bool MainMenuScene::init() {
 // are missing.
 void MainMenuScene::InitializeFirebase() {
   LogMessage("Initialize Firebase App.");
-  ::firebase::App* app;
+  App* app;
 
 #if defined(_ANDROID_)
-  app = ::firebase::App::Create(GetJniEnv(), GetActivity());
+  app = App::Create(GetJniEnv(), GetActivity());
 #else
-  app = ::firebase::App::Create();
+  app = App::Create();
 #endif  // defined(ANDROID)
 
   LogMessage("Initialize Firebase Auth and Firebase Database.");
@@ -566,25 +585,24 @@ void MainMenuScene::InitializeFirebase() {
   auth_ = nullptr;
   void* initialize_targets[] = {&auth_, &database_};
 
-  const firebase::ModuleInitializer::InitializerFn initializers[] = {
-      [](::firebase::App* app, void* data) {
+  const ModuleInitializer::InitializerFn initializers[] = {
+      [](::App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Auth.");
         void** targets = reinterpret_cast<void**>(data);
-        ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::auth::Auth**>(targets[0]) =
-            ::firebase::auth::Auth::GetAuth(app, &result);
+        InitResult result;
+        *reinterpret_cast<::Auth**>(targets[0]) = Auth::GetAuth(app, &result);
         return result;
       },
-      [](::firebase::App* app, void* data) {
+      [](::App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Database.");
         void** targets = reinterpret_cast<void**>(data);
-        ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::database::Database**>(targets[1]) =
-            ::firebase::database::Database::GetInstance(app, &result);
+        InitResult result;
+        *reinterpret_cast<::Database**>(targets[1]) =
+            Database::GetInstance(app, &result);
         return result;
       }};
 
-  ::firebase::ModuleInitializer initializer;
+  ModuleInitializer initializer;
   initializer.Initialize(app, initialize_targets, initializers,
                          sizeof(initializers) / sizeof(initializers[0]));
 
@@ -659,8 +677,8 @@ void MainMenuScene::onEnter() {
 void MainMenuScene::update(float /*delta*/) {
   if (current_state_ != previous_state_) {
     if (current_state_ == kWaitingAnonymousState) {
-      if (user_result_.status() == firebase::kFutureStatusComplete) {
-        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      if (user_result_.status() == kFutureStatusComplete) {
+        if (user_result_.error() == kAuthErrorNone) {
           user_ = *user_result_.result();
           user_uid_ = GenerateUid(10);
 
@@ -670,8 +688,8 @@ void MainMenuScene::update(float /*delta*/) {
         }
       }
     } else if (current_state_ == kWaitingSignUpState) {
-      if (user_result_.status() == firebase::kFutureStatusComplete) {
-        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      if (user_result_.status() == kFutureStatusComplete) {
+        if (user_result_.error() == kAuthErrorNone) {
           user_ = *user_result_.result();
           user_uid_ = user_->uid();
 
@@ -686,8 +704,8 @@ void MainMenuScene::update(float /*delta*/) {
         }
       }
     } else if (current_state_ == kWaitingLoginState) {
-      if (user_result_.status() == firebase::kFutureStatusComplete) {
-        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      if (user_result_.status() == kFutureStatusComplete) {
+        if (user_result_.error() == kAuthErrorNone) {
           user_ = *user_result_.result();
           user_uid_ = user_->uid();
 
