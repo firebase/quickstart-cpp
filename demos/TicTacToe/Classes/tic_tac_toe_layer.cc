@@ -14,6 +14,32 @@
 
 #include "tic_tac_toe_layer.h"
 
+#include <algorithm>
+#include <array>
+#include <string>
+#include <unordered_set>
+#include <vector>
+
+#include "cocos2d.h"
+#include "firebase/database.h"
+#include "firebase/variant.h"
+#include "util.h"
+
+using cocos2d::Director;
+using cocos2d::Event;
+using cocos2d::Label;
+using cocos2d::Sprite;
+using cocos2d::Touch;
+using firebase::Variant;
+using firebase::database::DataSnapshot;
+using firebase::database::Error;
+using firebase::database::TransactionResult;
+using firebase::database::ValueListener;
+using std::array;
+using std::make_unique;
+using std::string;
+using std::vector;
+
 USING_NS_CC;
 
 // Player constants.
@@ -34,8 +60,8 @@ static const enum kGameOutcome {
 // database outcome key.
 static const const char* kGameOutcomeStrings[] = {"wins", "loses", "ties",
                                                   "disbanded"};
-static const std::array<string, 4> kGameOverStrings = {
-    "you won!", "you lost.", "you tied.", "user left."};
+static const array<string, 4> kGameOverStrings = {"you won!", "you lost.",
+                                                  "you tied.", "user left."};
 
 // Game board dimensions.
 extern const int kTilesX;
@@ -54,62 +80,60 @@ static const int kEndGameFramesMax = 120;
 // Image file paths.
 static const char* kBoardImageFileName = "tic_tac_toe_board.png";
 static const char* kLeaveButtonFileName = "leave_button.png";
-static std::array<const char*, kNumberOfPlayers> kPlayerTokenFileNames = {
+static array<const char*, kNumberOfPlayers> kPlayerTokenFileNames = {
     "tic_tac_toe_x.png", "tic_tac_toe_o.png"};
 
 // An example of a ValueListener object. This specific version will
 // simply log every value it sees, and store them in a list so we can
 // confirm that all values were received.
-class SampleValueListener : public firebase::database::ValueListener {
+class SampleValueListener : public ValueListener {
  public:
-  void OnValueChanged(
-      const firebase::database::DataSnapshot& snapshot) override {
+  void OnValueChanged(const DataSnapshot& snapshot) override {
     LogMessage("  ValueListener.OnValueChanged(%s)",
                snapshot.value().AsString().string_value());
     last_seen_value_ = snapshot.value();
     seen_values_.push_back(snapshot.value());
   }
-  void OnCancelled(const firebase::database::Error& error_code,
+  void OnCancelled(const Error& error_code,
                    const char* error_message) override {
     LogMessage("ERROR: SampleValueListener canceled: %d: %s", error_code,
                error_message);
   }
-  const firebase::Variant& last_seen_value() { return last_seen_value_; }
-  bool seen_value(const firebase::Variant& value) {
+  const Variant& last_seen_value() { return last_seen_value_; }
+  bool seen_value(const Variant& value) {
     return std::find(seen_values_.begin(), seen_values_.end(), value) !=
            seen_values_.end();
   }
   size_t num_seen_values() { return seen_values_.size(); }
 
  private:
-  firebase::Variant last_seen_value_;
-  std::vector<firebase::Variant> seen_values_;
+  Variant last_seen_value_;
+  vector<Variant> seen_values_;
 };
 
 // An example ChildListener class.
 class SampleChildListener : public firebase::database::ChildListener {
  public:
-  void OnChildAdded(const firebase::database::DataSnapshot& snapshot,
+  void OnChildAdded(const DataSnapshot& snapshot,
                     const char* previous_sibling) override {
     LogMessage("  ChildListener.OnChildAdded(%s)", snapshot.key());
-    events_.push_back(std::string("added ") + snapshot.key());
+    events_.push_back(string("added ") + snapshot.key());
   }
-  void OnChildChanged(const firebase::database::DataSnapshot& snapshot,
+  void OnChildChanged(const DataSnapshot& snapshot,
                       const char* previous_sibling) override {
     LogMessage("  ChildListener.OnChildChanged(%s)", snapshot.key());
-    events_.push_back(std::string("changed ") + snapshot.key());
+    events_.push_back(string("changed ") + snapshot.key());
   }
-  void OnChildMoved(const firebase::database::DataSnapshot& snapshot,
+  void OnChildMoved(const DataSnapshot& snapshot,
                     const char* previous_sibling) override {
     LogMessage("  ChildListener.OnChildMoved(%s)", snapshot.key());
-    events_.push_back(std::string("moved ") + snapshot.key());
+    events_.push_back(string("moved ") + snapshot.key());
   }
-  void OnChildRemoved(
-      const firebase::database::DataSnapshot& snapshot) override {
+  void OnChildRemoved(const DataSnapshot& snapshot) override {
     LogMessage("  ChildListener.OnChildRemoved(%s)", snapshot.key());
-    events_.push_back(std::string("removed ") + snapshot.key());
+    events_.push_back(string("removed ") + snapshot.key());
   }
-  void OnCancelled(const firebase::database::Error& error_code,
+  void OnCancelled(const Error& error_code,
                    const char* error_message) override {
     LogMessage("ERROR: SampleChildListener canceled: %d: %s", error_code,
                error_message);
@@ -119,7 +143,7 @@ class SampleChildListener : public firebase::database::ChildListener {
   size_t total_events() { return events_.size(); }
 
   // Get the number of times this event was seen.
-  int num_events(const std::string& event) {
+  int num_events(const string& event) {
     int count = 0;
     for (int i = 0; i < events_.size(); i++) {
       if (events_[i] == event) {
@@ -132,16 +156,15 @@ class SampleChildListener : public firebase::database::ChildListener {
  public:
   // Vector of strings that contains the events in the order in which they
   // occurred.
-  std::vector<std::string> events_;
+  vector<string> events_;
 };
 
 // A ValueListener that expects a specific value to be set.
-class ExpectValueListener : public firebase::database::ValueListener {
+class ExpectValueListener : public ValueListener {
  public:
-  explicit ExpectValueListener(firebase::Variant wait_value)
+  explicit ExpectValueListener(Variant wait_value)
       : wait_value_(wait_value.AsString()), got_value_(false) {}
-  void OnValueChanged(
-      const firebase::database::DataSnapshot& snapshot) override {
+  void OnValueChanged(const DataSnapshot& snapshot) override {
     if (snapshot.value().AsString() == wait_value_) {
       got_value_ = true;
     } else {
@@ -149,7 +172,7 @@ class ExpectValueListener : public firebase::database::ValueListener {
           "FAILURE: ExpectValueListener did not receive the expected result.");
     }
   }
-  void OnCancelled(const firebase::database::Error& error_code,
+  void OnCancelled(const Error& error_code,
                    const char* error_message) override {
     LogMessage("ERROR: ExpectValueListener canceled: %d: %s", error_code,
                error_message);
@@ -158,7 +181,7 @@ class ExpectValueListener : public firebase::database::ValueListener {
   bool got_value() { return got_value_; }
 
  private:
-  firebase::Variant wait_value_;
+  Variant wait_value_;
   bool got_value_;
 };
 
@@ -219,14 +242,13 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   if (join_game_uuid_.empty()) {
     join_game_uuid_ = GenerateUid(4);
     ref_ = database_->GetReference("game_data").Child(join_game_uuid_);
-    firebase::Future<void> future_create_game =
-        ref_.Child("total_players").SetValue(1);
+    future_create_game_ = ref_.Child("total_players").SetValue(1);
     future_current_player_index_ =
         ref_.Child("current_player_index_").SetValue(kPlayerOne);
     future_game_over_ = ref_.Child("game_over").SetValue(false);
     WaitForCompletion(future_game_over_, "setGameOver");
     WaitForCompletion(future_current_player_index_, "setCurrentPlayerIndex");
-    WaitForCompletion(future_create_game, "createGame");
+    WaitForCompletion(future_create_game_, "createGame");
     player_index_ = kPlayerOne;
     awaiting_opponenet_move_ = false;
   } else {
@@ -241,7 +263,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
     } else {
       ref_ = database_->GetReference("game_data").Child(join_game_uuid_);
       auto future_increment_total_users =
-          ref_.RunTransaction([](MutableData* data) {
+          ref_.RunTransaction([](firebase::database::MutableData* data) {
             auto total_players = data->Child("total_players").value();
 
             // Complete the transaction based on the returned mutable data
@@ -340,12 +362,11 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   // total_player_listener_ and CurrentPlayerIndexListener listener is set up
   // to recognise when the desired players have connected & when turns
   // alternate.
-  total_player_listener_ =
-      std::make_unique<ExpectValueListener>(kNumberOfPlayers);
-  game_over_listener_ = std::make_unique<ExpectValueListener>(true);
+  total_player_listener_ = make_unique<ExpectValueListener>(kNumberOfPlayers);
+  game_over_listener_ = make_unique<ExpectValueListener>(true);
 
-  current_player_index_listener_ = std::make_unique<SampleValueListener>();
-  last_move_listener_ = std::make_unique<SampleValueListener>();
+  current_player_index_listener_ = make_unique<SampleValueListener>();
+  last_move_listener_ = make_unique<SampleValueListener>();
   ref_.Child("total_players").AddValueListener(total_player_listener_.get());
   ref_.Child("game_over").AddValueListener(game_over_listener_.get());
   ref_.Child("current_player_index_")

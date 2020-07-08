@@ -15,34 +15,20 @@
 #ifndef TICTACTOE_DEMO_CLASSES_TICTACTOELAYER_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_TICTACTOELAYER_SCENE_H_
 
-#include <algorithm>
-#include <array>
-#include <cstdlib>
-#include <ctime>
-#include <iostream>
-#include <iterator>
-#include <map>
-#include <set>
-#include <sstream>
 #include <string>
 #include <unordered_set>
 
 #include "cocos2d.h"
-#include "tic_tac_toe_scene.h"
-#include "util.h"
+#include "firebase/database.h"
+#include "firebase/future.h"
 
-using cocos2d::Director;
-using cocos2d::Event;
+using cocos2d::Label;
 using cocos2d::Layer;
-using cocos2d::LayerColor;
-using cocos2d::Point;
 using cocos2d::Sprite;
-using cocos2d::Touch;
 using firebase::Future;
-using firebase::database::DataSnapshot;
-using firebase::database::MutableData;
-using firebase::database::TransactionResult;
+using firebase::database::Database;
 using std::string;
+using std::unique_ptr;
 
 // Tile Constants.
 static const int kTilesX = 3;
@@ -56,7 +42,7 @@ class TicTacToeLayer : public Layer {
  public:
   // Derived from Layer class with input paramters for the game_uid, database
   // and user_uid and overrides Layer::update().
-  TicTacToeLayer(std::string, firebase::database::Database*, std::string);
+  TicTacToeLayer(string, Database*, string);
   ~TicTacToeLayer();
 
  private:
@@ -73,34 +59,35 @@ class TicTacToeLayer : public Layer {
 
   // String for the join game code and initialize the database
   // reference.
-  std::string join_game_uuid_;
+  string join_game_uuid_;
 
   // User uid to update the user's record after the game is over.
-  std::string user_uid_;
+  string user_uid_;
 
   // Firebase Realtime Database, the entry point to all database operations.
-  firebase::database::Database* database_;
+  Database* database_;
   firebase::database::DatabaseReference ref_;
 
   // The database schema has a top level game_uuid object which includes
   // last_move, total_players and current_player_index_ fields.
 
   // Listeners for database values.
-  std::unique_ptr<SampleValueListener> current_player_index_listener_;
-  std::unique_ptr<SampleValueListener> last_move_listener_;
-  std::unique_ptr<ExpectValueListener> total_player_listener_;
-  std::unique_ptr<ExpectValueListener> game_over_listener_;
+  unique_ptr<SampleValueListener> current_player_index_listener_;
+  unique_ptr<SampleValueListener> last_move_listener_;
+  unique_ptr<ExpectValueListener> total_player_listener_;
+  unique_ptr<ExpectValueListener> game_over_listener_;
 
   // Lables and a sprites.
   Sprite* board_sprite_;
   Sprite* leave_button_sprite_;
-  cocos2d::Label* game_over_label_;
-  cocos2d::Label* waiting_label_;
+  Label* game_over_label_;
+  Label* waiting_label_;
 
   // Firebase futures for last_move and current_player_index_.
   Future<void> future_last_move_;
   Future<void> future_current_player_index_;
   Future<void> future_game_over_;
+  Future<void> future_create_game_;
 
   int current_player_index_;
   int player_index_;
