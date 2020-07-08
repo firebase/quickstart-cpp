@@ -590,14 +590,14 @@ void MainMenuScene::InitializeFirebase() {
         LogMessage("Attempt to initialize Firebase Auth.");
         void** targets = reinterpret_cast<void**>(data);
         InitResult result;
-        *reinterpret_cast<::Auth**>(targets[0]) = Auth::GetAuth(app, &result);
+        *reinterpret_cast<Auth**>(targets[0]) = Auth::GetAuth(app, &result);
         return result;
       },
       [](App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Database.");
         void** targets = reinterpret_cast<void**>(data);
         InitResult result;
-        *reinterpret_cast<::Database**>(targets[1]) =
+        *reinterpret_cast<Database**>(targets[1]) =
             Database::GetInstance(app, &result);
         return result;
       }};
