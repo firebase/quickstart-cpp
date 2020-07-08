@@ -586,14 +586,14 @@ void MainMenuScene::InitializeFirebase() {
   void* initialize_targets[] = {&auth_, &database_};
 
   const ModuleInitializer::InitializerFn initializers[] = {
-      [](::App* app, void* data) {
+      [](App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Auth.");
         void** targets = reinterpret_cast<void**>(data);
         InitResult result;
         *reinterpret_cast<::Auth**>(targets[0]) = Auth::GetAuth(app, &result);
         return result;
       },
-      [](::App* app, void* data) {
+      [](App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Database.");
         void** targets = reinterpret_cast<void**>(data);
         InitResult result;
