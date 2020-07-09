@@ -33,6 +33,7 @@
 
 using cocos2d::Director;
 using cocos2d::Event;
+using cocos2d::Label;
 using cocos2d::Layer;
 using cocos2d::LayerColor;
 using cocos2d::Point;
@@ -79,11 +80,11 @@ class TicTacToeLayer : public Layer {
   std::string user_uid_;
 
   // Firebase Realtime Database, the entry point to all database operations.
-  firebase::database::Database* database_;
-  firebase::database::DatabaseReference ref_;
-
+  //
   // The database schema has a top level game_uuid object which includes
   // last_move, total_players and current_player_index_ fields.
+  firebase::database::Database* database_;
+  firebase::database::DatabaseReference ref_;
 
   // Listeners for database values.
   std::unique_ptr<SampleValueListener> current_player_index_listener_;
@@ -94,8 +95,8 @@ class TicTacToeLayer : public Layer {
   // Lables and a sprites.
   Sprite* board_sprite_;
   Sprite* leave_button_sprite_;
-  cocos2d::Label* game_over_label_;
-  cocos2d::Label* waiting_label_;
+  Label* game_over_label_;
+  Label* waiting_label_;
 
   // Firebase futures for last_move and current_player_index_.
   Future<void> future_last_move_;
