@@ -391,35 +391,34 @@ bool MainMenuScene::init() {
   join_text_field->setMaxLengthEnabled(true);
 
   // Adds the event listener to handle the actions for a textfield.
-  join_text_field->addEventListener(
-      [this](Ref* sender, TextField::EventType type) {
-        auto join_text_field = dynamic_cast<TextField*>(sender);
-        string join_text_field_string = join_text_field->getString();
-        // Transforms the letter casing to uppercase.
-        std::transform(
-            join_text_field_string.begin(), join_text_field_string.end(),
-            join_text_field_string.begin(),
-            [](unsigned char c) -> unsigned char { return std::toupper(c); });
-        // Creates a repeating blink action for the cursor.
-        const auto repeated_blink = CreateBlinkingCursorAction(join_text_field);
-        switch (type) {
-          case TextField::EventType::ATTACH_WITH_IME:
-            // Runs the repeated blinking cursor action.
-            join_text_field->runAction(repeated_blink);
-            break;
-          case TextField::EventType::DETACH_WITH_IME:
-            // Stops the blinking cursor.
-            join_text_field->stopAllActions();
-            break;
-          case TextField::EventType::INSERT_TEXT:
-            join_text_field->setString(join_text_field_string);
-            break;
-          case TextField::EventType::DELETE_BACKWARD:
-            break;
-          default:
-            break;
-        }
-      });
+  join_text_field->addEventListener([this](Ref* sender,
+                                           TextField::EventType type) {
+    auto join_text_field = dynamic_cast<TextField*>(sender);
+    string join_text_field_string = join_text_field->getString();
+    // Transforms the letter casing to uppercase.
+    std::transform(
+        join_text_field_string.begin(), join_text_field_string.end(),
+        join_text_field_string.begin(),
+        [](unsigned char c) -> unsigned char { return std::toupper(c); });
+    // Creates a repeating blink action for the cursor.
+    switch (type) {
+      case TextField::EventType::ATTACH_WITH_IME:
+        // Runs the repeated blinking cursor action.
+        join_text_field->runAction(CreateBlinkingCursorAction(join_text_field));
+        break;
+      case TextField::EventType::DETACH_WITH_IME:
+        // Stops the blinking cursor.
+        join_text_field->stopAllActions();
+        break;
+      case TextField::EventType::INSERT_TEXT:
+        join_text_field->setString(join_text_field_string);
+        break;
+      case TextField::EventType::DELETE_BACKWARD:
+        break;
+      default:
+        break;
+    }
+  });
 
   // Set up the constraints of the border so it surrounds the text box.
   const auto pos = join_text_field_position;
