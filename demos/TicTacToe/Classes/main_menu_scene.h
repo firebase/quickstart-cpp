@@ -15,6 +15,7 @@
 #ifndef TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 
+#include <cocos\ui\UITextField.h>
 #include <string.h>
 
 #include "cocos2d.h"
@@ -54,6 +55,10 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
     kWaitingLoginState,
     kWaitingGameOutcome
   };
+
+  // Creates an endless blinking cursor action for the textfield passed in.
+  cocos2d::RepeatForever* MainMenuScene::createBlinkingCursorAction(
+      cocos2d::ui::TextField*);
 
   // Updates the user record (wins,loses and ties) and displays it to the
   // screen.

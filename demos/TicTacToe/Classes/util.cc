@@ -54,7 +54,7 @@ void WaitForCompletion(const firebase::FutureBase& future, const char* name) {
 
 // Generates a random uid of a specified length.
 std::string GenerateUid(std::size_t length) {
-  const std::string kCharacters = "0123456789abcdefghjkmnpqrstuvwxyz";
+  const std::string kCharacters = "0123456789ABCDEFGHJKMNPQRSTUVWXYZ";
 
   std::random_device random_device;
   std::mt19937 generator(random_device());

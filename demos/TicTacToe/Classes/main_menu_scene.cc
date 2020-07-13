@@ -14,6 +14,8 @@
 
 #include "main_menu_scene.h"
 
+#include <cocos\ui\UITextField.h>
+
 #include <regex>
 
 #include "cocos2d.h"
@@ -31,6 +33,8 @@ static const char* kSignUpButtonImage = "sign_up.png";
 // Regex that will validate if the email entered is a valid email pattern.
 const std::regex email_pattern("(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+");
 USING_NS_CC;
+
+using cocos2d::ui::TextField;
 
 Scene* MainMenuScene::createScene() {
   // Builds a simple scene that uses the bottom left cordinate point as (0,0)
@@ -150,12 +154,12 @@ bool MainMenuScene::init() {
       Vec2(email_text_field_position.width - text_field_padding,
            email_text_field_position.height + email_text_field_size.height)};
 
-  // Create a text field border and add it around the text field.
+  // Creates  border and adds it around the text field.
   auto email_text_field_border = DrawNode::create();
   email_text_field_border->drawPolygon(email_border_corners, 4,
                                        Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
 
-  // Create a text field to enter the user's email.
+  // Creates a text field to enter the user's email.
   email_text_field_ = cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
       "enter an email address", email_text_field_size, TextHAlignment::LEFT,
       "Arial", email_font_size);
@@ -219,12 +223,12 @@ bool MainMenuScene::init() {
            password_text_field_position.height +
                password_text_field_size.height)};
 
-  // Create a text field border and add it around the text field.
+  // Creates a border and adds it around the text field.
   auto password_text_field_border = DrawNode::create();
   password_text_field_border->drawPolygon(
       password_border_corners, 4, Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
 
-  // Create a text field to enter the user's password.
+  // Creates a text field to enter the user's password.
   password_text_field_ = cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
       "enter a password", password_text_field_size, TextHAlignment::LEFT,
       "Arial", password_font_size);
@@ -270,14 +274,14 @@ bool MainMenuScene::init() {
       ->addEventListenerWithSceneGraphPriority(
           password_text_field_touch_listener, password_text_field_);
 
-  // Create the login button and give it a position, anchor point and
+  // Creates the login button and give it a position, anchor point and
   // touch_listener.
   auto login_button = Sprite::create(kLoginButtonImage);
   login_button->setPosition(90, 120);
   login_button->setAnchorPoint(Vec2(0, 0));
   login_button->setContentSize(Size(200, 75));
 
-  // Create a button listener to handle the touch event.
+  // Creates a button listener to handle the touch event.
   auto login_button_touch_listener = EventListenerTouchOneByOne::create();
 
   // Transition from kAuthState to kWaitingLoginState on button press and set
@@ -315,14 +319,14 @@ bool MainMenuScene::init() {
                                                login_button);
   auth_background_->addChild(login_button, /*layer_index=*/1);
 
-  // Create the sign_up button and give it a position, anchor point and
+  // Creates the sign_up button and give it a position, anchor point and
   // touch_listener.
   auto sign_up_button = Sprite::create(kSignUpButtonImage);
   sign_up_button->setPosition(310, 120);
   sign_up_button->setAnchorPoint(Vec2(0, 0));
   sign_up_button->setContentSize(Size(200, 75));
 
-  // Create a button listener to handle the touch event.
+  // Creates a button listener to handle the touch event.
   auto sign_up_button_touch_listener = EventListenerTouchOneByOne::create();
 
   // Transition from kAuthState to kWaitingSignUpState on button press and set
@@ -360,56 +364,69 @@ bool MainMenuScene::init() {
                                                sign_up_button);
   auth_background_->addChild(sign_up_button, /*layer_index=*/1);
 
-  // Create, set the position and assign a placeholder to the text
+  // Creates, sets the position and assign a placeholder to the text
   // field for the user to enter the join game uuid.
-  TextFieldTTF* join_text_field =
-      cocos2d::TextFieldTTF::textFieldWithPlaceHolder(
-          "code", cocos2d::Size(200, 100), TextHAlignment::LEFT, "Arial", 55.0);
-  join_text_field->setPosition(420, 45);
-  join_text_field->setAnchorPoint(Vec2(0, 0));
-  join_text_field->setColorSpaceHolder(Color3B::WHITE);
-  join_text_field->setDelegate(this);
 
-  auto join_text_field_border = Sprite::create(kTextFieldBorderImage);
-  join_text_field_border->setPosition(390, 50);
-  join_text_field_border->setAnchorPoint(Vec2(0, 0));
-  join_text_field_border->setScale(.53f);
-  this->addChild(join_text_field_border, /*layer_index=*/0);
+  auto join_text_field_position = Size(480, 95);
+  auto join_text_field_size = Size(180, 80);
+  auto join_text_field = ui::TextField::create("code", "Arial", 48);
+  join_text_field->setTextHorizontalAlignment(TextHAlignment::CENTER);
+  join_text_field->setPosition(join_text_field_position);
+  join_text_field->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
+  join_text_field->setTouchSize(join_text_field_size);
+  join_text_field->setTouchAreaEnabled(true);
+  join_text_field->setMaxLength(/*max_characters=*/4);
+  join_text_field->setMaxLengthEnabled(true);
 
-  // Create a touch listener to handle the touch event.
-  auto join_text_field_touch_listener = EventListenerTouchOneByOne::create();
+  // Adds the event listener to handle the actions for a textfield.
+  join_text_field->addEventListener(
+      [this](Ref* sender, ui::TextField::EventType type) {
+        auto join_text_field = dynamic_cast<ui::TextField*>(sender);
+        string join_text_field_string = join_text_field->getString();
+        // Transforms the letter casing to uppercase.
+        std::transform(
+            join_text_field_string.begin(), join_text_field_string.end(),
+            join_text_field_string.begin(),
+            [](unsigned char c) -> unsigned char { return std::toupper(c); });
+        // Creates a repeating blink action for the cursor.
+        const auto repeated_blink = createBlinkingCursorAction(join_text_field);
+        switch (type) {
+          case ui::TextField::EventType::ATTACH_WITH_IME:
+            // Runs the repeated blinking cursor action.
+            join_text_field->runAction(repeated_blink);
+            CCLOG("displayed keyboard");
+            break;
+          case ui::TextField::EventType::DETACH_WITH_IME:
+            // Stops the blinking cursor.
+            join_text_field->stopAllActions();
+            CCLOG("dismissed keyboard");
+            break;
+          case ui::TextField::EventType::INSERT_TEXT:
+            join_text_field->setString(join_text_field_string);
+            CCLOG("join_text_field inserted text : %s", join_text_field_string);
+            break;
+          case ui::TextField::EventType::DELETE_BACKWARD:
+            CCLOG("deleted backward");
+            break;
+          default:
+            break;
+        }
+      });
 
-  join_text_field_touch_listener->onTouchBegan =
-      [join_text_field, this](cocos2d::Touch* touch,
-                              cocos2d::Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kGameMenuState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
-      return false;
-    }
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-    if (bounds.containsPoint(point)) {
-      // Show the on screen keyboard and places character inputs into the text
-      // field.
-      auto str = join_text_field->getString();
-      auto text_field = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
-      text_field->setCursorEnabled(true);
-      text_field->attachWithIME();
-    } else {
-      auto text_field = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
-      text_field->setCursorEnabled(false);
-      text_field->detachWithIME();
-    }
+  // Set up the constraints of the border so it surrounds the text box.
+  const auto pos = join_text_field_position;
+  const auto size = join_text_field_size;
+  const Vec2 join_text_border_corners[4] = {
+      Vec2(pos.width - size.width / 2, pos.height - size.height / 2),
+      Vec2(pos.width + size.width / 2, pos.height - size.height / 2),
+      Vec2(pos.width + size.width / 2, pos.height + size.height / 2),
+      Vec2(pos.width - size.width / 2, pos.height + size.height / 2)};
 
-    return true;
-  };
-
-  // Attach the touch listener to the text field.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(join_text_field_touch_listener,
-                                               join_text_field);
+  // Creates a border and adds it around the text field.
+  auto join_text_field_border = DrawNode::create();
+  join_text_field_border->drawPolygon(join_text_border_corners, 4,
+                                      Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
+  this->addChild(join_text_field_border);
 
   // Creates a sprite for the create button and sets its position to the
   // center of the screen. TODO(grantpostma): Dynamically choose the location.
@@ -417,7 +434,7 @@ bool MainMenuScene::init() {
   create_button->setPosition(25, 200);
   create_button->setAnchorPoint(Vec2(0, 0));
 
-  // Create a button listener to handle the touch event.
+  // Creates a button listener to handle the touch event.
   auto create_button_touch_listener = EventListenerTouchOneByOne::create();
 
   // Set the onTouchBegan event up to a lambda tha will replace the
@@ -456,7 +473,7 @@ bool MainMenuScene::init() {
   logout_button->setAnchorPoint(Vec2(0, 0));
   logout_button->setContentSize(Size(125, 50));
 
-  // Create a button listener to handle the touch event.
+  // Creates a button listener to handle the touch event.
   auto logout_button_touch_listener = EventListenerTouchOneByOne::create();
 
   // Set the onTouchBegan event up to a lambda tha will replace the
@@ -500,7 +517,7 @@ bool MainMenuScene::init() {
   join_button->setAnchorPoint(Vec2(0, 0));
   join_button->setScale(1.3f);
 
-  // Create a button listener to handle the touch event.
+  // Creates a button listener to handle the touch event.
   auto join_button_touch_listener = EventListenerTouchOneByOne::create();
 
   // Set the onTouchBegan event up to a lambda tha will replace the
@@ -713,4 +730,25 @@ void MainMenuScene::update(float /*delta*/) {
     }
   }
   return;
+}
+
+// Returns a repeating action that toggles the cursor of the text field passed
+// in based on the toggle_delay.
+cocos2d::RepeatForever* MainMenuScene::createBlinkingCursorAction(
+    cocos2d::ui::TextField* text_field) {
+  // Creates a callable function that shows the cursor and sets the cursor
+  // character.
+  const auto show_cursor = CallFunc::create([text_field]() {
+    text_field->setCursorEnabled(true);
+    text_field->setCursorChar('|');
+  });
+  // Creates a callable function that hides the cursor character.
+  const auto hide_cursor =
+      CallFunc::create([text_field]() { text_field->setCursorChar(' '); });
+  const auto toggle_delay = DelayTime::create(1.0f);
+  // Aligns the sequence of actions to create a blinking cursor.
+  auto blink_cursor_action = Sequence::create(
+      show_cursor, toggle_delay, hide_cursor, toggle_delay, nullptr);
+  // Creates a forever repeating action based on the blink_cursor_action.
+  return RepeatForever::create(blink_cursor_action);
 }
