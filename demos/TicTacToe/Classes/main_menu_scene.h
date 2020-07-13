@@ -44,7 +44,7 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   };
 
   // Creates an endless blinking cursor action for the textfield passed in.
-  cocos2d::RepeatForever* MainMenuScene::createBlinkingCursorAction(
+  cocos2d::RepeatForever* MainMenuScene::CreateBlinkingCursorAction(
       cocos2d::ui::TextField*);
   // The game loop method for this layer which runs every frame once scheduled
   // using this->scheduleUpdate(). Acts as the state manager for this scene.

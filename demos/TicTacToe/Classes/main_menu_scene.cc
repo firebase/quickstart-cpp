@@ -389,7 +389,7 @@ bool MainMenuScene::init() {
             join_text_field_string.begin(),
             [](unsigned char c) -> unsigned char { return std::toupper(c); });
         // Creates a repeating blink action for the cursor.
-        const auto repeated_blink = createBlinkingCursorAction(join_text_field);
+        const auto repeated_blink = CreateBlinkingCursorAction(join_text_field);
         switch (type) {
           case ui::TextField::EventType::ATTACH_WITH_IME:
             // Runs the repeated blinking cursor action.
@@ -734,7 +734,7 @@ void MainMenuScene::update(float /*delta*/) {
 
 // Returns a repeating action that toggles the cursor of the text field passed
 // in based on the toggle_delay.
-cocos2d::RepeatForever* MainMenuScene::createBlinkingCursorAction(
+cocos2d::RepeatForever* MainMenuScene::CreateBlinkingCursorAction(
     cocos2d::ui::TextField* text_field) {
   // Creates a callable function that shows the cursor and sets the cursor
   // character.
