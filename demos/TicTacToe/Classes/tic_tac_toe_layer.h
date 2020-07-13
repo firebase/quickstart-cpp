@@ -65,11 +65,14 @@ class TicTacToeLayer : public Layer {
   string user_uid_;
 
   // Firebase Realtime Database, the entry point to all database operations.
+  //
+  // The database schema has a top level game_uuid object which includes
+  // last_move, total_players and current_player_index_ fields.
   Database* database_;
   firebase::database::DatabaseReference ref_;
 
-  // The database schema has a top level game_uuid object which includes
-  // last_move, total_players and current_player_index_ fields.
+
+
 
   // Listeners for database values.
   unique_ptr<SampleValueListener> current_player_index_listener_;

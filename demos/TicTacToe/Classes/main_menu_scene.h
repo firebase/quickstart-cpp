@@ -37,19 +37,6 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // and can have sprites, labels and nodes added onto it.
   static cocos2d::Scene* createScene();
 
-  // The game loop method for this layer which runs every frame once scheduled
-  // using this->scheduleUpdate(). Acts as the state manager for this scene.
-  void MainMenuScene::update(float) override;
-
-  // If the scene is re-entered from TicTacToeScene, then call
-  // UpdateUserRecord() and swap current_state_ to kGameMenuState.
-  void MainMenuScene::onEnter() override;
-
-  // Initializes the instance of a Node and returns a boolean based on if it was
-  // successful in doing so.
-  bool init() override;
-  CREATE_FUNC(MainMenuScene);
-
  private:
   // Defines the state the class is currently in, which updates the sprites in
   // the MainMenuScene::update(float) method.
@@ -62,6 +49,14 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
     kWaitingGameOutcome
   };
 
+  // The game loop method for this layer which runs every frame once scheduled
+  // using this->scheduleUpdate(). Acts as the state manager for this scene.
+  void MainMenuScene::update(float) override;
+
+  // If the scene is re-entered from TicTacToeScene, then call
+  // UpdateUserRecord() and swap current_state_ to kGameMenuState.
+  void MainMenuScene::onEnter() override;
+
   // Updates the user record (wins,loses and ties) and displays it to the
   // screen.
   void MainMenuScene::UpdateUserRecord();
@@ -69,8 +64,14 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Initializes the user record (wins,loses and ties) and displays it to the
   // screen.
   void MainMenuScene::InitializeUserRecord();
+
   // Initializes the the firebase app, auth, and database.
   void MainMenuScene::InitializeFirebase();
+
+  // Initializes the instance of a Node and returns a boolean based on if it was
+  // successful in doing so.
+  bool init() override;
+  CREATE_FUNC(MainMenuScene);
 
   // Node to be used as a background for the authentication menu.
   cocos2d::DrawNode* auth_background_;

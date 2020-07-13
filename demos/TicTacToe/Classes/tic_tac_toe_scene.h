@@ -26,6 +26,7 @@ class TicTacToe : public cocos2d::Layer {
                                      firebase::database::Database*,
                                      const std::string&);
 
+ private:
   // Defines a create type for a specific type, in this case a Layer.
   CREATE_FUNC(TicTacToe);
 };
