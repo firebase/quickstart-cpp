@@ -14,7 +14,8 @@
 
 #include "tic_tac_toe_layer.h"
 
-USING_NS_CC;
+using cocos2d::EventListenerTouchOneByOne;
+using cocos2d::Vec2;
 
 // Player constants.
 static const int kEmptyTile = -1;
@@ -272,7 +273,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   // image(default) to the bottom left, Vec2(0.0,0.0).
   board_sprite_ = Sprite::create(kBoardImageFileName);
   if (!board_sprite_) {
-    log("kBoardImageFileName: %s file not found.", kBoardImageFileName);
+    CCLOG("kBoardImageFileName: %s file not found.", kBoardImageFileName);
     exit(true);
   }
   board_sprite_->setPosition(0, 0);
@@ -280,7 +281,7 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
 
   leave_button_sprite_ = Sprite::create(kLeaveButtonFileName);
   if (!leave_button_sprite_) {
-    log("kLeaveButtonSprite: %s file not found.", kLeaveButtonFileName);
+    CCLOG("kLeaveButtonSprite: %s file not found.", kLeaveButtonFileName);
     exit(true);
   }
   leave_button_sprite_->setPosition(450, 585);
@@ -384,8 +385,8 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
       auto sprite =
           Sprite::create(kPlayerTokenFileNames[current_player_index_]);
       if (sprite == NULL) {
-        log("kPlayerTokenFileNames: %s file not found.",
-            kPlayerTokenFileNames[current_player_index_]);
+        CCLOG("kPlayerTokenFileNames: %s file not found.",
+              kPlayerTokenFileNames[current_player_index_]);
         exit(true);
       }
 
@@ -454,8 +455,8 @@ void TicTacToeLayer::update(float /*delta*/) {
     remaining_tiles_.erase(last_move);
     auto sprite = Sprite::create(kPlayerTokenFileNames[current_player_index_]);
     if (sprite == NULL) {
-      log("kPlayerTokenFileNames: %s file not found.",
-          kPlayerTokenFileNames[current_player_index_]);
+      CCLOG("kPlayerTokenFileNames: %s file not found.",
+            kPlayerTokenFileNames[current_player_index_]);
       exit(true);
     }
 

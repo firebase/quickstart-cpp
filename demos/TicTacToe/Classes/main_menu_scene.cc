@@ -14,14 +14,29 @@
 
 #include "main_menu_scene.h"
 
-#include <cocos\ui\UITextField.h>
-
 #include <regex>
 
 #include "cocos2d.h"
+#include "cocos\ui\UITextField.h"
 #include "firebase/util.h"
 #include "tic_tac_toe_scene.h"
 #include "util.h"
+
+using cocos2d::CallFunc;
+using cocos2d::Color3B;
+using cocos2d::Color4B;
+using cocos2d::Color4F;
+using cocos2d::DelayTime;
+using cocos2d::DrawNode;
+using cocos2d::EventListenerTouchOneByOne;
+using cocos2d::RepeatForever;
+using cocos2d::Scene;
+using cocos2d::Sequence;
+using cocos2d::Size;
+using cocos2d::TextFieldTTF;
+using cocos2d::TextHAlignment;
+using cocos2d::Vec2;
+using cocos2d::ui::TextField;
 
 static const char* kCreateGameImage = "create_game.png";
 static const char* kTextFieldBorderImage = "text_field_border.png";
@@ -32,9 +47,6 @@ static const char* kSignUpButtonImage = "sign_up.png";
 
 // Regex that will validate if the email entered is a valid email pattern.
 const std::regex email_pattern("(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+");
-USING_NS_CC;
-
-using cocos2d::ui::TextField;
 
 Scene* MainMenuScene::createScene() {
   // Builds a simple scene that uses the bottom left cordinate point as (0,0)
@@ -369,7 +381,7 @@ bool MainMenuScene::init() {
 
   auto join_text_field_position = Size(480, 95);
   auto join_text_field_size = Size(180, 80);
-  auto join_text_field = ui::TextField::create("code", "Arial", 48);
+  auto join_text_field = TextField::create("code", "Arial", 48);
   join_text_field->setTextHorizontalAlignment(TextHAlignment::CENTER);
   join_text_field->setPosition(join_text_field_position);
   join_text_field->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
@@ -380,8 +392,8 @@ bool MainMenuScene::init() {
 
   // Adds the event listener to handle the actions for a textfield.
   join_text_field->addEventListener(
-      [this](Ref* sender, ui::TextField::EventType type) {
-        auto join_text_field = dynamic_cast<ui::TextField*>(sender);
+      [this](Ref* sender, TextField::EventType type) {
+        auto join_text_field = dynamic_cast<TextField*>(sender);
         string join_text_field_string = join_text_field->getString();
         // Transforms the letter casing to uppercase.
         std::transform(
@@ -391,22 +403,18 @@ bool MainMenuScene::init() {
         // Creates a repeating blink action for the cursor.
         const auto repeated_blink = CreateBlinkingCursorAction(join_text_field);
         switch (type) {
-          case ui::TextField::EventType::ATTACH_WITH_IME:
+          case TextField::EventType::ATTACH_WITH_IME:
             // Runs the repeated blinking cursor action.
             join_text_field->runAction(repeated_blink);
-            CCLOG("displayed keyboard");
             break;
-          case ui::TextField::EventType::DETACH_WITH_IME:
+          case TextField::EventType::DETACH_WITH_IME:
             // Stops the blinking cursor.
             join_text_field->stopAllActions();
-            CCLOG("dismissed keyboard");
             break;
-          case ui::TextField::EventType::INSERT_TEXT:
+          case TextField::EventType::INSERT_TEXT:
             join_text_field->setString(join_text_field_string);
-            CCLOG("join_text_field inserted text : %s", join_text_field_string);
             break;
-          case ui::TextField::EventType::DELETE_BACKWARD:
-            CCLOG("deleted backward");
+          case TextField::EventType::DELETE_BACKWARD:
             break;
           default:
             break;

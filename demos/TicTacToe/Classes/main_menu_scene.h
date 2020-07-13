@@ -15,10 +15,10 @@
 #ifndef TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 
-#include <cocos\ui\UITextField.h>
 #include <string.h>
 
 #include "cocos2d.h"
+#include "cocos\ui\UITextField.h"
 #include "firebase/auth.h"
 #include "firebase/database.h"
 #include "firebase/future.h"

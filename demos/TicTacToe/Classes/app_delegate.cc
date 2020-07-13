@@ -17,7 +17,7 @@
 #include "main_menu_scene.h"
 #include "tic_tac_toe_scene.h"
 
-USING_NS_CC;
+using cocos2d::GLViewImpl;
 
 // Set based on the image width.
 const float kFrameWidth = 600;
