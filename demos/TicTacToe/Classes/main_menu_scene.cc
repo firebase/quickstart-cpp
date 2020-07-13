@@ -51,6 +51,7 @@ static const char* kSignUpButtonImage = "sign_up.png";
 
 // Regex that will validate if the email entered is a valid email pattern.
 const std::regex email_pattern("(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+");
+
 USING_NS_CC;
 
 Scene* MainMenuScene::createScene() {
@@ -127,13 +128,8 @@ bool MainMenuScene::init() {
 
   auto anonymous_label_touch_listener = EventListenerTouchOneByOne::create();
 
-  anonymous_label_touch_listener->onTouchBegan = [this](Touch* touch,
-                                                        Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kAuthState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return false;
-    }
+  anonymous_label_touch_listener->onTouchBegan =
+      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -187,13 +183,8 @@ bool MainMenuScene::init() {
 
   auto email_text_field_touch_listener = EventListenerTouchOneByOne::create();
 
-  email_text_field_touch_listener->onTouchBegan = [this](Touch* touch,
-                                                         Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kAuthState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return false;
-    }
+  email_text_field_touch_listener->onTouchBegan =
+      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -259,12 +250,7 @@ bool MainMenuScene::init() {
       EventListenerTouchOneByOne::create();
 
   password_text_field_touch_listener->onTouchBegan =
-      [this](Touch* touch, Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kAuthState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return false;
-    }
+      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -305,11 +291,6 @@ bool MainMenuScene::init() {
   // user_result_ to SignInWithEmailAndPassword future result.
   login_button_touch_listener->onTouchBegan = [this](Touch* touch,
                                                      Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kAuthState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return false;
-    }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -350,11 +331,6 @@ bool MainMenuScene::init() {
   // user_result_ to CreateUserWithEmailAndPassword future result.
   sign_up_button_touch_listener->onTouchBegan = [this](Touch* touch,
                                                        Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kAuthState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kAuthState) {
-      return false;
-    }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -400,12 +376,8 @@ bool MainMenuScene::init() {
   auto join_text_field_touch_listener = EventListenerTouchOneByOne::create();
 
   join_text_field_touch_listener->onTouchBegan =
-      [join_text_field, this](Touch* touch, Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kGameMenuState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
-      return false;
-    }
+      [join_text_field, this](cocos2d::Touch* touch,
+                              cocos2d::Event* event) -> bool {
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -443,11 +415,6 @@ bool MainMenuScene::init() {
   // MainMenu scene with a TicTacToe scene.
   create_button_touch_listener->onTouchBegan =
       [this, join_text_field](Touch* touch, Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kGameMenuState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
-      return false;
-    };
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
 
@@ -482,11 +449,6 @@ bool MainMenuScene::init() {
   // MainMenu scene with a TicTacToe scene.
   logout_button_touch_listener->onTouchBegan = [this](Touch* touch,
                                                       Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kGameMenuState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
-      return false;
-    }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
 
@@ -526,11 +488,6 @@ bool MainMenuScene::init() {
   // MainMenu scene with a TicTacToe scene and pass in join_text_field string.
   join_button_touch_listener->onTouchBegan =
       [join_text_field, this](Touch* touch, Event* event) -> bool {
-    // Returns false, not consuming the event, to exit the layer if
-    // current_state_ is not in the kGameMenuState or is switching states.
-    if (previous_state_ != current_state_ || current_state_ != kGameMenuState) {
-      return false;
-    }
     const auto bounds = event->getCurrentTarget()->getBoundingBox();
     const auto point = touch->getLocation();
     if (bounds.containsPoint(point)) {
@@ -565,6 +522,7 @@ bool MainMenuScene::init() {
 
   return true;
 }
+
 // Initialize the firebase auth and database while also ensuring no dependencies
 // are missing.
 void MainMenuScene::InitializeFirebase() {
@@ -721,11 +679,25 @@ void MainMenuScene::update(float /*delta*/) {
     } else if (current_state_ == kAuthState) {
       // Sign out logic, adding auth screen.
       auth_background_->setVisible(true);
+      // Pauses all event touch listeners & then resumes the ones attached to
+      // auth_background_.
+      const auto event_dispatcher =
+          Director::getInstance()->getEventDispatcher();
+      event_dispatcher->pauseEventListenersForTarget(this, /*recursive=*/true);
+      event_dispatcher->resumeEventListenersForTarget(auth_background_,
+                                                      /*recursive=*/true);
       user_ = nullptr;
       previous_state_ = current_state_;
     } else if (current_state_ == kGameMenuState) {
       // Removes the authentication screen.
       auth_background_->setVisible(false);
+      const auto event_dispatcher =
+          Director::getInstance()->getEventDispatcher();
+      // Resumes all event touch listeners & then pauses the ones
+      // attached to auth_background_.
+      event_dispatcher->resumeEventListenersForTarget(this, /*recursive=*/true);
+      event_dispatcher->pauseEventListenersForTarget(auth_background_,
+                                                     /*recursive=*/true);
       previous_state_ = current_state_;
     }
   }
