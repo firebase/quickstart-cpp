@@ -15,8 +15,10 @@
 #include "app_delegate.h"
 
 #include "main_menu_scene.h"
+#include "cocos2d.h"
 
-USING_NS_CC;
+using cocos2d::Director;
+using cocos2d::GLViewImpl;
 
 // Set based on the image width.
 const float kFrameWidth = 600;

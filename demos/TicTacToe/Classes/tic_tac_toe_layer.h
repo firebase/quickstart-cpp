@@ -71,9 +71,6 @@ class TicTacToeLayer : public Layer {
   Database* database_;
   firebase::database::DatabaseReference ref_;
 
-
-
-
   // Listeners for database values.
   unique_ptr<SampleValueListener> current_player_index_listener_;
   unique_ptr<SampleValueListener> last_move_listener_;
