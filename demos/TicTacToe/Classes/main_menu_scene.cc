@@ -51,9 +51,6 @@ bool MainMenuScene::init() {
   // Call the function to initialize the firebase features.
   this->InitializeFirebase();
 
-  // Initializes the event_dispatcher_ for this layer.
-  event_dispatcher_ = Director::getInstance()->getEventDispatcher();
-
   // Create the background to add all of the authentication elements on. The
   // visiblity of this node should match kAuthState, disable any
   // touch_listeners when not in this state.
@@ -124,8 +121,10 @@ bool MainMenuScene::init() {
   };
 
   // Attach the touch listener to the text field.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      anonymous_label_touch_listener, anonymous_login_label);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(anonymous_label_touch_listener,
+                                               anonymous_login_label);
   auth_background_->addChild(anonymous_login_label);
 
   // Extract the origin, size and position of the text field so that the
@@ -183,8 +182,10 @@ bool MainMenuScene::init() {
   };
 
   // Attach the touch listener to the text field.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      email_text_field_touch_listener, email_text_field_);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(email_text_field_touch_listener,
+                                               email_text_field_);
 
   auth_background_->addChild(email_text_field_, /*layer_index=*/1);
   auth_background_->addChild(email_text_field_border, /*layer_index=*/1);
@@ -250,8 +251,10 @@ bool MainMenuScene::init() {
   auth_background_->addChild(password_text_field_border, /*layer_index=*/1);
 
   // Attach the touch listener to the text field.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      password_text_field_touch_listener, password_text_field_);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(
+          password_text_field_touch_listener, password_text_field_);
 
   // Create the login button and give it a position, anchor point and
   // touch_listener.
@@ -287,8 +290,10 @@ bool MainMenuScene::init() {
   };
 
   // Attach the touch listener to the login button.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      login_button_touch_listener, login_button);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(login_button_touch_listener,
+                                               login_button);
   auth_background_->addChild(login_button, /*layer_index=*/1);
 
   // Create the sign_up button and give it a position, anchor point and
@@ -325,8 +330,10 @@ bool MainMenuScene::init() {
   };
 
   // Attach the touch listener to the sign_up button.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      sign_up_button_touch_listener, sign_up_button);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(sign_up_button_touch_listener,
+                                               sign_up_button);
   auth_background_->addChild(sign_up_button, /*layer_index=*/1);
 
   // Create, set the position and assign a placeholder to the text
@@ -370,8 +377,10 @@ bool MainMenuScene::init() {
   };
 
   // Attach the touch listener to the text field.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      join_text_field_touch_listener, join_text_field);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(join_text_field_touch_listener,
+                                               join_text_field);
 
   // Creates a sprite for the create button and sets its position to the
   // center of the screen. TODO(grantpostma): Dynamically choose the location.
@@ -402,8 +411,10 @@ bool MainMenuScene::init() {
   };
 
   // Attach the touch listener to the create game button.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      create_button_touch_listener, create_button);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(create_button_touch_listener,
+                                               create_button);
 
   // Creates a sprite for the logout button and sets its position to the
   auto logout_button = Sprite::create(kLogoutButtonImage);
@@ -437,8 +448,10 @@ bool MainMenuScene::init() {
   };
 
   // Attach the touch listener to the logout game button.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      logout_button_touch_listener, logout_button);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(logout_button_touch_listener,
+                                               logout_button);
 
   // Creates a sprite for the join button and sets its position to the center
   // of the screen. TODO(grantpostma): Dynamically choose the location and set
@@ -473,8 +486,10 @@ bool MainMenuScene::init() {
   };
 
   // Attach the touch listener to the join button.
-  event_dispatcher_->addEventListenerWithSceneGraphPriority(
-      join_button_touch_listener, join_button);
+  Director::getInstance()
+      ->getEventDispatcher()
+      ->addEventListenerWithSceneGraphPriority(join_button_touch_listener,
+                                               join_button);
 
   // Attach the create button, join button and join text field to the
   // MainMenu scene.
@@ -648,20 +663,23 @@ void MainMenuScene::update(float /*delta*/) {
       auth_background_->setVisible(true);
       // Pauses all event touch listeners & then resumes the ones attached to
       // auth_background_.
-      event_dispatcher_->pauseEventListenersForTarget(this, /*recursive=*/true);
-      event_dispatcher_->resumeEventListenersForTarget(auth_background_,
-                                                       /*recursive=*/true);
+      const auto event_dispatcher =
+          Director::getInstance()->getEventDispatcher();
+      event_dispatcher->pauseEventListenersForTarget(this, /*recursive=*/true);
+      event_dispatcher->resumeEventListenersForTarget(auth_background_,
+                                                      /*recursive=*/true);
       user_ = nullptr;
       previous_state_ = current_state_;
     } else if (current_state_ == kGameMenuState) {
       // Removes the authentication screen.
       auth_background_->setVisible(false);
-      // Resumes all event touch listeners & then pauses the ones attached to
-      // auth_background_.
-      event_dispatcher_->resumeEventListenersForTarget(this,
-                                                       /*recursive=*/true);
-      event_dispatcher_->pauseEventListenersForTarget(auth_background_,
-                                                      /*recursive=*/true);
+      const auto event_dispatcher =
+          Director::getInstance()->getEventDispatcher();
+      // Resumes all event touch listeners & then pauses the ones
+      // attached to auth_background_.
+      event_dispatcher->resumeEventListenersForTarget(this, /*recursive=*/true);
+      event_dispatcher->pauseEventListenersForTarget(auth_background_,
+                                                     /*recursive=*/true);
       previous_state_ = current_state_;
     }
   }
