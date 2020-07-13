@@ -17,11 +17,12 @@
 
 #include "cocos2d.h"
 
-class AppDelegate : private cocos2d::Application {
+class AppDelegate : public cocos2d::Application {
  public:
   AppDelegate();
   ~AppDelegate() override;
 
+ private:
   bool applicationDidFinishLaunching() override;
   void applicationDidEnterBackground() override;
   void applicationWillEnterForeground() override;
