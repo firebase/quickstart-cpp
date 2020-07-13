@@ -677,15 +677,14 @@ void MainMenuScene::onEnter() {
 void MainMenuScene::update(float /*delta*/) {
   if (current_state_ != previous_state_) {
     if (current_state_ == kWaitingAnonymousState) {
-      if (user_result_.status() == kFutureStatusComplete) {
-        if (user_result_.error() == kAuthErrorNone) {
-          user_ = *user_result_.result();
-          user_uid_ = GenerateUid(10);
+      if (user_result_.status() == kFutureStatusComplete &&
+          user_result_.error() == kAuthErrorNone) {
+        user_ = *user_result_.result();
+        user_uid_ = GenerateUid(10);
 
-          this->InitializeUserRecord();
+        this->InitializeUserRecord();
 
-          current_state_ = kGameMenuState;
-        }
+        current_state_ = kGameMenuState;
       }
     } else if (current_state_ == kWaitingSignUpState) {
       if (user_result_.status() == kFutureStatusComplete) {
