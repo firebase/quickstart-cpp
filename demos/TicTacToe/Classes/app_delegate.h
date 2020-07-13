@@ -14,6 +14,7 @@
 
 #ifndef TICTACTOE_DEMO_CLASSES_APPDELEGATE_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_APPDELEGATE_SCENE_H_
+
 #include "cocos2d.h"
 
 class AppDelegate : public cocos2d::Application {

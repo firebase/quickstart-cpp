@@ -15,7 +15,7 @@
 #ifndef TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 
-#include <string.h>
+#include <string>
 
 #include "cocos2d.h"
 #include "cocos\ui\UITextField.h"
@@ -23,7 +23,14 @@
 #include "firebase/database.h"
 #include "firebase/future.h"
 
-using std::to_string;
+using cocos2d::Label;
+using cocos2d::TextFieldTTF;
+using firebase::Future;
+using firebase::auth::Auth;
+using firebase::auth::User;
+using firebase::database::Database;
+using firebase::database::DatabaseReference;
+using std::string;
 
 class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
  public:
@@ -75,10 +82,10 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   cocos2d::DrawNode* auth_background_;
 
   // Labels and textfields for the authentication menu.
-  cocos2d::Label* invalid_login_label_;
-  cocos2d::Label* user_record_label_;
-  cocos2d::TextFieldTTF* email_text_field_;
-  cocos2d::TextFieldTTF* password_text_field_;
+  Label* invalid_login_label_;
+  Label* user_record_label_;
+  TextFieldTTF* email_text_field_;
+  TextFieldTTF* password_text_field_;
 
   // Variable to track the current state and previous state to check against
   // to see if the state changed.
@@ -90,13 +97,12 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   int user_loses_;
   int user_ties_;
 
-  // Firebase specific data members.
-  std::string user_uid_;
-  firebase::auth::User* user_;
-  firebase::Future<firebase::auth::User*> user_result_;
-  firebase::database::Database* database_;
-  firebase::auth::Auth* auth_;
-  firebase::database::DatabaseReference ref_;
+  string user_uid_;
+  Auth* auth_;
+  User* user_;
+  Future<User*> user_result_;
+  Database* database_;
+  DatabaseReference ref_;
 };
 
 #endif  // TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
