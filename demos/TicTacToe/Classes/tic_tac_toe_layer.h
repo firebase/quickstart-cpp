@@ -97,6 +97,9 @@ class TicTacToeLayer : public Layer {
   cocos2d::Label* game_over_label_;
   cocos2d::Label* waiting_label_;
 
+  // Dispatcher to handle adding, pausing, and resuming events.
+  cocos2d::EventDispatcher* event_dispatcher_;
+
   // Firebase futures for last_move and current_player_index_.
   Future<void> future_last_move_;
   Future<void> future_current_player_index_;

@@ -212,6 +212,8 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   game_outcome_ = kGameWon;
   database_ = main_menu_database;
   user_uid_ = main_menu_user;
+  // Initializes the event_dispatcher_ for this layer.
+  event_dispatcher_ = Director::getInstance()->getEventDispatcher();
 
   // If the join_game_uuid_ is present, initialize game variables, otherwise
   // alter the game variables to signify a user joined. Additionally sets the
@@ -316,10 +318,8 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
   };
 
   // Attach the touch listener to the create game button.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(
-          leave_button_sprite_touch_listener, leave_button_sprite_);
+  event_dispatcher_->addEventListenerWithSceneGraphPriority(
+      leave_button_sprite_touch_listener, leave_button_sprite_);
 
   board_sprite_->addChild(leave_button_sprite_, /*layer_index=*/1);
 
@@ -423,9 +423,8 @@ TicTacToeLayer::TicTacToeLayer(string game_uuid,
     return true;
   };
 
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(touch_listener, board_sprite_);
+  event_dispatcher_->addEventListenerWithSceneGraphPriority(touch_listener,
+                                                            board_sprite_);
 
   this->addChild(board_sprite_);
 

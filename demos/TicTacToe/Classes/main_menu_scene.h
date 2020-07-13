@@ -75,8 +75,11 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   cocos2d::TextFieldTTF* email_text_field_;
   cocos2d::TextFieldTTF* password_text_field_;
 
-  // Variable to track the current state and previous state to check against to
-  // see if the state changed.
+  // Dispatcher to handle adding, pausing, and resuming events.
+  cocos2d::EventDispatcher* event_dispatcher_;
+
+  // Variable to track the current state and previous state to check against
+  // to see if the state changed.
   kSceneState current_state_ = kAuthState;
   kSceneState previous_state_ = kInitializingState;
 
