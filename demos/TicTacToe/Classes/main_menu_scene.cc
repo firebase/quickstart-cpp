@@ -364,7 +364,7 @@ bool MainMenuScene::init() {
                                                sign_up_button);
   auth_background_->addChild(sign_up_button, /*layer_index=*/1);
 
-  // Creates, sets the position and assign a placeholder to the text
+  // Creates, sets the position and assigns a placeholder to the text
   // field for the user to enter the join game uuid.
 
   auto join_text_field_position = Size(480, 95);
