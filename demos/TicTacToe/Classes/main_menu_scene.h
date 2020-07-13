@@ -34,6 +34,7 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Defines the state the class is currently in, which updates the sprites in
   // the MainMenuScene::update(float) method.
   enum kSceneState {
+    kInitializingState,
     kAuthState,
     kGameMenuState,
     kWaitingAnonymousState,
@@ -75,10 +76,10 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   cocos2d::TextFieldTTF* email_text_field_;
   cocos2d::TextFieldTTF* password_text_field_;
 
-  // Variable to track the current state and previous state to check against to
-  // see if the state changed.
+  // Variable to track the current state and previous state to check against
+  // to see if the state changed.
   kSceneState current_state_ = kAuthState;
-  kSceneState previous_state_ = kAuthState;
+  kSceneState previous_state_ = kInitializingState;
 
   // User record variabales that are stored in firebase database.
   int user_wins_;
