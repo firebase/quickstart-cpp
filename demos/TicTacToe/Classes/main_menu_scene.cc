@@ -17,8 +17,9 @@
 #include <regex>
 #include <string>
 
+#include "cocos/ui/UIButton.h"
+#include "cocos/ui/UITextField.h"
 #include "cocos2d.h"
-#include "cocos\ui\UITextField.h"
 #include "firebase/auth.h"
 #include "firebase/database.h"
 #include "firebase/future.h"
@@ -36,6 +37,9 @@ using cocos2d::DrawNode;
 using cocos2d::Event;
 using cocos2d::EventListenerTouchOneByOne;
 using cocos2d::Label;
+using cocos2d::Menu;
+using cocos2d::MenuItem;
+using cocos2d::MenuItemSprite;
 using cocos2d::RepeatForever;
 using cocos2d::Scene;
 using cocos2d::Sequence;
@@ -45,7 +49,9 @@ using cocos2d::TextFieldTTF;
 using cocos2d::TextHAlignment;
 using cocos2d::Touch;
 using cocos2d::Vec2;
+using cocos2d::ui::Button;
 using cocos2d::ui::TextField;
+using cocos2d::ui::Widget;
 using firebase::App;
 using firebase::InitResult;
 using firebase::kFutureStatusComplete;
@@ -80,49 +86,21 @@ bool MainMenuScene::init() {
     return false;
   }
 
-  // Call the function to initialize the firebase features.
+  // Initializes the firebase features.
   this->InitializeFirebase();
 
-  // Create the background to add all of the authentication elements on. The
-  // visiblity of this node should match kAuthState, disable any
-  // touch_listeners when not in this state.
-  auth_background_ = DrawNode::create();
-  auto auth_background_border = DrawNode::create();
+  // Initializes the authentication layer by creating the background and placing
+  // all required cocos2d components.
+  this->InitializeAuthenticationLayer();
 
-  const auto auth_background_size = Size(500, 550);
-  const auto auth_background_origin = Size(50, 50);
-  Vec2 auth_background_corners[4];
-  auth_background_corners[0] =
-      Vec2(auth_background_origin.width, auth_background_origin.height);
-  auth_background_corners[1] =
-      Vec2(auth_background_origin.width + auth_background_size.width,
-           auth_background_origin.height);
-  auth_background_corners[2] =
-      Vec2(auth_background_origin.width + auth_background_size.width,
-           auth_background_origin.height + auth_background_size.height);
-  auth_background_corners[3] =
-      Vec2(auth_background_origin.width,
-           auth_background_origin.height + auth_background_size.height);
+  // Initializes the login layer by creating the background and placing all
+  // required cocos2d components.
+  this->InitializeLoginLayer();
 
-  Color4F white(1, 1, 1, 1);
-  auth_background_->drawPolygon(auth_background_corners, 4, Color4F::BLACK, 1,
-                                Color4F::BLACK);
-  auth_background_border->drawPolygon(auth_background_corners, 4,
-                                      Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
-  auth_background_->addChild(auth_background_border);
+  // Initializes the login layer by creating the background and placing all
+  // required cocos2d components.
 
-  this->addChild(auth_background_, /*layer_index=*/10);
-
-  // Label the background as Authentication.
-  auto auth_label = Label::createWithSystemFont("authentication", "Arial", 48);
-  auth_label->setPosition(Vec2(300, 550));
-  auth_background_->addChild(auth_label);
-
-  // Label to print out all of the login errors.
-  invalid_login_label_ = Label::createWithSystemFont("", "Arial", 24);
-  invalid_login_label_->setTextColor(Color4B::RED);
-  invalid_login_label_->setPosition(Vec2(300, 220));
-  auth_background_->addChild(invalid_login_label_);
+  this->InitializeSignUpLayer();
 
   // Label to display the users record.
   user_record_label_ = Label::createWithSystemFont("", "Arial", 24);
@@ -130,243 +108,6 @@ bool MainMenuScene::init() {
   user_record_label_->setTextColor(Color4B::WHITE);
   user_record_label_->setPosition(Vec2(500, 600));
   this->addChild(user_record_label_);
-
-  // Label for anonymous sign in.
-  auto anonymous_login_label =
-      Label::createWithSystemFont("anonymous sign-in", "Arial", 18);
-  anonymous_login_label->setTextColor(Color4B::WHITE);
-  anonymous_login_label->setPosition(Vec2(460, 75));
-
-  auto anonymous_label_touch_listener = EventListenerTouchOneByOne::create();
-
-  anonymous_label_touch_listener->onTouchBegan =
-      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-    if (bounds.containsPoint(point)) {
-      // Use anonymous sign in for the user.
-      user_result_ = auth_->SignInAnonymously();
-      current_state_ = kWaitingAnonymousState;
-    }
-
-    return true;
-  };
-
-  // Attach the touch listener to the text field.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(anonymous_label_touch_listener,
-                                               anonymous_login_label);
-  auth_background_->addChild(anonymous_login_label);
-
-  // Extract the origin, size and position of the text field so that the
-  // border can be created based on those values.
-  const auto email_text_field_origin = Vec2(0, 0);
-  const auto email_text_field_position = Size(110, 350);
-  const auto text_field_padding = 20;
-  const auto email_font_size = 36.0;
-  const auto email_text_field_size = Size(400, 2 * email_font_size);
-
-  // Set up the constraints of the border so it surrounds the text box.
-  Vec2 email_border_corners[4] = {
-      Vec2(email_text_field_position.width - text_field_padding,
-           email_text_field_position.height),
-      Vec2(email_text_field_position.width + email_text_field_size.width,
-           email_text_field_position.height),
-      Vec2(email_text_field_position.width + email_text_field_size.width,
-           email_text_field_position.height + email_text_field_size.height),
-      Vec2(email_text_field_position.width - text_field_padding,
-           email_text_field_position.height + email_text_field_size.height)};
-
-  // Creates  border and adds it around the text field.
-  auto email_text_field_border = DrawNode::create();
-  email_text_field_border->drawPolygon(email_border_corners, 4,
-                                       Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
-
-  // Create a text field to enter the user's email.
-  email_text_field_ = TextFieldTTF::textFieldWithPlaceHolder(
-      "enter an email address", email_text_field_size, TextHAlignment::LEFT,
-      "Arial", email_font_size);
-  email_text_field_->setPosition(email_text_field_position);
-  email_text_field_->setAnchorPoint(Vec2(0, 0));
-  email_text_field_->setColorSpaceHolder(Color3B::GRAY);
-  email_text_field_->setDelegate(this);
-
-  auto email_text_field_touch_listener = EventListenerTouchOneByOne::create();
-
-  email_text_field_touch_listener->onTouchBegan =
-      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-    if (bounds.containsPoint(point)) {
-      // Show the on screen keyboard and places character inputs into the text
-      // field.
-      auto text_field = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
-      text_field->setCursorEnabled(true);
-      text_field->attachWithIME();
-    } else {
-      auto text_field = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
-      text_field->setCursorEnabled(false);
-      text_field->detachWithIME();
-    }
-
-    return true;
-  };
-
-  // Attach the touch listener to the text field.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(email_text_field_touch_listener,
-                                               email_text_field_);
-
-  auth_background_->addChild(email_text_field_, /*layer_index=*/1);
-  auth_background_->addChild(email_text_field_border, /*layer_index=*/1);
-
-  // Extract the origin, size and position of the text field so that the
-  // border can be created based on those values.
-  const auto password_text_field_origin = Vec2(0, 0);
-  const auto password_text_field_position = Size(110, 250);
-  const auto password_font_size = 36.0;
-  const auto password_text_field_size = Size(400, 2 * password_font_size);
-
-  // Set up the constraints of the border so it surrounds the text box.
-  Vec2 password_border_corners[4] = {
-      Vec2(password_text_field_position.width - text_field_padding,
-           password_text_field_position.height),
-      Vec2(password_text_field_position.width + password_text_field_size.width,
-           password_text_field_position.height),
-      Vec2(password_text_field_position.width + password_text_field_size.width,
-           password_text_field_position.height +
-               password_text_field_size.height),
-      Vec2(password_text_field_position.width - text_field_padding,
-           password_text_field_position.height +
-               password_text_field_size.height)};
-
-  // Creates a border and adds it around the text field.
-  auto password_text_field_border = DrawNode::create();
-  password_text_field_border->drawPolygon(
-      password_border_corners, 4, Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
-
-  // Create a text field to enter the user's password.
-  password_text_field_ = TextFieldTTF::textFieldWithPlaceHolder(
-      "enter a password", password_text_field_size, TextHAlignment::LEFT,
-      "Arial", password_font_size);
-  password_text_field_->setPosition(password_text_field_position);
-  password_text_field_->setAnchorPoint(Vec2(0, 0));
-  password_text_field_->setColorSpaceHolder(Color3B::GRAY);
-  password_text_field_->setSecureTextEntry(true);
-  password_text_field_->setDelegate(this);
-
-  auto password_text_field_touch_listener =
-      EventListenerTouchOneByOne::create();
-
-  password_text_field_touch_listener->onTouchBegan =
-      [this](cocos2d::Touch* touch, cocos2d::Event* event) -> bool {
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-    if (bounds.containsPoint(point)) {
-      // Shows the on screen keyboard and places character inputs into the text
-      // field.
-      auto text_field = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
-      text_field->setCursorEnabled(true);
-      text_field->attachWithIME();
-    } else {
-      auto text_field = dynamic_cast<TextFieldTTF*>(event->getCurrentTarget());
-      text_field->setCursorEnabled(false);
-      text_field->detachWithIME();
-    }
-
-    return true;
-  };
-
-  auth_background_->addChild(password_text_field_, /*layer_index=*/1);
-  auth_background_->addChild(password_text_field_border, /*layer_index=*/1);
-
-  // Attach the touch listener to the text field.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(
-          password_text_field_touch_listener, password_text_field_);
-
-  // Creates the login button and give it a position, anchor point and
-  // touch_listener.
-  auto login_button = Sprite::create(kLoginButtonImage);
-  login_button->setPosition(90, 120);
-  login_button->setAnchorPoint(Vec2(0, 0));
-  login_button->setContentSize(Size(200, 75));
-
-  // Creates a button listener to handle the touch event.
-  auto login_button_touch_listener = EventListenerTouchOneByOne::create();
-
-  // Transition from kAuthState to kWaitingLoginState on button press and set
-  // user_result_ to SignInWithEmailAndPassword future result.
-  login_button_touch_listener->onTouchBegan = [this](Touch* touch,
-                                                     Event* event) -> bool {
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-    if (bounds.containsPoint(point)) {
-      // Check the string for a valid email pattern.
-      if (!std::regex_match(email_text_field_->getString(), email_pattern)) {
-        invalid_login_label_->setString("invalid email address");
-      } else if (password_text_field_->getString().length() < 8) {
-        invalid_login_label_->setString(
-            "password must be at least 8 characters long");
-      } else {
-        user_result_ = auth_->SignInWithEmailAndPassword(
-            email_text_field_->getString().c_str(),
-            password_text_field_->getString().c_str());
-        current_state_ = kWaitingLoginState;
-      }
-    }
-    return true;
-  };
-
-  // Attach the touch listener to the login button.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(login_button_touch_listener,
-                                               login_button);
-  auth_background_->addChild(login_button, /*layer_index=*/1);
-
-  // Creates the sign_up button and give it a position, anchor point and
-  // touch_listener.
-  auto sign_up_button = Sprite::create(kSignUpButtonImage);
-  sign_up_button->setPosition(310, 120);
-  sign_up_button->setAnchorPoint(Vec2(0, 0));
-  sign_up_button->setContentSize(Size(200, 75));
-
-  // Creates a button listener to handle the touch event.
-  auto sign_up_button_touch_listener = EventListenerTouchOneByOne::create();
-
-  // Transition from kAuthState to kWaitingSignUpState on button press and set
-  // user_result_ to CreateUserWithEmailAndPassword future result.
-  sign_up_button_touch_listener->onTouchBegan = [this](Touch* touch,
-                                                       Event* event) -> bool {
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-    if (bounds.containsPoint(point)) {
-      // Check the string for a valid email pattern.
-      if (!std::regex_match(email_text_field_->getString(), email_pattern)) {
-        invalid_login_label_->setString("invalid email address");
-      } else if (password_text_field_->getString().length() < 8) {
-        invalid_login_label_->setString(
-            "password must be at least 8 characters long");
-      } else {
-        user_result_ = auth_->CreateUserWithEmailAndPassword(
-            email_text_field_->getString().c_str(),
-            password_text_field_->getString().c_str());
-        current_state_ = kWaitingSignUpState;
-      }
-    }
-    return true;
-  };
-
-  // Attach the touch listener to the sign_up button.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(sign_up_button_touch_listener,
-                                               sign_up_button);
-  auth_background_->addChild(sign_up_button, /*layer_index=*/1);
 
   auto join_text_field_position = Size(480, 95);
   auto join_text_field_size = Size(180, 80);
@@ -385,15 +126,14 @@ bool MainMenuScene::init() {
     auto join_text_field = dynamic_cast<TextField*>(sender);
     string join_text_field_string = join_text_field->getString();
     // Transforms the letter casing to uppercase.
-    std::transform(
-        join_text_field_string.begin(), join_text_field_string.end(),
-        join_text_field_string.begin(),
-        [](unsigned char c) -> unsigned char { return std::toupper(c); });
+    std::transform(join_text_field_string.begin(), join_text_field_string.end(),
+                   join_text_field_string.begin(), toupper);
+
     // Creates a repeating blink action for the cursor.
     switch (type) {
       case TextField::EventType::ATTACH_WITH_IME:
         // Runs the repeated blinking cursor action.
-        join_text_field->runAction(CreateBlinkingCursorAction(join_text_field));
+        CreateBlinkingCursorAction(join_text_field);
         break;
       case TextField::EventType::DETACH_WITH_IME:
         // Stops the blinking cursor.
@@ -401,8 +141,6 @@ bool MainMenuScene::init() {
         break;
       case TextField::EventType::INSERT_TEXT:
         join_text_field->setString(join_text_field_string);
-        break;
-      case TextField::EventType::DELETE_BACKWARD:
         break;
       default:
         break;
@@ -477,12 +215,9 @@ bool MainMenuScene::init() {
     // Replaces the scene with a new TicTacToe scene if the touched point is
     // within the bounds of the button.
     if (bounds.containsPoint(point)) {
-      current_state_ = kAuthState;
+      current_state_ = kAuthMenuState;
       user_uid_ = "";
       user_ = nullptr;
-      invalid_login_label_->setString("");
-      email_text_field_->setString("");
-      password_text_field_->setString("");
       user_record_label_->setString("");
     }
 
@@ -545,15 +280,15 @@ bool MainMenuScene::init() {
   return true;
 }
 
-// Initialize the firebase auth and database while also ensuring no dependencies
-// are missing.
+// Initialize the firebase auth and database while also ensuring no
+// dependencies are missing.
 void MainMenuScene::InitializeFirebase() {
   LogMessage("Initialize Firebase App.");
-  App* app;
+  firebase::App* app;
 #if defined(_ANDROID_)
-  app = App::Create(GetJniEnv(), GetActivity());
+  app = firebase::App::Create(GetJniEnv(), GetActivity());
 #else
-  app = App::Create();
+  app = firebase::App::Create();
 #endif  // defined(ANDROID)
 
   LogMessage("Initialize Firebase Auth and Firebase Database.");
@@ -564,24 +299,25 @@ void MainMenuScene::InitializeFirebase() {
   auth_ = nullptr;
   void* initialize_targets[] = {&auth_, &database_};
 
-  const ModuleInitializer::InitializerFn initializers[] = {
-      [](App* app, void* data) {
+  const firebase::ModuleInitializer::InitializerFn initializers[] = {
+      [](firebase::App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Auth.");
         void** targets = reinterpret_cast<void**>(data);
-        InitResult result;
-        *reinterpret_cast<Auth**>(targets[0]) = Auth::GetAuth(app, &result);
+        firebase::InitResult result;
+        *reinterpret_cast<firebase::auth::Auth**>(targets[0]) =
+            firebase::auth::Auth::GetAuth(app, &result);
         return result;
       },
-      [](App* app, void* data) {
+      [](firebase::App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Database.");
         void** targets = reinterpret_cast<void**>(data);
-        InitResult result;
-        *reinterpret_cast<Database**>(targets[1]) =
-            Database::GetInstance(app, &result);
+        firebase::InitResult result;
+        *reinterpret_cast<firebase::database::Database**>(targets[1]) =
+            firebase::database::Database::GetInstance(app, &result);
         return result;
       }};
 
-  ModuleInitializer initializer;
+  firebase::ModuleInitializer initializer;
   initializer.Initialize(app, initialize_targets, initializers,
                          sizeof(initializers) / sizeof(initializers[0]));
 
@@ -591,8 +327,428 @@ void MainMenuScene::InitializeFirebase() {
     LogMessage("Failed to initialize Firebase libraries: %s",
                initializer.InitializeLastResult().error_message());
     ProcessEvents(2000);
-    database_->set_persistence_enabled(true);
   }
+  LogMessage("Successfully initialized Firebase Auth and Firebase Database.");
+
+  database_->set_persistence_enabled(true);
+}
+
+// 1. Creates the background node.
+// 2. Adds the error label and layer title label: sign up.
+// 3. Adds the id and password text fields and their event listeners.
+// 4. Adds the back and sign up button.
+void MainMenuScene::InitializeSignUpLayer() {
+  // Creates a background to add on all of the cocos2d components. The
+  // visiblity of this node should match kSignUpState and only active this
+  // layers event listeners.
+
+  // Creates and places the sign_up_background_.
+  const auto sign_up_background_size = Size(500, 450);
+  const auto sign_up_background_origin = Size(300, 300);
+  sign_up_background_ =
+      this->CreateRectangle(sign_up_background_size, sign_up_background_origin,
+                            /*background_color=*/Color4F::BLACK);
+  this->addChild(sign_up_background_, /*layer_index=*/10);
+
+  // Creates the layer title label: sign up.
+  auto layer_title = Label::createWithSystemFont("sign up", "Arial", 48);
+  layer_title->setAnchorPoint(Vec2(.5, .5));
+  layer_title->setPosition(Vec2(300, 475));
+  sign_up_background_->addChild(layer_title);
+
+  // Label to output sign up errors.
+  sign_up_error_label_ = Label::createWithSystemFont("", "Arial", 24);
+  sign_up_error_label_->setTextColor(Color4B::RED);
+  sign_up_error_label_->setPosition(Vec2(300, 425));
+  sign_up_background_->addChild(sign_up_error_label_);
+
+  // Creates the sign_up_id_.
+  const auto id_font_size = 28;
+  const auto id_position = Size(300, 375);
+  const auto id_size = Size(450, id_font_size * 1.75);
+  sign_up_id_ = TextField::create("email", "Arial", id_font_size);
+  sign_up_id_->setPosition(id_position);
+  sign_up_id_->setTouchAreaEnabled(true);
+  sign_up_id_->setTouchSize(id_size);
+  sign_up_background_->addChild(sign_up_id_);
+
+  // Creates the border for the sign_up_id_ text field.
+  auto id_border = this->CreateRectangle(id_size, id_position);
+  sign_up_background_->addChild(id_border);
+
+  // Adds the event listener to handle the actions for the sign_up_id_.
+  sign_up_id_->addEventListener([this](Ref* sender, TextField::EventType type) {
+    auto sign_up_id_ = dynamic_cast<TextField*>(sender);
+    switch (type) {
+      case TextField::EventType::ATTACH_WITH_IME:
+        // Creates and runs the repeated blinking cursor action.
+        CreateBlinkingCursorAction(sign_up_id_);
+        break;
+      case TextField::EventType::DETACH_WITH_IME:
+        // Stops the blinking cursor.
+        sign_up_id_->stopAllActions();
+        break;
+      default:
+        break;
+    }
+  });
+
+  // Creates the sign_up_password_.
+  const auto password_font_size = 28;
+  const auto password_position = Size(300, 300);
+  const auto password_size = Size(450, password_font_size * 1.75);
+  sign_up_password_ =
+      TextField::create("password", "Arial", password_font_size);
+  sign_up_password_->setPosition(password_position);
+  sign_up_password_->setTouchAreaEnabled(true);
+  sign_up_password_->setTouchSize(password_size);
+  sign_up_password_->setPasswordEnabled(true);
+  sign_up_background_->addChild(sign_up_password_);
+
+  // Creates the border for the sign_up_password_ text field.
+  auto password_border =
+      this->CreateRectangle(password_size, password_position);
+  sign_up_background_->addChild(password_border);
+
+  // Adds the event listener to handle the actions for the sign_up_password_
+  // text field.
+  sign_up_password_->addEventListener(
+      [this](Ref* sender, TextField::EventType type) {
+        auto sign_up_password_ = dynamic_cast<TextField*>(sender);
+        switch (type) {
+          case TextField::EventType::ATTACH_WITH_IME:
+            // Creates and runs the repeated blinking cursor action.
+            CreateBlinkingCursorAction(sign_up_password_);
+            break;
+          case TextField::EventType::DETACH_WITH_IME:
+            // Stops the blinking cursor.
+            sign_up_password_->stopAllActions();
+            break;
+          default:
+            break;
+        }
+      });
+
+  // Creates the password_confirm text_field.
+  const auto password_confirm_font_size = 28;
+  const auto password_confirm_position = Size(300, 225);
+  const auto password_confirm_size =
+      Size(450, password_confirm_font_size * 1.75);
+  sign_up_password_confirm_ = TextField::create("confirm password", "Arial",
+                                                password_confirm_font_size);
+  sign_up_password_confirm_->setPosition(password_confirm_position);
+  sign_up_password_confirm_->setTouchAreaEnabled(true);
+  sign_up_password_confirm_->setTouchSize(password_confirm_size);
+  sign_up_password_confirm_->setPasswordEnabled(true);
+  sign_up_background_->addChild(sign_up_password_confirm_);
+
+  // Creates the border for the sign_up_password_confirm_ text field.
+  auto password_confirm_border =
+      this->CreateRectangle(password_confirm_size, password_confirm_position);
+  sign_up_background_->addChild(password_confirm_border);
+
+  // Adds the event listener to handle the actions for the
+  // sign_up_password_confirm text field.
+  sign_up_password_confirm_->addEventListener(
+      [this](Ref* sender, TextField::EventType type) {
+        auto sign_up_password_confirm_ = dynamic_cast<TextField*>(sender);
+        switch (type) {
+          case TextField::EventType::ATTACH_WITH_IME:
+            // Creates and runs the repeated blinking cursor action.
+            CreateBlinkingCursorAction(sign_up_password_confirm_);
+            break;
+          case TextField::EventType::DETACH_WITH_IME:
+            // Stops the blinking cursor.
+            sign_up_password_confirm_->stopAllActions();
+            break;
+          default:
+            break;
+        }
+      });
+
+  // Creates the sign_up_button.
+  auto sign_up_button = Button::create(kSignUpButtonImage, kLoginButtonImage);
+  sign_up_button->setScale(.5);
+  sign_up_button->setPosition(Size(300, 130));
+  sign_up_background_->addChild(sign_up_button);
+
+  // Adds the event listener to handle touch actions for the sign_up_button.
+  sign_up_button->addTouchEventListener(
+      [this](Ref* sender, Widget::TouchEventType type) {
+        switch (type) {
+          case Widget::TouchEventType::ENDED:
+            // Validates the id and passwords are valid, then sets the
+            // user_result_ future and swaps to kWaitingSignUpState.
+            if (!std::regex_match(sign_up_id_->getString(), email_pattern)) {
+              sign_up_error_label_->setString("invalid email address");
+            } else if (sign_up_password_->getString().length() < 8) {
+              sign_up_error_label_->setString(
+                  "password must be at least 8 characters long");
+            } else if (sign_up_password_->getString() !=
+                       sign_up_password_confirm_->getString()) {
+              sign_up_error_label_->setString("passwords do not match");
+            } else {
+              sign_up_error_label_->setString("");
+              user_result_ = auth_->CreateUserWithEmailAndPassword(
+                  sign_up_id_->getString().c_str(),
+                  sign_up_password_->getString().c_str());
+              current_state_ = kWaitingSignUpState;
+            }
+            break;
+          default:
+            break;
+        }
+      });
+
+  // Creates the back_button.
+  auto back_button = Button::create(kJoinButtonImage, kSignUpButtonImage);
+  back_button->setScale(.5);
+  back_button->setPosition(Size(130, 500));
+  sign_up_background_->addChild(back_button);
+
+  // Adds the event listener to return back to the kAuthMenuState.
+  back_button->addTouchEventListener(
+      [this](Ref* sender, Widget::TouchEventType type) {
+        switch (type) {
+          case Widget::TouchEventType::ENDED:
+            current_state_ = kAuthMenuState;
+            break;
+          default:
+            break;
+        }
+      });
+}
+
+// 1. Creates the background node.
+// 2. Adds the error label and layer title label: login.
+// 3. Adds the id and password text fields and their event listeners.
+// 4. Adds the back and login button.
+void MainMenuScene::InitializeLoginLayer() {
+  // Creates a background to add on all of the cocos2d components. The
+  // visiblity of this node should match kLoginState and only active this
+  // layers event listeners.
+
+  // Creates and places the login_background_.
+  const auto login_background_size = Size(500, 450);
+  const auto login_background_origin = Size(300, 300);
+  login_background_ =
+      this->CreateRectangle(login_background_size, login_background_origin,
+                            /*background_color=*/Color4F::BLACK);
+  this->addChild(login_background_, /*layer_index=*/10);
+
+  // Creates the layer title label: login.
+  auto layer_title = Label::createWithSystemFont("Login", "Arial", 48);
+  layer_title->setAnchorPoint(Vec2(.5, .5));
+  layer_title->setPosition(Vec2(300, 475));
+  login_background_->addChild(layer_title);
+
+  // Label to output login errors.
+  login_error_label_ = Label::createWithSystemFont("", "Arial", 24);
+  login_error_label_->setTextColor(Color4B::RED);
+  login_error_label_->setPosition(Vec2(300, 425));
+  login_background_->addChild(login_error_label_);
+
+  // Creating the login_id_.
+  const auto id_font_size = 28;
+  const auto id_position = Size(300, 375);
+  const auto id_size = Size(450, id_font_size * 1.75);
+  login_id_ = TextField::create("email", "Arial", id_font_size);
+  login_id_->setPosition(id_position);
+  login_id_->setTouchAreaEnabled(true);
+  login_id_->setTouchSize(id_size);
+  login_background_->addChild(login_id_);
+
+  // Creates the border for the login_id_ text field.
+  auto id_border = this->CreateRectangle(id_size, id_position);
+  login_background_->addChild(id_border);
+
+  // Adds the event listener to handle the actions for the login_id_.
+  login_id_->addEventListener([this](Ref* sender, TextField::EventType type) {
+    auto login_id_ = dynamic_cast<TextField*>(sender);
+    switch (type) {
+      case TextField::EventType::ATTACH_WITH_IME:
+        // Creates and runs the repeated blinking cursor action.
+        CreateBlinkingCursorAction(login_id_);
+        break;
+      case TextField::EventType::DETACH_WITH_IME:
+        // Stops the blinking cursor.
+        login_id_->stopAllActions();
+        break;
+      default:
+        break;
+    }
+  });
+
+  // Creates the login_password_ text field.
+  const auto password_font_size = 28;
+  const auto password_position = Size(300, 300);
+  const auto password_size = Size(450, password_font_size * 1.75);
+  login_password_ = TextField::create("password", "Arial", password_font_size);
+  login_password_->setPosition(password_position);
+  login_password_->setTouchAreaEnabled(true);
+  login_password_->setTouchSize(password_size);
+  login_password_->setPasswordEnabled(true);
+  login_background_->addChild(login_password_);
+
+  // Creates the border for the login_password_ text field.
+  auto password_border =
+      this->CreateRectangle(password_size, password_position);
+  login_background_->addChild(password_border);
+
+  // Adds the event listener to handle the actions for the login_password_ text
+  // field.
+  login_password_->addEventListener(
+      [this](Ref* sender, TextField::EventType type) {
+        auto login_password_ = dynamic_cast<TextField*>(sender);
+        switch (type) {
+          case TextField::EventType::ATTACH_WITH_IME:
+            // Creates and runs the repeated blinking cursor action.
+            CreateBlinkingCursorAction(login_password_);
+            break;
+          case TextField::EventType::DETACH_WITH_IME:
+            // Stops the blinking cursor.
+            login_password_->stopAllActions();
+            break;
+          default:
+            break;
+        }
+      });
+
+  // Creates the login_button.
+  auto login_button = Button::create(kLoginButtonImage, kSignUpButtonImage);
+  login_button->setScale(.5);
+  login_button->setPosition(Size(300, 200));
+  login_background_->addChild(login_button);
+
+  // Adds the event listener to handle touch actions for the login_button.
+  login_button->addTouchEventListener(
+      [this](Ref* sender, Widget::TouchEventType type) {
+        switch (type) {
+          case Widget::TouchEventType::ENDED:
+            // Validates the id and passwords are valid, then sets the
+            // user_result_ future and swaps to kWaitingLoginState.
+            if (!std::regex_match(login_id_->getString(), email_pattern)) {
+              login_error_label_->setString("invalid email address");
+            } else if (login_password_->getString().length() < 8) {
+              login_error_label_->setString(
+                  "password must be at least 8 characters long");
+            } else {
+              login_error_label_->setString("");
+              user_result_ = auth_->SignInWithEmailAndPassword(
+                  login_id_->getString().c_str(),
+                  login_password_->getString().c_str());
+              current_state_ = kWaitingLoginState;
+            }
+            break;
+          default:
+            break;
+        }
+      });
+
+  // Creates the back_button.
+  auto back_button = Button::create(kJoinButtonImage, kSignUpButtonImage);
+  back_button->setScale(.5);
+  back_button->setPosition(Size(130, 500));
+  login_background_->addChild(back_button);
+
+  // Adds the event listener to return back to the kAuthMenuState.
+  back_button->addTouchEventListener(
+      [this](Ref* sender, Widget::TouchEventType type) {
+        switch (type) {
+          case Widget::TouchEventType::ENDED:
+            current_state_ = kAuthMenuState;
+            break;
+          default:
+            break;
+        }
+      });
+}
+
+// 1. Creates the background node.
+// 2. Adds the layer title label: authentication.
+// 3. Adds the id and password text fields and their event listeners.
+// 4. Adds the back and login button.
+void MainMenuScene::InitializeAuthenticationLayer() {
+  // Creates a background to add on all of the cocos2d components. The
+  // visiblity of this node should match kAuthMenuState and only active this
+  // layers event listeners.
+
+  // Creates and places the auth_background_.
+  const auto auth_background_size = Size(500, 550);
+  const auto auth_background_origin = Size(300, 300);
+  auth_background_ =
+      this->CreateRectangle(auth_background_size, auth_background_origin,
+                            /*background_color=*/Color4F::BLACK);
+  this->addChild(auth_background_, /*layer_index=*/10);
+
+  // Creates the layer title label: authentication.
+  auto layer_title = Label::createWithSystemFont("authentication", "Arial", 48);
+  layer_title->setPosition(Vec2(300, 550));
+  auth_background_->addChild(layer_title);
+
+  // Creates three buttons for the menu items (login,sign up, and anonymous sign
+  // in).
+  // For each menu item button, creates a normal and selected version and attach
+  // the touch listener.
+
+  // Creates the sign up menu item.
+  const auto sign_up_normal_item = Sprite::create(kSignUpButtonImage);
+  sign_up_normal_item->setContentSize(Size(450, 175));
+  auto sign_up_selected = Sprite::create(kSignUpButtonImage);
+  sign_up_normal_item->setContentSize(Size(450, 175));
+  sign_up_selected->setColor(Color3B::GRAY);
+
+  auto sign_up_item = MenuItemSprite::create(
+      sign_up_normal_item, sign_up_selected, [this](Ref* sender) {
+        auto node = dynamic_cast<Node*>(sender);
+        if (node != nullptr) {
+          current_state_ = kSignUpState;
+        }
+      });
+  sign_up_item->setTag(0);
+
+  // Creates the login menu item.
+  const auto login_normal_item = Sprite::create(kLoginButtonImage);
+  login_normal_item->setContentSize(Size(450, 175));
+  auto login_selected_item = Sprite::create(kLoginButtonImage);
+  login_normal_item->setContentSize(Size(450, 175));
+  login_selected_item->setColor(Color3B::GRAY);
+
+  auto login_item = MenuItemSprite::create(
+      login_normal_item, login_selected_item, [this](Ref* sender) {
+        auto node = dynamic_cast<Node*>(sender);
+        if (node != nullptr) {
+          current_state_ = kLoginState;
+        }
+      });
+  login_item->setTag(1);
+
+  // Creates the skip login menu item.
+  const auto skip_login_normal_item = Sprite::create(kJoinButtonImage);
+  skip_login_normal_item->setContentSize(Size(450, 175));
+  auto skip_login_selected_item = Sprite::create(kJoinButtonImage);
+  skip_login_selected_item->setContentSize(Size(450, 175));
+  skip_login_selected_item->setColor(Color3B::GRAY);
+
+  auto skip_login_item = MenuItemSprite::create(
+      skip_login_normal_item, skip_login_selected_item, [this](Ref* sender) {
+        auto node = dynamic_cast<Node*>(sender);
+        if (node != nullptr) {
+          user_result_ = auth_->SignInAnonymously();
+          current_state_ = kWaitingAnonymousState;
+        }
+      });
+  skip_login_item->setTag(2);
+
+  // Combines the individual items to create the menu.
+  cocos2d::Vector<MenuItem*> menuItems = {sign_up_item, login_item,
+                                          skip_login_item};
+  auto menu = Menu::createWithArray(menuItems);
+  menu->setPosition(Size(290, 260));
+  menu->setContentSize(Size(100, 200));
+  menu->setScale(.8, .7);
+  menu->alignItemsVerticallyWithPadding(30.0f);
+  auth_background_->addChild(menu);
 }
 
 // Updates the user record variables to reflect what is in the database.
@@ -610,6 +766,26 @@ void MainMenuScene::UpdateUserRecord() {
   user_record_label_->setString("W:" + to_string(user_wins_) +
                                 " L:" + to_string(user_loses_) +
                                 " T:" + to_string(user_ties_));
+}
+
+// Creates a rectangle of Size size and centered on the origin.
+// Optional parameters: background_color, border_color, border_thickness.
+DrawNode* MainMenuScene::CreateRectangle(Size size, Vec2 origin,
+                                         Color4F background_color,
+                                         Color4F border_color,
+                                         int border_thickness) {
+  // Creates the corners of the rectangle.
+  Vec2 corners[4];
+  corners[0] = Vec2(origin.x - (size.width / 2), origin.y - (size.height / 2));
+  corners[1] = Vec2(origin.x - (size.width / 2), origin.y + (size.height / 2));
+  corners[2] = Vec2(origin.x + (size.width / 2), origin.y + (size.height / 2));
+  corners[3] = Vec2(origin.x + (size.width / 2), origin.y - (size.height / 2));
+
+  // Draws the rectangle.
+  DrawNode* rectangle = DrawNode::create();
+  rectangle->drawPolygon(corners, /*number_of_points=*/4, background_color,
+                         border_thickness, border_color);
+  return rectangle;
 }
 
 // Initialize the user records in the database.
@@ -640,117 +816,164 @@ void MainMenuScene::onEnter() {
   Layer::onEnter();
 }
 
+// Clears all of the labels and text fields on the login and sign up layers.
+void MainMenuScene::ClearAuthFields() {
+  // Clears the login components.
+  login_id_->setString("");
+  login_password_->setString("");
+  login_error_label_->setString("");
+
+  // Clears the sign up components.
+  sign_up_id_->setString("");
+  sign_up_password_->setString("");
+  sign_up_password_confirm_->setString("");
+  sign_up_error_label_->setString("");
+}
+
 // Updates the previous_state_ when current_state_ != previous_state_:
 //
 // switch (current_state_)
-// (1) kAuthState: makes the auth_background_ visable.
+// (1) kAuthMenuState: makes the auth_background_ visable.
 // (2) kGameMenuState: makes the auth_background_ invisable.
-// (3) kWaitingAnonymousState: waits for anonymous sign in then swaps to
-// (1). (4) kWaitingSignUpState: waits for sign up future completion,
+// (3) kWaitingAnonymousState: waits for anonymous sign in then swaps to (1).
+// (4) kWaitingSignUpState: waits for sign up future completion,
 //     updates user variables, and swaps to (2).
 // (5) kWaitingLoginState: waits for login future completion,
 //     updates user variables, and swaps to (2).
 // (6) kWaitingGameOutcome: waits for director to pop the TicTacToeScene.
 void MainMenuScene::update(float /*delta*/) {
-    if (current_state_ != previous_state_) {
-        if (current_state_ == kWaitingAnonymousState) {
-            if (user_result_.status() == kFutureStatusComplete &&
-                user_result_.error() == kAuthErrorNone) {
-                user_ = *user_result_.result();
-                user_uid_ = GenerateUid(10);
+  if (current_state_ != previous_state_) {
+    if (current_state_ == kWaitingAnonymousState) {
+      if (user_result_.status() == firebase::kFutureStatusComplete) {
+        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+          user_ = *user_result_.result();
+          user_uid_ = GenerateUid(10);
 
-                this->InitializeUserRecord();
+          this->InitializeUserRecord();
 
-                current_state_ = kGameMenuState;
-            }
+          current_state_ = kGameMenuState;
         }
-        else if (current_state_ == kWaitingSignUpState) {
-            if (user_result_.status() == kFutureStatusComplete) {
-                if (user_result_.error() == kAuthErrorNone) {
-                    user_ = *user_result_.result();
-                    user_uid_ = user_->uid();
+      }
+    } else if (current_state_ == kWaitingSignUpState) {
+      if (user_result_.status() == firebase::kFutureStatusComplete) {
+        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+          user_ = *user_result_.result();
+          user_uid_ = user_->uid();
 
-                    this->InitializeUserRecord();
+          this->ClearAuthFields();
+          this->InitializeUserRecord();
 
-                    current_state_ = kGameMenuState;
+          current_state_ = kGameMenuState;
 
-                }
-                else {
-                    // Change invalid_login_label_ to display the
-                    // user_create failed.
-                    invalid_login_label_->setString("invalid sign up");
-                    current_state_ = kAuthState;
-                }
-            }
+        } else {
+          // Change invalid_login_label_ to display the user_create failed.
+          sign_up_error_label_->setString("invalid credentials");
+          current_state_ = kSignUpState;
         }
-        else if (current_state_ == kWaitingLoginState) {
-            if (user_result_.status() == kFutureStatusComplete) {
-                if (user_result_.error() == kAuthErrorNone) {
-                    user_ = *user_result_.result();
-                    user_uid_ = user_->uid();
+      }
+    } else if (current_state_ == kWaitingLoginState) {
+      if (user_result_.status() == firebase::kFutureStatusComplete) {
+        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+          user_ = *user_result_.result();
+          user_uid_ = user_->uid();
+          this->ClearAuthFields();
+          this->UpdateUserRecord();
 
-                    this->UpdateUserRecord();
+          current_state_ = kGameMenuState;
+        } else {
+          // Change invalid_login_label_ to display the auth_result errored.
+          login_error_label_->setString("invalid credentials");
+          current_state_ = kLoginState;
+        }
+      }
+    } else if (current_state_ == kAuthMenuState) {
+      // Sets the authentication layer visable and hides the login &
+      // sign up layers.
+      auth_background_->setVisible(true);
+      login_background_->setVisible(false);
+      sign_up_background_->setVisible(false);
+      // Pauses all event touch listeners & then resumes the ones attached to
+      // auth_background_.
+      const auto event_dispatcher =
+          Director::getInstance()->getEventDispatcher();
+      event_dispatcher->pauseEventListenersForTarget(this,
+                                                     /*recursive=*/true);
+      event_dispatcher->resumeEventListenersForTarget(auth_background_,
+                                                      /*recursive=*/true);
+      user_ = nullptr;
+      previous_state_ = current_state_;
+    } else if (current_state_ == kLoginState) {
+      // Sets the login layer visable and hides the authentication &
+      // sign up layers.
+      auth_background_->setVisible(false);
+      sign_up_background_->setVisible(false);
+      login_background_->setVisible(true);
+      // Pauses all event touch listeners & then resumes the ones attached to
+      // login_background_.
+      const auto event_dispatcher =
+          Director::getInstance()->getEventDispatcher();
+      event_dispatcher->pauseEventListenersForTarget(this,
+                                                     /*recursive=*/true);
+      event_dispatcher->resumeEventListenersForTarget(login_background_,
+                                                      /*recursive=*/true);
+      user_ = nullptr;
+      previous_state_ = current_state_;
+    } else if (current_state_ == kSignUpState) {
+      // Sets the sign up layer visable and hides the authentication &
+      // login layers.
+      auth_background_->setVisible(false);
+      login_background_->setVisible(false);
+      sign_up_background_->setVisible(true);
 
-                    current_state_ = kGameMenuState;
-                }
-                else {
-                    // Change invalid_login_label_ to display the auth_result
-                    // errored.
-                    auto err = user_result_.error_message();
-                    invalid_login_label_->setString("invalid login");
-                    current_state_ = kAuthState;
-                }
-            }
-        }
-        else if (current_state_ == kAuthState) {
-            // Sign out logic, adding auth screen.
-            auth_background_->setVisible(true);
-            // Pauses all event touch listeners & then resumes the
-            // ones attached to auth_background_.
-            const auto event_dispatcher =
-                Director::getInstance()->getEventDispatcher();
-            event_dispatcher->pauseEventListenersForTarget(this,
-                /*recursive=*/true);
-            event_dispatcher->resumeEventListenersForTarget(auth_background_,
-                /*recursive=*/true);
-            user_ = nullptr;
-            previous_state_ = current_state_;
-        }
-        else if (current_state_ == kGameMenuState) {
-            // Removes the authentication screen.
-            auth_background_->setVisible(false);
-            const auto event_dispatcher =
-                Director::getInstance()->getEventDispatcher();
-            // Resumes all event touch listeners & then pauses the
-            // ones attached to auth_background_.
-            event_dispatcher->resumeEventListenersForTarget(this,
-                /*recursive=*/true);
-            event_dispatcher->pauseEventListenersForTarget(auth_background_,
-                /*recursive=*/true);
-            previous_state_ = current_state_;
-        }
+      // Pauses all event touch listeners & then resumes the ones attached to
+      // sign_up_background_.
+      const auto event_dispatcher =
+          Director::getInstance()->getEventDispatcher();
+      event_dispatcher->pauseEventListenersForTarget(this,
+                                                     /*recursive=*/true);
+      event_dispatcher->resumeEventListenersForTarget(sign_up_background_,
+                                                      /*recursive=*/true);
+      user_ = nullptr;
+      previous_state_ = current_state_;
+    } else if (current_state_ == kGameMenuState) {
+      // hides the authentication,login, and sign up layers.
+      auth_background_->setVisible(false);
+      login_background_->setVisible(false);
+      sign_up_background_->setVisible(false);
+      const auto event_dispatcher =
+          Director::getInstance()->getEventDispatcher();
+      // Resumes all event touch listeners & then pauses the ones
+      // attached to auth_background_.
+      event_dispatcher->resumeEventListenersForTarget(this,
+                                                      /*recursive=*/true);
+      event_dispatcher->pauseEventListenersForTarget(auth_background_,
+                                                     /*recursive=*/true);
+      previous_state_ = current_state_;
     }
+  }
 }
 
-// Returns a repeating action that toggles the cursor of the
-// text field passed in based on the toggle_delay.
-cocos2d::RepeatForever* MainMenuScene::CreateBlinkingCursorAction(
+// Returns a repeating action that toggles the cursor of the text field passed
+// in based on the toggle_delay.
+void MainMenuScene::CreateBlinkingCursorAction(
     cocos2d::ui::TextField* text_field) {
-  // Creates a callable function that shows the cursor and sets
-  // the cursor character.
+  // Creates a callable function that shows the cursor and sets the cursor
+  // character.
   const auto show_cursor = CallFunc::create([text_field]() {
     text_field->setCursorEnabled(true);
     text_field->setCursorChar('|');
   });
-  // Creates a callable function that hides the cursor
-  // character.
+  // Creates a callable function that hides the cursor character.
   const auto hide_cursor =
       CallFunc::create([text_field]() { text_field->setCursorChar(' '); });
-  const auto toggle_delay = DelayTime::create(1.0f);
+
+  // Creates a delay action.
+  const cocos2d::DelayTime* delay = DelayTime::create(/*delay_durration=*/0.3f);
+
   // Aligns the sequence of actions to create a blinking cursor.
-  auto blink_cursor_action = Sequence::create(
-      show_cursor, toggle_delay, hide_cursor, toggle_delay, nullptr);
-  // Creates a forever repeating action based on the
-  // blink_cursor_action.
-  return RepeatForever::create(blink_cursor_action);
+  auto blink_cursor_action =
+      Sequence::create(show_cursor, delay, hide_cursor, delay, nullptr);
+
+  // Creates a forever repeating action based on the blink_cursor_action.
+  text_field->runAction(RepeatForever::create(blink_cursor_action));
 }
