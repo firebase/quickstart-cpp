@@ -15,10 +15,14 @@
 #include "main_menu_scene.h"
 
 #include <regex>
+#include <string>
 
 #include "cocos2d.h"
 #include "cocos\ui\UIButton.h"
 #include "cocos\ui\UITextField.h"
+#include "firebase/auth.h"
+#include "firebase/database.h"
+#include "firebase/future.h"
 #include "firebase/util.h"
 #include "tic_tac_toe_scene.h"
 #include "util.h"
@@ -28,8 +32,11 @@ using cocos2d::Color3B;
 using cocos2d::Color4B;
 using cocos2d::Color4F;
 using cocos2d::DelayTime;
+using cocos2d::Director;
 using cocos2d::DrawNode;
+using cocos2d::Event;
 using cocos2d::EventListenerTouchOneByOne;
+using cocos2d::Label;
 using cocos2d::Menu;
 using cocos2d::MenuItem;
 using cocos2d::MenuItemSprite;
@@ -37,12 +44,22 @@ using cocos2d::RepeatForever;
 using cocos2d::Scene;
 using cocos2d::Sequence;
 using cocos2d::Size;
+using cocos2d::Sprite;
 using cocos2d::TextFieldTTF;
 using cocos2d::TextHAlignment;
+using cocos2d::Touch;
 using cocos2d::Vec2;
 using cocos2d::ui::Button;
 using cocos2d::ui::TextField;
 using cocos2d::ui::Widget;
+using firebase::App;
+using firebase::InitResult;
+using firebase::kFutureStatusComplete;
+using firebase::ModuleInitializer;
+using firebase::auth::Auth;
+using firebase::auth::kAuthErrorNone;
+using firebase::database::Database;
+using std::to_string;
 
 static const char* kCreateGameImage = "create_game.png";
 static const char* kTextFieldBorderImage = "text_field_border.png";
@@ -269,7 +286,6 @@ bool MainMenuScene::init() {
 void MainMenuScene::InitializeFirebase() {
   LogMessage("Initialize Firebase App.");
   ::firebase::App* app;
-
 #if defined(_ANDROID_)
   app = ::firebase::App::Create(GetJniEnv(), GetActivity());
 #else
