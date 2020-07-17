@@ -127,7 +127,7 @@ bool MainMenuScene::init() {
     string join_text_field_string = join_text_field->getString();
     // Transforms the letter casing to uppercase.
     std::transform(join_text_field_string.begin(), join_text_field_string.end(),
-                   join_text_field_string.begin(), ::toupper);
+                   join_text_field_string.begin(), toupper);
 
     // Creates a repeating blink action for the cursor.
     switch (type) {
@@ -284,11 +284,11 @@ bool MainMenuScene::init() {
 // dependencies are missing.
 void MainMenuScene::InitializeFirebase() {
   LogMessage("Initialize Firebase App.");
-  ::firebase::App* app;
+  firebase::App* app;
 #if defined(_ANDROID_)
-  app = ::firebase::App::Create(GetJniEnv(), GetActivity());
+  app = firebase::App::Create(GetJniEnv(), GetActivity());
 #else
-  app = ::firebase::App::Create();
+  app = firebase::App::Create();
 #endif  // defined(ANDROID)
 
   LogMessage("Initialize Firebase Auth and Firebase Database.");
@@ -300,24 +300,24 @@ void MainMenuScene::InitializeFirebase() {
   void* initialize_targets[] = {&auth_, &database_};
 
   const firebase::ModuleInitializer::InitializerFn initializers[] = {
-      [](::firebase::App* app, void* data) {
+      [](firebase::App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Auth.");
         void** targets = reinterpret_cast<void**>(data);
-        ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::auth::Auth**>(targets[0]) =
-            ::firebase::auth::Auth::GetAuth(app, &result);
+        firebase::InitResult result;
+        *reinterpret_cast<firebase::auth::Auth**>(targets[0]) =
+            firebase::auth::Auth::GetAuth(app, &result);
         return result;
       },
-      [](::firebase::App* app, void* data) {
+      [](firebase::App* app, void* data) {
         LogMessage("Attempt to initialize Firebase Database.");
         void** targets = reinterpret_cast<void**>(data);
-        ::firebase::InitResult result;
-        *reinterpret_cast<::firebase::database::Database**>(targets[1]) =
-            ::firebase::database::Database::GetInstance(app, &result);
+        firebase::InitResult result;
+        *reinterpret_cast<firebase::database::Database**>(targets[1]) =
+            firebase::database::Database::GetInstance(app, &result);
         return result;
       }};
 
-  ::firebase::ModuleInitializer initializer;
+  firebase::ModuleInitializer initializer;
   initializer.Initialize(app, initialize_targets, initializers,
                          sizeof(initializers) / sizeof(initializers[0]));
 
