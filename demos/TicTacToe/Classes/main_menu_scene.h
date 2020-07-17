@@ -17,8 +17,8 @@
 
 #include <string>
 
+#include "cocos/ui/UITextField.h"
 #include "cocos2d.h"
-#include "cocos\ui\UITextField.h"
 #include "firebase/auth.h"
 #include "firebase/database.h"
 #include "firebase/future.h"
