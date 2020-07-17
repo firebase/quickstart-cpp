@@ -15,7 +15,7 @@
 #ifndef TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 #define TICTACTOE_DEMO_CLASSES_MAINMENU_SCENE_H_
 
-#include <string.h>
+#include <string>
 
 #include "cocos2d.h"
 #include "cocos\ui\UITextField.h"
@@ -23,6 +23,10 @@
 #include "firebase/database.h"
 #include "firebase/future.h"
 
+using cocos2d::Color4F;
+using cocos2d::DrawNode;
+using cocos2d::Size;
+using cocos2d::Vec2;
 using std::to_string;
 
 class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
@@ -36,7 +40,9 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // the MainMenuScene::update(float) method.
   enum kSceneState {
     kInitializingState,
-    kAuthState,
+    kAuthMenuState,
+    kLoginState,
+    kSignUpState,
     kGameMenuState,
     kWaitingAnonymousState,
     kWaitingSignUpState,
@@ -44,9 +50,10 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
     kWaitingGameOutcome
   };
 
-  // Creates an endless blinking cursor action for the textfield passed in.
-  cocos2d::RepeatForever* MainMenuScene::CreateBlinkingCursorAction(
-      cocos2d::ui::TextField*);
+  // Creates and runs an endless blinking cursor action for the textfield passed
+  // in.
+  void MainMenuScene::CreateBlinkingCursorAction(cocos2d::ui::TextField*);
+
   // The game loop method for this layer which runs every frame once scheduled
   // using this->scheduleUpdate(). Acts as the state manager for this scene.
   void MainMenuScene::update(float) override;
@@ -63,9 +70,29 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // screen.
   void MainMenuScene::InitializeUserRecord();
 
+  // Initializes the authentication layer which includes the background, buttons
+  // and labels.
+  void MainMenuScene::InitializeAuthenticationLayer();
+
+  // Initializes the sign up layer which includes the background, buttons
+  // and labels.
+  void MainMenuScene::InitializeSignUpLayer();
+
+  // Initializes the login layer which includes the background, buttons
+  // and labels.
+  void MainMenuScene::InitializeLoginLayer();
+
+  // Clears the labels and text fields for all authentication layers.
+  void MainMenuScene::ClearAuthFields();
+
+  // Creates a rectangle from the size, origin, border_color, background_color,
+  // and border_thickness.
+  DrawNode* MainMenuScene::CreateRectangle(
+      Size size, Vec2 origin, Color4F background_color = Color4F(0, 0, 0, 0),
+      Color4F border_color = Color4F::WHITE, int border_thickness = 1);
+
   // Initializes the the firebase app, auth, and database.
   void MainMenuScene::InitializeFirebase();
-
   // Initializes the instance of a Node and returns a boolean based on if it was
   // successful in doing so.
   bool init() override;
@@ -74,15 +101,29 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Node to be used as a background for the authentication menu.
   cocos2d::DrawNode* auth_background_;
 
+  // Node to be used as a background for the login menu.
+  cocos2d::DrawNode* login_background_;
+
+  // Node to be used as a background for the sign-up menu.
+  cocos2d::DrawNode* sign_up_background_;
+
   // Labels and textfields for the authentication menu.
-  cocos2d::Label* invalid_login_label_;
+  cocos2d::Label* login_error_label_;
+  cocos2d::Label* sign_up_error_label_;
   cocos2d::Label* user_record_label_;
-  cocos2d::TextFieldTTF* email_text_field_;
-  cocos2d::TextFieldTTF* password_text_field_;
+
+  // Cocos2d components for the login layer.
+  cocos2d::ui::TextField* login_id_;
+  cocos2d::ui::TextField* login_password_;
+
+  // Cocos2d components for the sign up layer.
+  cocos2d::ui::TextField* sign_up_id_;
+  cocos2d::ui::TextField* sign_up_password_;
+  cocos2d::ui::TextField* sign_up_password_confirm_;
 
   // Variable to track the current state and previous state to check against
   // to see if the state changed.
-  kSceneState current_state_ = kAuthState;
+  kSceneState current_state_ = kAuthMenuState;
   kSceneState previous_state_ = kInitializingState;
 
   // User record variabales that are stored in firebase database.
