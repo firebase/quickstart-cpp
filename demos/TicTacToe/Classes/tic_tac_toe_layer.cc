@@ -508,6 +508,7 @@ void TicTacToeLayer::EndGame() {
       remaining_tiles_.size() != kNumberOfTiles) {
     game_outcome_ = kGameWon;
   }
+
   game_over_label_->setString(kGameOverStrings[game_outcome_]);
   end_game_frames_--;
   if (end_game_frames_ > 0) {

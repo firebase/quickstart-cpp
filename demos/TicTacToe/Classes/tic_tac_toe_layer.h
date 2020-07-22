@@ -49,24 +49,24 @@ class TicTacToeLayer : public Layer {
   // The game loop for this layer which runs every frame once scheduled using
   // this->scheduleUpdate(). It constantly checks current_player_index_listener_
   // and game_over_listener so it can take action accordingly.
-  void TicTacToeLayer::update(float) override;
+  void update(float) override;
 
   // Initializes the game board cocos2d componenets and game variables.
-  void TicTacToeLayer::InitializeBoard();
+  void InitializeBoard();
 
   // Initializes the player data, based on the join_game_uid.
-  void TicTacToeLayer::InitializePlayerData();
+  void InitializePlayerData();
 
   // Shows the end game message before returning back to the previous scene.
-  void TicTacToeLayer::EndGame();
+  void EndGame();
 
   // Initializes the value listeners for current_player_, last_move_, game_over_
   // and total_players_.
-  void TicTacToeLayer::InitializeDatabaseListeners();
+  void InitializeDatabaseListeners();
 
   // Updates the board based on the move taken from the game instance in
   // the database.
-  void TicTacToeLayer::UpdateBoard();
+  void UpdateBoard();
 
   // Tracks whether the board was unable to build.
   bool initialization_failed_ = false;
