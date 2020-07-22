@@ -17,8 +17,8 @@
 
 #include <string>
 
+#include "cocos/ui/UITextField.h"
 #include "cocos2d.h"
-#include "cocos\ui\UITextField.h"
 #include "firebase/auth.h"
 #include "firebase/database.h"
 #include "firebase/future.h"
@@ -51,22 +51,32 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
     kLoginState,
     kSignUpState,
     kGameMenuState,
-    kWaitingAnonymousState,
-    kWaitingSignUpState,
-    kWaitingLoginState,
-    kWaitingGameOutcome
+    kSkipLoginState,
+    kRunGameState
   };
 
   // Creates and runs an endless blinking cursor action for the textfield passed
   // in.
   void MainMenuScene::CreateBlinkingCursorAction(cocos2d::ui::TextField*);
 
+  // Updates the scene to show the active layer based on state.
+  void MainMenuScene::UpdateLayer(MainMenuScene::kSceneState);
+
   // The game loop method for this layer which runs every frame once scheduled
   // using this->scheduleUpdate(). Acts as the state manager for this scene.
   void MainMenuScene::update(float) override;
 
+  // Each individual update method to correspond each kSceneState.
+  MainMenuScene::kSceneState MainMenuScene::UpdateAuthentication();
+  MainMenuScene::kSceneState MainMenuScene::UpdateGameMenu();
+  MainMenuScene::kSceneState MainMenuScene::UpdateInitialize();
+  MainMenuScene::kSceneState MainMenuScene::UpdateLogin();
+  MainMenuScene::kSceneState MainMenuScene::UpdateSignUp();
+  MainMenuScene::kSceneState MainMenuScene::UpdateSkipLogin();
+  MainMenuScene::kSceneState MainMenuScene::UpdateRunGame();
+
   // If the scene is re-entered from TicTacToeScene, then call
-  // UpdateUserRecord() and swap current_state_ to kGameMenuState.
+  // UpdateUserRecord() and swap state_ to kGameMenuState.
   void MainMenuScene::onEnter() override;
 
   // Updates the user record (wins,loses and ties) and displays it to the
@@ -76,6 +86,10 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Initializes the user record (wins,loses and ties) and displays it to the
   // screen.
   void MainMenuScene::InitializeUserRecord();
+
+  // Initializes the main menu layer which includes the background, buttons
+  // and labels.
+  void MainMenuScene::InitializeGameMenuLayer();
 
   // Initializes the authentication layer which includes the background, buttons
   // and labels.
@@ -100,6 +114,7 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
 
   // Initializes the the firebase app, auth, and database.
   void MainMenuScene::InitializeFirebase();
+
   // Initializes the instance of a Node and returns a boolean based on if it was
   // successful in doing so.
   bool init() override;
@@ -128,10 +143,8 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   cocos2d::ui::TextField* sign_up_password_;
   cocos2d::ui::TextField* sign_up_password_confirm_;
 
-  // Variable to track the current state and previous state to check against
-  // to see if the state changed.
-  kSceneState current_state_ = kAuthMenuState;
-  kSceneState previous_state_ = kInitializingState;
+  // Initializes the state_ to the kInitializingState.
+  kSceneState state_ = kInitializingState;
 
   // User record variabales that are stored in firebase database.
   int user_wins_;

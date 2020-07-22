@@ -51,6 +51,23 @@ class TicTacToeLayer : public Layer {
   // and game_over_listener so it can take action accordingly.
   void TicTacToeLayer::update(float) override;
 
+  // Initializes the game board cocos2d componenets and game variables.
+  void TicTacToeLayer::InitializeBoard();
+
+  // Initializes the player data, based on the join_game_uid.
+  void TicTacToeLayer::InitializePlayerData();
+
+  // Shows the end game message before returning back to the previous scene.
+  void TicTacToeLayer::EndGame();
+
+  // Initializes the value listeners for current_player_, last_move_, game_over_
+  // and total_players_.
+  void TicTacToeLayer::InitializeDatabaseListeners();
+
+  // Updates the board based on the move taken from the game instance in
+  // the database.
+  void TicTacToeLayer::UpdateBoard();
+
   // Tracks whether the board was unable to build.
   bool initialization_failed_ = false;
 
@@ -59,14 +76,14 @@ class TicTacToeLayer : public Layer {
 
   // String for the join game code and initialize the database
   // reference.
-  string join_game_uuid_;
+  string join_game_uid_;
 
   // User uid to update the user's record after the game is over.
   string user_uid_;
 
   // Firebase Realtime Database, the entry point to all database operations.
   //
-  // The database schema has a top level game_uuid object which includes
+  // The database schema has a top level game_uid object which includes
   // last_move, total_players and current_player_index_ fields.
   Database* database_;
   firebase::database::DatabaseReference ref_;
@@ -99,6 +116,7 @@ class TicTacToeLayer : public Layer {
   std::unordered_set<int> remaining_tiles_;
 
   // Amount of frames the screen has been in the end game state.
-  int end_game_frames_ = 0;
+  // Number of seconds x 60.
+  int end_game_frames_ = 120;
 };
 #endif  // TICTACTOE_DEMO_CLASSES_TICTACTOELAYER_SCENE_H_
