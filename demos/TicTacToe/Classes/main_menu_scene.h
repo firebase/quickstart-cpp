@@ -114,7 +114,6 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
 
   // Initializes the the firebase app, auth, and database.
   void MainMenuScene::InitializeFirebase();
-
   // Initializes the instance of a Node and returns a boolean based on if it was
   // successful in doing so.
   bool init() override;
