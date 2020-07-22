@@ -66,7 +66,7 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // using this->scheduleUpdate(). Acts as the state manager for this scene.
   void MainMenuScene::update(float) override;
 
-  // Each individual update method to correspond each kSceneState.
+  // Update methods to corresponding to each kSceneState.
   MainMenuScene::kSceneState MainMenuScene::UpdateAuthentication();
   MainMenuScene::kSceneState MainMenuScene::UpdateGameMenu();
   MainMenuScene::kSceneState MainMenuScene::UpdateInitialize();
@@ -87,7 +87,7 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // screen.
   void MainMenuScene::InitializeUserRecord();
 
-  // Initializes the main menu layer which includes the background, buttons
+  // Initializes the game menu layer which includes the background, buttons
   // and labels.
   void MainMenuScene::InitializeGameMenuLayer();
 

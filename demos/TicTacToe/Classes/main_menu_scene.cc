@@ -164,6 +164,11 @@ void MainMenuScene::InitializeFirebase() {
   database_->set_persistence_enabled(true);
 }
 
+// 1. Adds the user record label (wins, loses & ties).
+// 2. Creates the background for the node.
+// 3. Adds the join and create button.
+// 4. Adds the enter code text field and their event listeners.
+// 5. Adds the logout button.
 void MainMenuScene::InitializeGameMenuLayer() {
   // Label to display the users record.
   user_record_label_ = Label::createWithSystemFont("", "Arial", 24);
@@ -172,6 +177,7 @@ void MainMenuScene::InitializeGameMenuLayer() {
   user_record_label_->setPosition(Vec2(500, 600));
   this->addChild(user_record_label_);
 
+  // Creates the join_text_field.
   auto join_text_field_position = Size(480, 95);
   auto join_text_field_size = Size(180, 80);
   auto join_text_field = TextField::create("code", "Arial", 48);
@@ -855,7 +861,7 @@ MainMenuScene::kSceneState MainMenuScene::UpdateLogin() {
 
       return kGameMenuState;
     } else {
-      // Change login_error_label_ to display the user_result_ future errored.
+      // Changes login_error_label_ to display the user_result_ future errored.
       login_error_label_->setString("invalid credentials");
       return kLoginState;
     }
@@ -878,7 +884,8 @@ MainMenuScene::kSceneState MainMenuScene::UpdateSignUp() {
 
       return kGameMenuState;
     } else {
-      // Change sign_up_error_label_ to display the user_result_ future errored.
+      // Changes sign_up_error_label_ to display the user_result_ future
+      // errored.
       sign_up_error_label_->setString("sign up failed");
       return kSignUpState;
     }

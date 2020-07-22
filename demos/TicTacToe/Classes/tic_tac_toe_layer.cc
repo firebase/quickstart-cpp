@@ -270,7 +270,7 @@ void TicTacToeLayer::update(float /*delta*/) {
   else if (game_over_listener_->got_value()) {
     this->EndGame();
   }
-  // Updates the waiting label to signify it is this players move.
+  // Updates the waiting label to show its your move.
   else if (total_player_listener_->got_value() &&
            awaiting_opponenet_move_ == false) {
     waiting_label_->setString("your move");
@@ -458,7 +458,7 @@ void TicTacToeLayer::InitializePlayerData() {
           ref_.RunTransaction([](firebase::database::MutableData* data) {
             auto total_players = data->Child("total_players").value();
 
-            // Complete the transaction based on the returned mutable data
+            // Completes the transaction based on the returned mutable data
             // value.
             if (total_players.is_null()) {
               // Must return this if the transaction was unsuccessful.
@@ -511,7 +511,7 @@ void TicTacToeLayer::EndGame() {
   game_over_label_->setString(kGameOverStrings[game_outcome_]);
   end_game_frames_--;
   if (end_game_frames_ > 0) {
-    // Remove the game from existence and update the user's record before
+    // Removes the game from existence and updates the user's record before
     // swap back scenes.
     WaitForCompletion(database_->GetReference("game_data")
                           .Child(join_game_uid_)
@@ -556,24 +556,24 @@ void TicTacToeLayer::UpdateBoard() {
                       (.5 + last_move / kTilesY) * kTileHeight);
   board_sprite_->addChild(sprite);
 
-  // Modify local game state variables to reflect this most recent move.
+  // Modifies local game state variables to reflect this most recent move.
   board[last_move / kTilesX][last_move % kTilesX] = current_player_index_;
   remaining_tiles_.erase(last_move);
   awaiting_opponenet_move_ = false;
   current_player_index_ = player_index_;
   if (GameOver(board)) {
-    // Set game_outcome_ to reflect the use lost.
+    // Sets game_outcome_ to reflect the use lost.
     game_outcome_ = kGameLost;
     WaitForCompletion(ref_.Child("game_over").SetValue(true), "setGameOver");
   } else if (remaining_tiles_.size() == 0) {
-    // Set game_outcome_ to reflect the game ended in a tie.
+    // Sets game_outcome_ to reflect the game ended in a tie.
     game_outcome_ = kGameTied;
     WaitForCompletion(ref_.Child("game_over").SetValue(true), "setGameOver");
   }
 }
 
 TicTacToeLayer::~TicTacToeLayer() {
-  // release our sprite and layer so that it gets deallocated
+  // releases our sprite and layer so that it gets deallocated
   CC_SAFE_RELEASE_NULL(this->board_sprite_);
   CC_SAFE_RELEASE_NULL(this->game_over_label_);
   CC_SAFE_RELEASE_NULL(this->waiting_label_);
