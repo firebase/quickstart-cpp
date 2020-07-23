@@ -99,182 +99,13 @@ bool MainMenuScene::init() {
 
   // Initializes the login layer by creating the background and placing all
   // required cocos2d components.
-
   this->InitializeSignUpLayer();
 
-  // Label to display the users record.
-  user_record_label_ = Label::createWithSystemFont("", "Arial", 24);
-  user_record_label_->setAlignment(TextHAlignment::RIGHT);
-  user_record_label_->setTextColor(Color4B::WHITE);
-  user_record_label_->setPosition(Vec2(500, 600));
-  this->addChild(user_record_label_);
+  // Initializes the game menu layer by creating the background and placing all
+  // required cocos2d components.
+  this->InitializeGameMenuLayer();
 
-  auto join_text_field_position = Size(480, 95);
-  auto join_text_field_size = Size(180, 80);
-  auto join_text_field = TextField::create("code", "Arial", 48);
-  join_text_field->setTextHorizontalAlignment(TextHAlignment::CENTER);
-  join_text_field->setPosition(join_text_field_position);
-  join_text_field->setAnchorPoint(Vec2::ANCHOR_MIDDLE);
-  join_text_field->setTouchSize(join_text_field_size);
-  join_text_field->setTouchAreaEnabled(true);
-  join_text_field->setMaxLength(/*max_characters=*/4);
-  join_text_field->setMaxLengthEnabled(true);
-
-  // Adds the event listener to handle the actions for a textfield.
-  join_text_field->addEventListener([this](Ref* sender,
-                                           TextField::EventType type) {
-    auto join_text_field = dynamic_cast<TextField*>(sender);
-    string join_text_field_string = join_text_field->getString();
-    // Transforms the letter casing to uppercase.
-    std::transform(join_text_field_string.begin(), join_text_field_string.end(),
-                   join_text_field_string.begin(), toupper);
-
-    // Creates a repeating blink action for the cursor.
-    switch (type) {
-      case TextField::EventType::ATTACH_WITH_IME:
-        // Runs the repeated blinking cursor action.
-        CreateBlinkingCursorAction(join_text_field);
-        break;
-      case TextField::EventType::DETACH_WITH_IME:
-        // Stops the blinking cursor.
-        join_text_field->stopAllActions();
-        break;
-      case TextField::EventType::INSERT_TEXT:
-        join_text_field->setString(join_text_field_string);
-        break;
-      default:
-        break;
-    }
-  });
-
-  // Set up the constraints of the border so it surrounds the text box.
-  const auto pos = join_text_field_position;
-  const auto size = join_text_field_size;
-  const Vec2 join_text_border_corners[4] = {
-      Vec2(pos.width - size.width / 2, pos.height - size.height / 2),
-      Vec2(pos.width + size.width / 2, pos.height - size.height / 2),
-      Vec2(pos.width + size.width / 2, pos.height + size.height / 2),
-      Vec2(pos.width - size.width / 2, pos.height + size.height / 2)};
-
-  // Creates a border and adds it around the text field.
-  auto join_text_field_border = DrawNode::create();
-  join_text_field_border->drawPolygon(join_text_border_corners, 4,
-                                      Color4F(0, 0, 0, 0), 1, Color4F::WHITE);
-  this->addChild(join_text_field_border);
-
-  // Creates a sprite for the create button and sets its position to the
-  // center of the screen. TODO(grantpostma): Dynamically choose the location.
-  auto create_button = Sprite::create(kCreateGameImage);
-  create_button->setPosition(25, 200);
-  create_button->setAnchorPoint(Vec2(0, 0));
-
-  // Creates a button listener to handle the touch event.
-  auto create_button_touch_listener = EventListenerTouchOneByOne::create();
-
-  // Set the onTouchBegan event up to a lambda tha will replace the
-  // MainMenu scene with a TicTacToe scene.
-  create_button_touch_listener->onTouchBegan =
-      [this, join_text_field](Touch* touch, Event* event) -> bool {
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-
-    // Replaces the scene with a new TicTacToe scene if the touched point is
-    // within the bounds of the button.
-    if (bounds.containsPoint(point)) {
-      Director::getInstance()->pushScene(
-          TicTacToe::createScene(std::string(), database_, user_uid_));
-      join_text_field->setString("");
-      current_state_ = kWaitingGameOutcome;
-    }
-
-    return true;
-  };
-
-  // Attach the touch listener to the create game button.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(create_button_touch_listener,
-                                               create_button);
-
-  // Creates a sprite for the logout button and sets its position to the
-  auto logout_button = Sprite::create(kLogoutButtonImage);
-  logout_button->setPosition(25, 575);
-  logout_button->setAnchorPoint(Vec2(0, 0));
-  logout_button->setContentSize(Size(125, 50));
-
-  // Creates a button listener to handle the touch event.
-  auto logout_button_touch_listener = EventListenerTouchOneByOne::create();
-
-  // Set the onTouchBegan event up to a lambda tha will replace the
-  // MainMenu scene with a TicTacToe scene.
-  logout_button_touch_listener->onTouchBegan = [this](Touch* touch,
-                                                      Event* event) -> bool {
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-
-    // Replaces the scene with a new TicTacToe scene if the touched point is
-    // within the bounds of the button.
-    if (bounds.containsPoint(point)) {
-      current_state_ = kAuthMenuState;
-      user_uid_ = "";
-      user_ = nullptr;
-      user_record_label_->setString("");
-    }
-
-    return true;
-  };
-
-  // Attach the touch listener to the logout game button.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(logout_button_touch_listener,
-                                               logout_button);
-
-  // Creates a sprite for the join button and sets its position to the center
-  // of the screen. TODO(grantpostma): Dynamically choose the location and set
-  // size().
-  auto join_button = Sprite::create(kJoinButtonImage);
-  join_button->setPosition(25, 50);
-  join_button->setAnchorPoint(Vec2(0, 0));
-  join_button->setScale(1.3f);
-
-  // Creates a button listener to handle the touch event.
-  auto join_button_touch_listener = EventListenerTouchOneByOne::create();
-
-  // Set the onTouchBegan event up to a lambda tha will replace the
-  // MainMenu scene with a TicTacToe scene and pass in join_text_field string.
-  join_button_touch_listener->onTouchBegan =
-      [join_text_field, this](Touch* touch, Event* event) -> bool {
-    const auto bounds = event->getCurrentTarget()->getBoundingBox();
-    const auto point = touch->getLocation();
-    if (bounds.containsPoint(point)) {
-      // Get the string from join_text_field.
-      std::string join_text_field_string = join_text_field->getString();
-      if (join_text_field_string.length() == 4) {
-        Director::getInstance()->pushScene(TicTacToe::createScene(
-            join_text_field_string, database_, user_uid_));
-        current_state_ = kWaitingGameOutcome;
-        join_text_field->setString("");
-      } else {
-        join_text_field->setString("");
-      }
-    }
-    return true;
-  };
-
-  // Attach the touch listener to the join button.
-  Director::getInstance()
-      ->getEventDispatcher()
-      ->addEventListenerWithSceneGraphPriority(join_button_touch_listener,
-                                               join_button);
-
-  // Attach the create button, join button and join text field to the
-  // MainMenu scene.
-  this->addChild(create_button);
-  this->addChild(join_button);
-  this->addChild(logout_button);
-  this->addChild(join_text_field, /*layer_index=*/1);
-
+  // Kicks off the updating game loop.
   this->scheduleUpdate();
 
   return true;
@@ -331,6 +162,133 @@ void MainMenuScene::InitializeFirebase() {
   LogMessage("Successfully initialized Firebase Auth and Firebase Database.");
 
   database_->set_persistence_enabled(true);
+}
+
+// 1. Adds the user record label (wins, loses & ties).
+// 2. Creates the background for the node.
+// 3. Adds the join and create button.
+// 4. Adds the enter code text field and their event listeners.
+// 5. Adds the logout button.
+void MainMenuScene::InitializeGameMenuLayer() {
+  // Label to display the users record.
+  user_record_label_ = Label::createWithSystemFont("", "Arial", 24);
+  user_record_label_->setAlignment(TextHAlignment::RIGHT);
+  user_record_label_->setTextColor(Color4B::WHITE);
+  user_record_label_->setPosition(Vec2(500, 600));
+  this->addChild(user_record_label_);
+
+  // Creates the join_text_field.
+  auto join_text_field_position = Size(480, 95);
+  auto join_text_field_size = Size(180, 80);
+  auto join_text_field = TextField::create("code", "Arial", 48);
+  join_text_field->setPosition(join_text_field_position);
+  join_text_field->setTouchSize(join_text_field_size);
+  join_text_field->setTouchAreaEnabled(true);
+  join_text_field->setMaxLength(/*max_characters=*/4);
+  join_text_field->setMaxLengthEnabled(true);
+  this->addChild(join_text_field);
+
+  // Adds the event listener to handle the actions for the text field.
+  join_text_field->addEventListener([this](Ref* sender,
+                                           TextField::EventType type) {
+    auto join_text_field = dynamic_cast<TextField*>(sender);
+    string join_text_field_string = join_text_field->getString();
+    // Transforms the letter casing to uppercase.
+    std::transform(join_text_field_string.begin(), join_text_field_string.end(),
+                   join_text_field_string.begin(), toupper);
+    switch (type) {
+      case TextField::EventType::ATTACH_WITH_IME:
+        // Adds the repeated blinking cursor action.
+        CreateBlinkingCursorAction(join_text_field);
+        break;
+      case TextField::EventType::DETACH_WITH_IME:
+        // Stops the blinking cursor.
+        join_text_field->stopAllActions();
+        break;
+      case TextField::EventType::INSERT_TEXT:
+        join_text_field->setString(join_text_field_string);
+        break;
+      default:
+        break;
+    }
+  });
+
+  // Creates the border for the join_text_field_.
+  const auto join_text_field_border =
+      CreateRectangle(join_text_field_size, join_text_field_position,
+                      Color4F(0, 0, 0, 0), Color4F::WHITE);
+  this->addChild(join_text_field_border);
+
+  // Creates the create_button.
+  auto create_button = Button::create(kCreateGameImage);
+  create_button->setPosition(Vec2(300, 300));
+  this->addChild(create_button);
+
+  // Adds the event listener to swap scenes to the TicTacToe scene.
+  create_button->addTouchEventListener(
+      [this, join_text_field](Ref* sender, Widget::TouchEventType type) {
+        switch (type) {
+          case Widget::TouchEventType::ENDED:
+            Director::getInstance()->pushScene(
+                TicTacToe::createScene(std::string(), database_, user_uid_));
+            join_text_field->setString("");
+            state_ = kRunGameState;
+            break;
+          default:
+            break;
+        }
+      });
+
+  // Creates a sprite for the logout button and sets its position to the
+  auto logout_button = Button::create(kLogoutButtonImage);
+  logout_button->setPosition(Vec2(75, 575));
+  logout_button->setScale(.4);
+  this->addChild(logout_button);
+
+  // Adds the event listener to change to the kAuthMenuState.
+  logout_button->addTouchEventListener(
+      [this, join_text_field](Ref* sender, Widget::TouchEventType type) {
+        switch (type) {
+          case Widget::TouchEventType::ENDED:
+            user_uid_ = "";
+            user_ = nullptr;
+            user_result_.Release();
+            user_record_label_->setString("");
+            state_ = kAuthMenuState;
+            break;
+          default:
+            break;
+        }
+      });
+
+  // Creates a sprite for the join button and sets its position to the center
+  // of the screen.
+  auto join_button = Button::create(kJoinButtonImage, kJoinButtonImage);
+  join_button->setPosition(Vec2(25, 50));
+  join_button->setAnchorPoint(Vec2(0, 0));
+  join_button->setScale(1.3f);
+  this->addChild(join_button);
+
+  // Adds the event listener to handle touch actions for the join_button.
+  join_button->addTouchEventListener(
+      [this, join_text_field](Ref* sender, Widget::TouchEventType type) {
+        // Get the string from join_text_field.
+        const std::string join_text_field_string = join_text_field->getString();
+        switch (type) {
+          case Widget::TouchEventType::ENDED:
+            if (join_text_field_string.length() == 4) {
+              Director::getInstance()->pushScene(TicTacToe::createScene(
+                  join_text_field_string, database_, user_uid_));
+              state_ = kRunGameState;
+              join_text_field->setString("");
+            } else {
+              join_text_field->setString("");
+            }
+            break;
+          default:
+            break;
+        }
+      });
 }
 
 // 1. Creates the background node.
@@ -478,7 +436,7 @@ void MainMenuScene::InitializeSignUpLayer() {
         switch (type) {
           case Widget::TouchEventType::ENDED:
             // Validates the id and passwords are valid, then sets the
-            // user_result_ future and swaps to kWaitingSignUpState.
+            // user_result_ future and swaps to kSignUpState.
             if (!std::regex_match(sign_up_id_->getString(), email_pattern)) {
               sign_up_error_label_->setString("invalid email address");
             } else if (sign_up_password_->getString().length() < 8) {
@@ -488,11 +446,15 @@ void MainMenuScene::InitializeSignUpLayer() {
                        sign_up_password_confirm_->getString()) {
               sign_up_error_label_->setString("passwords do not match");
             } else {
+              // Clears error label and sets user_result_ to the future created
+              // user.
               sign_up_error_label_->setString("");
               user_result_ = auth_->CreateUserWithEmailAndPassword(
                   sign_up_id_->getString().c_str(),
                   sign_up_password_->getString().c_str());
-              current_state_ = kWaitingSignUpState;
+
+              // Sets the state to kSignUpState.
+              state_ = kSignUpState;
             }
             break;
           default:
@@ -506,12 +468,12 @@ void MainMenuScene::InitializeSignUpLayer() {
   back_button->setPosition(Size(130, 500));
   sign_up_background_->addChild(back_button);
 
-  // Adds the event listener to return back to the kAuthMenuState.
+  // Adds the event listener to swap back to kAuthMenuState.
   back_button->addTouchEventListener(
       [this](Ref* sender, Widget::TouchEventType type) {
         switch (type) {
           case Widget::TouchEventType::ENDED:
-            current_state_ = kAuthMenuState;
+            state_ = kAuthMenuState;
             break;
           default:
             break;
@@ -626,18 +588,19 @@ void MainMenuScene::InitializeLoginLayer() {
         switch (type) {
           case Widget::TouchEventType::ENDED:
             // Validates the id and passwords are valid, then sets the
-            // user_result_ future and swaps to kWaitingLoginState.
+            // user_result_ future.
             if (!std::regex_match(login_id_->getString(), email_pattern)) {
               login_error_label_->setString("invalid email address");
             } else if (login_password_->getString().length() < 8) {
               login_error_label_->setString(
                   "password must be at least 8 characters long");
             } else {
+              // Clears error label and sets user_result_ to the future existing
+              // user.
               login_error_label_->setString("");
               user_result_ = auth_->SignInWithEmailAndPassword(
                   login_id_->getString().c_str(),
                   login_password_->getString().c_str());
-              current_state_ = kWaitingLoginState;
             }
             break;
           default:
@@ -656,7 +619,7 @@ void MainMenuScene::InitializeLoginLayer() {
       [this](Ref* sender, Widget::TouchEventType type) {
         switch (type) {
           case Widget::TouchEventType::ENDED:
-            current_state_ = kAuthMenuState;
+            state_ = kAuthMenuState;
             break;
           default:
             break;
@@ -702,7 +665,7 @@ void MainMenuScene::InitializeAuthenticationLayer() {
       sign_up_normal_item, sign_up_selected, [this](Ref* sender) {
         auto node = dynamic_cast<Node*>(sender);
         if (node != nullptr) {
-          current_state_ = kSignUpState;
+          state_ = kSignUpState;
         }
       });
   sign_up_item->setTag(0);
@@ -718,7 +681,7 @@ void MainMenuScene::InitializeAuthenticationLayer() {
       login_normal_item, login_selected_item, [this](Ref* sender) {
         auto node = dynamic_cast<Node*>(sender);
         if (node != nullptr) {
-          current_state_ = kLoginState;
+          state_ = kLoginState;
         }
       });
   login_item->setTag(1);
@@ -735,7 +698,7 @@ void MainMenuScene::InitializeAuthenticationLayer() {
         auto node = dynamic_cast<Node*>(sender);
         if (node != nullptr) {
           user_result_ = auth_->SignInAnonymously();
-          current_state_ = kWaitingAnonymousState;
+          state_ = kSkipLoginState;
         }
       });
   skip_login_item->setTag(2);
@@ -807,11 +770,11 @@ void MainMenuScene::InitializeUserRecord() {
 
 // Overriding the onEnter method to update the user_record on reenter.
 void MainMenuScene::onEnter() {
-  // if the scene enter is from the game, updateUserRecords and change
-  // current_state_.
-  if (current_state_ == kWaitingGameOutcome) {
+  // If the scene is entering from the game, UpdateUserRecords() and change
+  // state_ back to kGameMenuState.
+  if (state_ == kRunGameState) {
     this->UpdateUserRecord();
-    current_state_ = kGameMenuState;
+    state_ = kGameMenuState;
   }
   Layer::onEnter();
 }
@@ -830,127 +793,135 @@ void MainMenuScene::ClearAuthFields() {
   sign_up_error_label_->setString("");
 }
 
-// Updates the previous_state_ when current_state_ != previous_state_:
+// Updates every frame:
 //
-// switch (current_state_)
+// switch (state_)
+// (0) kInitializingState: swaps to (1).
 // (1) kAuthMenuState: makes the auth_background_ visable.
-// (2) kGameMenuState: makes the auth_background_ invisable.
-// (3) kWaitingAnonymousState: waits for anonymous sign in then swaps to (1).
-// (4) kWaitingSignUpState: waits for sign up future completion,
+// (2) kGameMenuState: makes the game_menu_background_ invisable.
+// (3) kSkipLoginState: waits for anonymous sign in then swaps to (2).
+// (4) kSignUpState: waits for sign up future completion,
 //     updates user variables, and swaps to (2).
-// (5) kWaitingLoginState: waits for login future completion,
+// (5) kLoginState: waits for login future completion,
 //     updates user variables, and swaps to (2).
-// (6) kWaitingGameOutcome: waits for director to pop the TicTacToeScene.
+// (6) kRunGameState: waits for director to pop the TicTacToeScene.
 void MainMenuScene::update(float /*delta*/) {
-  if (current_state_ != previous_state_) {
-    if (current_state_ == kWaitingAnonymousState) {
-      if (user_result_.status() == firebase::kFutureStatusComplete) {
-        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
-          user_ = *user_result_.result();
-          user_uid_ = GenerateUid(10);
-
-          this->InitializeUserRecord();
-
-          current_state_ = kGameMenuState;
-        }
-      }
-    } else if (current_state_ == kWaitingSignUpState) {
-      if (user_result_.status() == firebase::kFutureStatusComplete) {
-        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
-          user_ = *user_result_.result();
-          user_uid_ = user_->uid();
-
-          this->ClearAuthFields();
-          this->InitializeUserRecord();
-
-          current_state_ = kGameMenuState;
-
-        } else {
-          // Change invalid_login_label_ to display the user_create failed.
-          sign_up_error_label_->setString("invalid credentials");
-          current_state_ = kSignUpState;
-        }
-      }
-    } else if (current_state_ == kWaitingLoginState) {
-      if (user_result_.status() == firebase::kFutureStatusComplete) {
-        if (user_result_.error() == firebase::auth::kAuthErrorNone) {
-          user_ = *user_result_.result();
-          user_uid_ = user_->uid();
-          this->ClearAuthFields();
-          this->UpdateUserRecord();
-
-          current_state_ = kGameMenuState;
-        } else {
-          // Change invalid_login_label_ to display the auth_result errored.
-          login_error_label_->setString("invalid credentials");
-          current_state_ = kLoginState;
-        }
-      }
-    } else if (current_state_ == kAuthMenuState) {
-      // Sets the authentication layer visable and hides the login &
-      // sign up layers.
-      auth_background_->setVisible(true);
-      login_background_->setVisible(false);
-      sign_up_background_->setVisible(false);
-      // Pauses all event touch listeners & then resumes the ones attached to
-      // auth_background_.
-      const auto event_dispatcher =
-          Director::getInstance()->getEventDispatcher();
-      event_dispatcher->pauseEventListenersForTarget(this,
-                                                     /*recursive=*/true);
-      event_dispatcher->resumeEventListenersForTarget(auth_background_,
-                                                      /*recursive=*/true);
-      user_ = nullptr;
-      previous_state_ = current_state_;
-    } else if (current_state_ == kLoginState) {
-      // Sets the login layer visable and hides the authentication &
-      // sign up layers.
-      auth_background_->setVisible(false);
-      sign_up_background_->setVisible(false);
-      login_background_->setVisible(true);
-      // Pauses all event touch listeners & then resumes the ones attached to
-      // login_background_.
-      const auto event_dispatcher =
-          Director::getInstance()->getEventDispatcher();
-      event_dispatcher->pauseEventListenersForTarget(this,
-                                                     /*recursive=*/true);
-      event_dispatcher->resumeEventListenersForTarget(login_background_,
-                                                      /*recursive=*/true);
-      user_ = nullptr;
-      previous_state_ = current_state_;
-    } else if (current_state_ == kSignUpState) {
-      // Sets the sign up layer visable and hides the authentication &
-      // login layers.
-      auth_background_->setVisible(false);
-      login_background_->setVisible(false);
-      sign_up_background_->setVisible(true);
-
-      // Pauses all event touch listeners & then resumes the ones attached to
-      // sign_up_background_.
-      const auto event_dispatcher =
-          Director::getInstance()->getEventDispatcher();
-      event_dispatcher->pauseEventListenersForTarget(this,
-                                                     /*recursive=*/true);
-      event_dispatcher->resumeEventListenersForTarget(sign_up_background_,
-                                                      /*recursive=*/true);
-      user_ = nullptr;
-      previous_state_ = current_state_;
-    } else if (current_state_ == kGameMenuState) {
-      // hides the authentication,login, and sign up layers.
-      auth_background_->setVisible(false);
-      login_background_->setVisible(false);
-      sign_up_background_->setVisible(false);
-      const auto event_dispatcher =
-          Director::getInstance()->getEventDispatcher();
-      // Resumes all event touch listeners & then pauses the ones
-      // attached to auth_background_.
-      event_dispatcher->resumeEventListenersForTarget(this,
-                                                      /*recursive=*/true);
-      event_dispatcher->pauseEventListenersForTarget(auth_background_,
-                                                     /*recursive=*/true);
-      previous_state_ = current_state_;
-    }
+  switch (state_) {
+    case kInitializingState:
+      state_ = UpdateInitialize();
+      break;
+    case kAuthMenuState:
+      state_ = UpdateAuthentication();
+      break;
+    case kGameMenuState:
+      state_ = UpdateGameMenu();
+      break;
+    case kSkipLoginState:
+      state_ = UpdateSkipLogin();
+      break;
+    case kSignUpState:
+      state_ = UpdateSignUp();
+      break;
+    case kLoginState:
+      state_ = UpdateLogin();
+      break;
+    case kRunGameState:
+      state_ = UpdateRunGame();
+      break;
+    default:
+      assert(0);
   }
+}
+// Returns kAuthMenuState. This will be the default update method and
+// immediately swap to auth state. TODO(grantpostma): have this display a
+// loading screen before swapping.
+MainMenuScene::kSceneState MainMenuScene::UpdateInitialize() {
+  return kAuthMenuState;
+}
+
+// Updates the layer and returns the kAuthMenuState.
+MainMenuScene::kSceneState MainMenuScene::UpdateAuthentication() {
+  this->UpdateLayer(state_);
+  return kAuthMenuState;
+}
+
+// Updates the layer and stays in this state until user_result_ completes.
+// Updates the user variables if the user_result_ is valid. Updates the error
+// message and returns back to kLoginState if the future user_result_ errored.
+MainMenuScene::kSceneState MainMenuScene::UpdateLogin() {
+  this->UpdateLayer(state_);
+  if (user_result_.status() == firebase::kFutureStatusComplete) {
+    if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      // Updates the user to refect the uid and record (wins,losses and ties)
+      // stored for the user in the database.
+      user_ = *user_result_.result();
+      user_uid_ = user_->uid();
+      this->ClearAuthFields();
+      this->UpdateUserRecord();
+
+      return kGameMenuState;
+    } else {
+      // Changes login_error_label_ to display the user_result_ future errored.
+      login_error_label_->setString("invalid credentials");
+      return kLoginState;
+    }
+  } else {
+    return kLoginState;
+  }
+}
+
+// Updates the layer and stays in this state until user_result_ completes.
+// Initializes the user if the user_result_ is valid. Updates the error message
+// and returns back to kSignUpState if the future user_result_ errored.
+MainMenuScene::kSceneState MainMenuScene::UpdateSignUp() {
+  this->UpdateLayer(state_);
+  if (user_result_.status() == firebase::kFutureStatusComplete) {
+    if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      // Initializes user variables and stores them in the database.
+      user_ = *user_result_.result();
+      user_uid_ = GenerateUid(10);
+      this->InitializeUserRecord();
+
+      return kGameMenuState;
+    } else {
+      // Changes sign_up_error_label_ to display the user_result_ future
+      // errored.
+      sign_up_error_label_->setString("sign up failed");
+      return kSignUpState;
+    }
+  } else {
+    return kSignUpState;
+  }
+}
+// Updates the layer and stays in this state until user_result_ completes.
+// Initializes the user if the user_result_ is valid. Otherwise, return back to
+// kAuthMenuState.
+MainMenuScene::kSceneState MainMenuScene::UpdateSkipLogin() {
+  if (user_result_.status() == firebase::kFutureStatusComplete) {
+    if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      // Initializes user variables and stores them in the database.
+      user_ = *user_result_.result();
+      user_uid_ = GenerateUid(10);
+      this->InitializeUserRecord();
+
+      return kGameMenuState;
+    } else {
+      CCLOG("Error skipping login.");
+      return kAuthMenuState;
+    }
+
+  } else {
+    return kSkipLoginState;
+  }
+}
+// Updates the layer and returns kGameMenuState.
+MainMenuScene::kSceneState MainMenuScene::UpdateGameMenu() {
+  this->UpdateLayer(state_);
+  return kGameMenuState;
+}
+// Continues to return that you are in the kRunGameState.
+MainMenuScene::kSceneState MainMenuScene::UpdateRunGame() {
+  return kRunGameState;
 }
 
 // Returns a repeating action that toggles the cursor of the text field passed
@@ -976,4 +947,10 @@ void MainMenuScene::CreateBlinkingCursorAction(
 
   // Creates a forever repeating action based on the blink_cursor_action.
   text_field->runAction(RepeatForever::create(blink_cursor_action));
+}
+// Updates the auth_,login_ and sign_up_ layer based on state.
+void MainMenuScene::UpdateLayer(MainMenuScene::kSceneState state) {
+  auth_background_->setVisible(state == kAuthMenuState);
+  login_background_->setVisible(state == kLoginState);
+  sign_up_background_->setVisible(state == kSignUpState);
 }
