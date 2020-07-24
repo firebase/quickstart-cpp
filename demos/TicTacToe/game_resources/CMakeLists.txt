@@ -25,7 +25,7 @@
 
 cmake_minimum_required(VERSION 3.6)
 
-set(APP_NAME tictactoe_demo)
+set(APP_NAME tic_tac_toe_demo)
 
 project(${APP_NAME})
 
@@ -81,6 +81,8 @@ add_subdirectory(${FIREBASE_CPP_SDK_DIR} bin/ EXCLUDE_FROM_ALL)
 # # Note that firebase_app needs to be last in the list.
 set(firebase_libs firebase_database firebase_auth firebase_app)
 
+
+
 if(XCODE)
   if(NOT DEFINED CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET)
     SET (CMAKE_XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET 8.0)
@@ -96,9 +98,25 @@ endif()
 
 # record sources, headers, resources...
 set(GAME_HEADER)
-
+set(GAME_SOURCE)
 set(GAME_RES_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/Resources")
-    
+
+ list(APPEND GAME_SOURCE
+     Classes/app_delegate.cc
+     Classes/tic_tac_toe_layer.cc
+     Classes/tic_tac_toe_scene.cc
+     Classes/main_menu_scene.cc
+     Classes/util.cc
+     )
+
+list(APPEND GAME_HEADER
+     Classes/app_delegate.h
+     Classes/tic_tac_toe_layer.h
+     Classes/tic_tac_toe_scene.h
+     Classes/main_menu_scene.h
+     Classes/util.h
+     )   
+
 if(APPLE OR WINDOWS)
   cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})
 endif()
@@ -109,7 +127,7 @@ list(APPEND GAME_HEADER Classes/app_delegate.h )
 
 if(ANDROID)
   # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml
-  set(APP_NAME MyGame)
+  set(APP_NAME DemoApp)
   list(APPEND GAME_SOURCE proj.android/app/jni/hellocpp/main.cpp)
 elseif(LINUX)
   list(APPEND GAME_SOURCE proj.linux/main.cpp)

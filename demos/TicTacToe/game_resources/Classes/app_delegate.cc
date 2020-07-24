@@ -14,8 +14,8 @@
 
 #include "app_delegate.h"
 
-#include "main_menu_scene.h"
 #include "cocos2d.h"
+#include "main_menu_scene.h"
 
 using cocos2d::Director;
 using cocos2d::GLViewImpl;
