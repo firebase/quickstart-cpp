@@ -22,19 +22,12 @@
 # SOFTWARE.
 
 
-import fileinput
-import glob
 import logging
 import os
 import subprocess
 import sys
 
-
-# The setup_demo.py script directory.
-ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-
-def main():
-  """The main function."""
+def logger_setup():
   # The root logger of the hierarchy.
   logger = logging.getLogger()
   logger.setLevel(logging.DEBUG)
@@ -47,29 +40,50 @@ def main():
   stream_handler.setFormatter(formatter)
   logger.addHandler(stream_handler)
 
-  # Game directories. 
+  return logger
+
+
+def log_run(dir, logger, cmd):
+  # Logs the command.
+  logger.info(cmd)
+  # Runs the command.
+  subprocess.call(cmd, cwd=dir, shell=True)
+
+def main():
+  """The main function."""
+  # The setup_demo.py script directory.
+  ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
+  
+  # Sets up the logging format and handler.
+  logger = logger_setup()
+ 
+  # Directory paths.
   game_name = "tic_tac_toe_demo"
   game_resources_dir = os.path.join(ROOT_DIRECTORY, "game_resources")
   game_files_dir = os.path.join(ROOT_DIRECTORY, game_name);
-  debug_exe_path = os.path.join(game_files_dir,"build","bin",game_name, "Debug")
+  build_dir = os.path.join(game_files_dir,"build")
+  executable_dir = os.path.join(build_dir,"bin",game_name,"Debug")
 
-  # Creating the cocos2d-x project. 
-  os.system("cocos new {0} -p com.DemoApp.{0} -l cpp -d .".format(game_name))
+ # Creating the cocos2d-x project. 
+  log_run(ROOT_DIRECTORY, logger,"cocos new {0} -p com.DemoApp.{0} -l cpp -d .".format(game_name))
+
   # Removing the default cocos2d-x project files.
-  os.system("rm -r {0}/Classes {0}/Resources {0}/CMakeLists.txt".format(game_files_dir))
+  log_run(ROOT_DIRECTORY, logger,"rm -r {0}/Classes {0}/Resources {0}/CMakeLists.txt".format(game_files_dir) )
+
   # Copies the google-services.json file into the correct directory to run the executable. 
-  os.system("cp google_services/google-services.json {}".format(os.path.join(game_resources_dir,"build","bin", game_name, "Debug")))
+  log_run(ROOT_DIRECTORY, logger,"cp google_services/google-services.json {}".format(os.path.join(game_resources_dir,"build","bin", game_name, "Debug")))
+ 
   # Copies the tic-tac-toe game files into the cocos2d-x project files.
-  os.system("cp {} {} -TRv".format(game_resources_dir,game_files_dir))
+  log_run(ROOT_DIRECTORY, logger, "cp {} {} -TRv".format(game_resources_dir,game_files_dir))
+ 
   # Changes directory into the build directory.
-  os.chdir(os.path.join(game_files_dir,"build"))
+  log_run(build_dir, logger, 'cmake .. -G "Visual Studio 16 2019" -A Win32')
+ 
   # Runs cmake with the Visual Studio 2019 as the generator and windows as the target.
-  os.system('cmake .. -G "Visual Studio 16 2019" -A Win32')
-  os.system("cmake --build .")
-  # Changes direcotyr to the executable.
-  os.chdir(debug_exe_path)
+  log_run(build_dir, logger,"cmake --build .")
+ 
   # Runs the tic-tac-toe executable.
-  subprocess.call('{}.exe'.format(game_name))
+  log_run(executable_dir, logger,'{}.exe'.format(game_name))
 
 # Check to see if this script is being called directly.
 if __name__ == "__main__":
