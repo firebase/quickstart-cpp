@@ -1,4 +1,20 @@
 #/****************************************************************************
+  # Copyright 2020 Google Inc. All rights reserved.
+  #
+  # Licensed under the Apache License, Version 2.0 (the "License");
+  # you may not use this file except in compliance with the License.
+  # You may obtain a copy of the License at
+  #
+  # http://www.apache.org/licenses/LICENSE-2.0
+  #
+  # Unless required by applicable law or agreed to in writing, software
+  # distributed under the License is distributed on an "AS IS" BASIS,
+  # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  # See the License for the specific language governing permissions and
+  # limitations under the License.
+#/****************************************************************************
+
+#/****************************************************************************
   # Copyright (c) 2013-2014 cocos2d-x.org
   # Copyright (c) 2015-2017 Chukong Technologies Inc.
   #
@@ -25,7 +41,7 @@
 
 cmake_minimum_required(VERSION 3.6)
 
-set(APP_NAME tictactoe_demo)
+set(APP_NAME tic_tac_toe_demo)
 
 project(${APP_NAME})
 
@@ -96,9 +112,25 @@ endif()
 
 # record sources, headers, resources...
 set(GAME_HEADER)
-
+set(GAME_SOURCE)
 set(GAME_RES_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/Resources")
-    
+
+ list(APPEND GAME_SOURCE
+     Classes/app_delegate.cc
+     Classes/tic_tac_toe_layer.cc
+     Classes/tic_tac_toe_scene.cc
+     Classes/main_menu_scene.cc
+     Classes/util.cc
+     )
+
+list(APPEND GAME_HEADER
+     Classes/app_delegate.h
+     Classes/tic_tac_toe_layer.h
+     Classes/tic_tac_toe_scene.h
+     Classes/main_menu_scene.h
+     Classes/util.h
+     )   
+
 if(APPLE OR WINDOWS)
   cocos_mark_multi_resources(common_res_files RES_TO "Resources" FOLDERS ${GAME_RES_FOLDER})
 endif()
@@ -109,7 +141,7 @@ list(APPEND GAME_HEADER Classes/app_delegate.h )
 
 if(ANDROID)
   # change APP_NAME to the share library name for Android, it's value depend on AndroidManifest.xml
-  set(APP_NAME MyGame)
+  set(APP_NAME DemoApp)
   list(APPEND GAME_SOURCE proj.android/app/jni/hellocpp/main.cpp)
 elseif(LINUX)
   list(APPEND GAME_SOURCE proj.linux/main.cpp)
