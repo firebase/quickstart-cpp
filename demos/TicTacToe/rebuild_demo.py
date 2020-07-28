@@ -49,15 +49,15 @@ def main():
   # Sets up the logging format and handler.
   logger = logger_setup()
  
-  # Directory paths.
+  # Directory  and file paths.
   game_name = "tic_tac_toe_demo"
-  build_dir = os.path.join(ROOT_DIRECTORY,game_name,"build")
+  build_dir = os.path.join(ROOT_DIRECTORY, game_name, "build")
 
   # Checks whether the build directory was created.
   if os.path.isdir(build_dir):
     logger.info("Building the demo...")
     # Builds the tic_tac_toe_demo executable.
-    log_run(build_dir, logger,"cmake --build .")
+    log_run(build_dir, logger, "cmake --build .")
   else:
     logger.error("Build directory does not exist.")
     exit()

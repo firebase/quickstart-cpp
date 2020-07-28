@@ -59,15 +59,15 @@ def main():
     exit()
 
   # Checks whether the google-services.json exists in the debug directory.
-  if not os.path.isfile(os.path.join(executable_dir,"google-services.json")):
+  if not os.path.isfile(os.path.join(executable_dir, "google-services.json")):
     logger.error("google-services.json file is missing in Debug directory.")
     exit()
 
   # Checks whether the executable exists in the debug directory.
-  if os.path.isfile(os.path.join(executable_dir,"{}.exe".format(game_name))):
+  if os.path.isfile(os.path.join(executable_dir, "{}.exe".format(game_name))):
     logger.info("Lanching the demo...")
     # Runs the tic-tac-toe executable.
-    log_run(executable_dir, logger,'{}.exe'.format(game_name))
+    log_run(executable_dir, logger, '{}.exe'.format(game_name))
   else:
     logger.error("Game executable does not exist.")
     exit()
