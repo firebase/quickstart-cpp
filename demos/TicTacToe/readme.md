@@ -43,9 +43,9 @@ Getting Started
 
 ### How To Play
 
-- After you have successfully run the setup_demo.py script, you can then launch the game by running the run_game.py script. In order to test the multiplayer functionality, open up another terminal and launch a second instant of the game by running the run_game.py script again.  
+- After you have successfully run the setup_demo.py script, you can then launch the game by running the run_demo.py script. In order to test the multiplayer functionality, open up another terminal and launch a second instant of the game by running the run_demo.py script again.  
   ```
-  python run_game.py 
+  python run_demo.py 
   ```
 
 - Using the sign-up button or login button will link your record (Wins-Losses-Ties) to your account. The skip login button will not save your record between sessions.
