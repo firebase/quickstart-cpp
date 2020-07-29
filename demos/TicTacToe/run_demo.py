@@ -20,59 +20,68 @@ import os
 import subprocess
 import sys
 
+
 def logger_setup():
-  # The root logger of the hierarchy.
-  logger = logging.getLogger()
-  logger.setLevel(logging.DEBUG)
+    # The root logger of the hierarchy.
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
 
-  # Add a StreamHandler to log to stdout.
-  stream_handler = logging.StreamHandler(sys.stdout)
-  stream_handler.setLevel(logging.DEBUG)
-  formatter = logging.Formatter(
-      "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-  stream_handler.setFormatter(formatter)
-  logger.addHandler(stream_handler)
+    # Add a StreamHandler to log to stdout.
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
 
-  return logger
+    return logger
+
 
 def log_run(dir, logger, cmd):
-  # Logs the command.
-  logger.info(cmd)
-  # Runs the command.
-  subprocess.call(cmd, cwd=dir, shell=True)
+    # Logs the command.
+    logger.info(cmd)
+    # Runs the command.
+    subprocess.call(cmd, cwd=dir, shell=True)
+
 
 def main():
-  """The main function."""
-  # The run_demo.py script directory.
-  ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-  
-  # Sets up the logging format and handler.
-  logger = logger_setup()
- 
-  # Directory paths.
-  game_name = "tic_tac_toe_demo"
-  executable_dir = os.path.join(ROOT_DIRECTORY, game_name, "build", "bin", game_name, "Debug")
+    """The main function."""
+    # The run_demo.py script directory.
+    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
-  # Checks whether the demo was set up properly.
-  if not os.path.isdir(executable_dir):
-    logger.error("demo setup is incomplete.")
-    exit()
+    # Sets up the logging format and handler.
+    logger = logger_setup()
 
-  # Checks whether the google-services.json exists in the debug directory.
-  if not os.path.isfile(os.path.join(executable_dir, "google-services.json")):
-    logger.error("google-services.json file is missing in Debug directory.")
-    exit()
+    # Directory paths.
+    game_name = "tic_tac_toe_demo"
+    executable_dir = os.path.join(ROOT_DIRECTORY, game_name, "build", "bin",
+                                  game_name, "Debug")
 
-  # Checks whether the executable exists in the debug directory.
-  if os.path.isfile(os.path.join(executable_dir, "{}.exe".format(game_name))):
-    logger.info("Lanching the demo...")
-    # Runs the tic-tac-toe executable.
-    log_run(executable_dir, logger, '{}.exe'.format(game_name))
-  else:
-    logger.error("Game executable does not exist.")
-    exit()
+    # Checks whether the demo was set up properly.
+    if not os.path.isdir(executable_dir):
+        logger.error(
+            "Demo setup incomplete. Did you run the setup script first?")
+        exit()
+
+    # Checks whether the google-services.json exists in the debug directory.
+    if not os.path.isfile(os.path.join(executable_dir,
+                                       "google-services.json")):
+        logger.error(
+            "google-services.json file is missing in {} directory.".format(
+                executable_dir))
+        exit()
+
+    # Checks whether the executable exists in the debug directory.
+    if os.path.isfile(os.path.join(executable_dir,
+                                   "{}.exe".format(game_name))):
+        logger.info("Lanching the demo...")
+        # Runs the tic-tac-toe executable.
+        log_run(executable_dir, logger, '{}.exe'.format(game_name))
+    else:
+        logger.error("Game executable does not exist.")
+        exit()
 
 
 # Check to see if this script is being called directly.
 if __name__ == "__main__":
-  exit(main())
+    exit(main())

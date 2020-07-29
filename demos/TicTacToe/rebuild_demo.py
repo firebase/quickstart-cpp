@@ -20,49 +20,53 @@ import os
 import subprocess
 import sys
 
+
 def logger_setup():
-  # The root logger of the hierarchy.
-  logger = logging.getLogger()
-  logger.setLevel(logging.DEBUG)
+    # The root logger of the hierarchy.
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
 
-  # Add a StreamHandler to log to stdout.
-  stream_handler = logging.StreamHandler(sys.stdout)
-  stream_handler.setLevel(logging.DEBUG)
-  formatter = logging.Formatter(
-      "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-  stream_handler.setFormatter(formatter)
-  logger.addHandler(stream_handler)
+    # Add a StreamHandler to log to stdout.
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
 
-  return logger
+    return logger
+
 
 def log_run(dir, logger, cmd):
-  # Logs the command.
-  logger.info(cmd)
-  # Runs the command.
-  subprocess.call(cmd, cwd=dir, shell=True)
+    # Logs the command.
+    logger.info(cmd)
+    # Runs the command.
+    subprocess.call(cmd, cwd=dir, shell=True)
+
 
 def main():
-  """The main function."""
-  # The run_demo.py script directory.
-  ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-  
-  # Sets up the logging format and handler.
-  logger = logger_setup()
- 
-  # Directory  and file paths.
-  game_name = "tic_tac_toe_demo"
-  build_dir = os.path.join(ROOT_DIRECTORY, game_name, "build")
+    """The main function."""
+    # The run_demo.py script directory.
+    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
-  # Checks whether the build directory was created.
-  if os.path.isdir(build_dir):
-    logger.info("Building the demo...")
-    # Builds the tic_tac_toe_demo executable.
-    log_run(build_dir, logger, "cmake --build .")
-  else:
-    logger.error("Build directory does not exist.")
-    exit()
+    # Sets up the logging format and handler.
+    logger = logger_setup()
+
+    # Directory  and file paths.
+    game_name = "tic_tac_toe_demo"
+    build_dir = os.path.join(ROOT_DIRECTORY, game_name, "build")
+
+    # Checks whether the build directory was created.
+    if os.path.isdir(build_dir):
+        logger.info("Building the demo...")
+        # Builds the tic_tac_toe_demo executable.
+        log_run(build_dir, logger, "cmake --build .")
+    else:
+        logger.error(
+            "Build directory expected at {} does not exist.".format(build_dir))
+        exit()
 
 
 # Check to see if this script is being called directly.
 if __name__ == "__main__":
-  exit(main())
+    exit(main())
