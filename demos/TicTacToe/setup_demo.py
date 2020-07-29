@@ -21,74 +21,96 @@ import os
 import subprocess
 import sys
 
+
 def logger_setup():
-  # The root logger of the hierarchy.
-  logger = logging.getLogger()
-  logger.setLevel(logging.DEBUG)
+    # The root logger of the hierarchy.
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
 
-  # Add a StreamHandler to log to stdout.
-  stream_handler = logging.StreamHandler(sys.stdout)
-  stream_handler.setLevel(logging.DEBUG)
-  formatter = logging.Formatter(
-      "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-  stream_handler.setFormatter(formatter)
-  logger.addHandler(stream_handler)
+    # Add a StreamHandler to log to stdout.
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
 
-  return logger
+    return logger
+
 
 def log_run(dir, logger, cmd):
-  # Logs the command.
-  logger.info(cmd)
-  # Runs the command.
-  subprocess.call(cmd, cwd=dir, shell=True)
+    # Logs the command.
+    logger.info(cmd)
+    # Runs the command.
+    subprocess.call(cmd, cwd=dir, shell=True)
+
 
 def modify_proj_file(dir):
-  f = fileinput.FileInput(files = [os.path.join(dir,"main.cpp")], inplace = True)
-  for line in f:
-    print line.replace("AppDelegate.h", "app_delegate.h"),
+    f = fileinput.FileInput(files=[os.path.join(dir, "main.cpp")],
+                            inplace=True)
+    for line in f:
+        print line.replace("AppDelegate.h", "app_delegate.h"),
+
 
 def main():
-  """The main function."""
-  # The setup_demo.py script directory.
-  ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-  
-  # Sets up the logging format and handler.
-  logger = logger_setup()
- 
-  # Directory paths.
-  game_name = "tic_tac_toe_demo"
-  game_resources_dir = os.path.join(ROOT_DIRECTORY, "game_resources")
-  game_files_dir = os.path.join(ROOT_DIRECTORY, game_name);
-  windows_proj_dir = os.path.join(game_files_dir,"proj.win32")
-  mac_proj_dir = os.path.join(game_files_dir,"proj.ios_mac","mac")
-  linux_proj_dir = os.path.join(game_files_dir,"proj.linux")
-  build_dir = os.path.join(game_files_dir,"build")
-  executable_dir = os.path.join(build_dir,"bin",game_name,"Debug")
+    """The main function."""
+    # The setup_demo.py script directory.
+    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
-  # Creating the cocos2d-x project. 
-  log_run(ROOT_DIRECTORY, logger,"cocos new {0} -p com.DemoApp.{0} -l cpp -d .".format(game_name))
+    # Sets up the logging format and handler.
+    logger = logger_setup()
 
-  # Removing the default cocos2d-x project files.
-  log_run(ROOT_DIRECTORY, logger,"rm -r {0}/Classes {0}/Resources {0}/CMakeLists.txt".format(game_files_dir) )
+    # Directory paths.
+    game_name = "tic_tac_toe_demo"
+    game_resources_dir = os.path.join(ROOT_DIRECTORY, "game_resources")
+    game_files_dir = os.path.join(ROOT_DIRECTORY, game_name)
+    windows_proj_dir = os.path.join(game_files_dir, "proj.win32")
+    mac_proj_dir = os.path.join(game_files_dir, "proj.ios_mac", "mac")
+    linux_proj_dir = os.path.join(game_files_dir, "proj.linux")
+    build_dir = os.path.join(game_files_dir, "build")
+    executable_dir = os.path.join(build_dir, "bin", game_name, "Debug")
 
-  # Copies the google-services.json file into the correct directory to run the executable. 
-  log_run(ROOT_DIRECTORY, logger,"cp google_services/google-services.json {}".format(os.path.join(game_resources_dir,"build","bin", game_name, "Debug")))
- 
-  # Copies the tic-tac-toe game files into the cocos2d-x project files.
-  log_run(ROOT_DIRECTORY, logger, "cp {} {} -TRv".format(game_resources_dir,game_files_dir))
+    # Checks whether the google-services.json exists in the debug directory.
+    if not os.path.isfile(
+            os.path.join(ROOT_DIRECTORY, "google_services",
+                         "google-services.json")):
+        # Runs the tic-tac-toe executable.
+        logger.error("google_services/google-services.json is missing.")
+        exit()
 
-  # Changes the windows project main.cpp to include the new app_delegate header.
-  modify_proj_file(windows_proj_dir)
+    # Creating the cocos2d-x project.
+    log_run(ROOT_DIRECTORY, logger,
+            "cocos new {0} -p com.DemoApp.{0} -l cpp -d .".format(game_name))
 
-  # Changes directory into the build directory.
-  log_run(build_dir, logger, 'cmake .. -G "Visual Studio 16 2019" -A Win32')
- 
-  # Runs cmake with the Visual Studio 2019 as the generator and windows as the target.
-  log_run(build_dir, logger,"cmake --build .")
- 
-  # Runs the tic-tac-toe executable.
-  log_run(executable_dir, logger,'{}.exe'.format(game_name))
+    # Removing the default cocos2d-x project files.
+    log_run(
+        ROOT_DIRECTORY, logger,
+        "rm -r {0}/Classes {0}/Resources {0}/CMakeLists.txt".format(
+            game_files_dir))
+
+    # Copies the google-services.json file into the correct directory to run the executable.
+    log_run(
+        ROOT_DIRECTORY, logger,
+        "cp google_services/google-services.json {}".format(
+            os.path.join(game_resources_dir, "build", "bin", game_name,
+                         "Debug")))
+
+    # Copies the tic-tac-toe game files into the cocos2d-x project files.
+    log_run(ROOT_DIRECTORY, logger,
+            "cp {} {} -TRv".format(game_resources_dir, game_files_dir))
+
+    # Changes the windows project main.cpp to include the new app_delegate header.
+    modify_proj_file(windows_proj_dir)
+
+    # Runs cmake with the Visual Studio 2019 as the generator and windows as the target.
+    log_run(build_dir, logger, 'cmake .. -G "Visual Studio 16 2019" -A Win32')
+
+    # Builds the tic_tac_toe_demo executable.
+    log_run(build_dir, logger, "cmake --build .")
+
+    logger.info("Demo setup succeeded.")
+
 
 # Check to see if this script is being called directly.
 if __name__ == "__main__":
-  exit(main())
+    exit(main())
