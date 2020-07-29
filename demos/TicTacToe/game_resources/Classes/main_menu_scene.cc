@@ -171,7 +171,8 @@ void MainMenuScene::InitializeFirebase() {
 // 5. Adds the logout button.
 void MainMenuScene::InitializeGameMenuLayer() {
   // Label to display the users record.
-  user_record_label_ = Label::createWithSystemFont("", "Arial", 24);
+  user_record_label_ =
+      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
   user_record_label_->setAlignment(TextHAlignment::RIGHT);
   user_record_label_->setTextColor(Color4B::WHITE);
   user_record_label_->setPosition(Vec2(500, 600));
@@ -180,7 +181,8 @@ void MainMenuScene::InitializeGameMenuLayer() {
   // Creates the join_text_field.
   auto join_text_field_position = Size(480, 95);
   auto join_text_field_size = Size(180, 80);
-  auto join_text_field = TextField::create("code", "Arial", 48);
+  auto join_text_field =
+      TextField::create("code", "fonts/GoogleSans-Regular.ttf", 48);
   join_text_field->setPosition(join_text_field_position);
   join_text_field->setTouchSize(join_text_field_size);
   join_text_field->setTouchAreaEnabled(true);
@@ -309,13 +311,15 @@ void MainMenuScene::InitializeSignUpLayer() {
   this->addChild(sign_up_background_, /*layer_index=*/10);
 
   // Creates the layer title label: sign up.
-  auto layer_title = Label::createWithSystemFont("sign up", "Arial", 48);
+  auto layer_title =
+      Label::createWithTTF("sign up", "fonts/GoogleSans-Regular.ttf", 48);
   layer_title->setAnchorPoint(Vec2(.5, .5));
   layer_title->setPosition(Vec2(300, 475));
   sign_up_background_->addChild(layer_title);
 
   // Label to output sign up errors.
-  sign_up_error_label_ = Label::createWithSystemFont("", "Arial", 24);
+  sign_up_error_label_ =
+      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
   sign_up_error_label_->setTextColor(Color4B::RED);
   sign_up_error_label_->setPosition(Vec2(300, 425));
   sign_up_background_->addChild(sign_up_error_label_);
@@ -324,7 +328,8 @@ void MainMenuScene::InitializeSignUpLayer() {
   const auto id_font_size = 28;
   const auto id_position = Size(300, 375);
   const auto id_size = Size(450, id_font_size * 1.75);
-  sign_up_id_ = TextField::create("email", "Arial", id_font_size);
+  sign_up_id_ =
+      TextField::create("email", "fonts/GoogleSans-Regular.ttf", id_font_size);
   sign_up_id_->setPosition(id_position);
   sign_up_id_->setTouchAreaEnabled(true);
   sign_up_id_->setTouchSize(id_size);
@@ -355,8 +360,8 @@ void MainMenuScene::InitializeSignUpLayer() {
   const auto password_font_size = 28;
   const auto password_position = Size(300, 300);
   const auto password_size = Size(450, password_font_size * 1.75);
-  sign_up_password_ =
-      TextField::create("password", "Arial", password_font_size);
+  sign_up_password_ = TextField::create(
+      "password", "fonts/GoogleSans-Regular.ttf", password_font_size);
   sign_up_password_->setPosition(password_position);
   sign_up_password_->setTouchAreaEnabled(true);
   sign_up_password_->setTouchSize(password_size);
@@ -392,8 +397,9 @@ void MainMenuScene::InitializeSignUpLayer() {
   const auto password_confirm_position = Size(300, 225);
   const auto password_confirm_size =
       Size(450, password_confirm_font_size * 1.75);
-  sign_up_password_confirm_ = TextField::create("confirm password", "Arial",
-                                                password_confirm_font_size);
+  sign_up_password_confirm_ =
+      TextField::create("confirm password", "fonts/GoogleSans-Regular.ttf",
+                        password_confirm_font_size);
   sign_up_password_confirm_->setPosition(password_confirm_position);
   sign_up_password_confirm_->setTouchAreaEnabled(true);
   sign_up_password_confirm_->setTouchSize(password_confirm_size);
@@ -499,13 +505,15 @@ void MainMenuScene::InitializeLoginLayer() {
   this->addChild(login_background_, /*layer_index=*/10);
 
   // Creates the layer title label: login.
-  auto layer_title = Label::createWithSystemFont("Login", "Arial", 48);
+  auto layer_title =
+      Label::createWithTTF("Login", "fonts/GoogleSans-Regular.ttf", 48);
   layer_title->setAnchorPoint(Vec2(.5, .5));
   layer_title->setPosition(Vec2(300, 475));
   login_background_->addChild(layer_title);
 
   // Label to output login errors.
-  login_error_label_ = Label::createWithSystemFont("", "Arial", 24);
+  login_error_label_ =
+      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
   login_error_label_->setTextColor(Color4B::RED);
   login_error_label_->setPosition(Vec2(300, 425));
   login_background_->addChild(login_error_label_);
@@ -514,7 +522,8 @@ void MainMenuScene::InitializeLoginLayer() {
   const auto id_font_size = 28;
   const auto id_position = Size(300, 375);
   const auto id_size = Size(450, id_font_size * 1.75);
-  login_id_ = TextField::create("email", "Arial", id_font_size);
+  login_id_ =
+      TextField::create("email", "fonts/GoogleSans-Regular.ttf", id_font_size);
   login_id_->setPosition(id_position);
   login_id_->setTouchAreaEnabled(true);
   login_id_->setTouchSize(id_size);
@@ -545,7 +554,8 @@ void MainMenuScene::InitializeLoginLayer() {
   const auto password_font_size = 28;
   const auto password_position = Size(300, 300);
   const auto password_size = Size(450, password_font_size * 1.75);
-  login_password_ = TextField::create("password", "Arial", password_font_size);
+  login_password_ = TextField::create(
+      "password", "fonts/GoogleSans-Regular.ttf", password_font_size);
   login_password_->setPosition(password_position);
   login_password_->setTouchAreaEnabled(true);
   login_password_->setTouchSize(password_size);
@@ -645,7 +655,8 @@ void MainMenuScene::InitializeAuthenticationLayer() {
   this->addChild(auth_background_, /*layer_index=*/10);
 
   // Creates the layer title label: authentication.
-  auto layer_title = Label::createWithSystemFont("authentication", "Arial", 48);
+  auto layer_title = Label::createWithTTF("authentication",
+                                          "fonts/GoogleSans-Regular.ttf", 48);
   layer_title->setPosition(Vec2(300, 550));
   auth_background_->addChild(layer_title);
 
