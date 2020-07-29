@@ -338,14 +338,16 @@ void TicTacToeLayer::InitializeBoard() {
   // TODO(grantpostma@): Modify these numbers to be based on the extern window
   // size & label size dimensions.
   cocos2d::Label* game_uid_label =
-      Label::createWithSystemFont(join_game_uid_, "Arial", 30);
+      Label::createWithTTF(join_game_uid_, "fonts/GoogleSans-Regular.ttf", 30);
   game_uid_label->setPosition(Vec2(40, 20));
   board_sprite_->addChild(game_uid_label, /*layer_index=*/1);
-  waiting_label_ = Label::createWithSystemFont("waiting", "Arial", 30);
+  waiting_label_ =
+      Label::createWithTTF("waiting", "fonts/GoogleSans-Regular.ttf", 30);
   waiting_label_->setPosition(Vec2(530, 20));
 
   board_sprite_->addChild(waiting_label_, /*layer_index=*/1);
-  game_over_label_ = Label::createWithSystemFont("", "Arial", 80);
+  game_over_label_ =
+      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 80);
   game_over_label_->setPosition(Vec2(300, 300));
   board_sprite_->addChild(game_over_label_, /*layer_index=*/1);
 
