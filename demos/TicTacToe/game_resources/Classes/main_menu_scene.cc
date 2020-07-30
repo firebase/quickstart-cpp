@@ -67,6 +67,7 @@ static const char* kJoinButtonImage = "join_game.png";
 static const char* kLoginButtonImage = "login.png";
 static const char* kLogoutButtonImage = "logout.png";
 static const char* kSignUpButtonImage = "sign_up.png";
+static const char* kLoadingBackgroundImage = "loading_background.png";
 
 // Regex that will validate if the email entered is a valid email pattern.
 const std::regex email_pattern("(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+");
@@ -88,6 +89,10 @@ bool MainMenuScene::init() {
 
   // Initializes the firebase features.
   this->InitializeFirebase();
+
+  // Initializes the loading layer by setting the background that expires on a
+  // delay.
+  this->InitializeLoadingLayer();
 
   // Initializes the authentication layer by creating the background and placing
   // all required cocos2d components.
@@ -637,6 +642,29 @@ void MainMenuScene::InitializeLoginLayer() {
       });
 }
 
+// Creates and places the loading background. Creates a action sequence to delay
+// then swap to the authentication state.
+void MainMenuScene::InitializeLoadingLayer() {
+  // Creates the delay action.
+  auto loading_delay = DelayTime::create(/*delay_durration*/ 2.0f);
+
+  // Creates a callback function to swap state to kAuthMenuState.
+  auto SwapToAuthState =
+      CallFunc::create([this]() { state_ = kAuthMenuState; });
+
+  // Runs the sequence that will delay followed by the swap state callback
+  // function.
+  this->runAction(Sequence::create(loading_delay, SwapToAuthState, NULL));
+
+  // Creates the loading background sprite.
+  const auto window_size = Director::getInstance()->getWinSize();
+  const auto background = Sprite::create(kLoadingBackgroundImage);
+  background->setContentSize(window_size);
+  background->setAnchorPoint(Vec2(0, 0));
+  loading_background_ = background;
+  this->addChild(loading_background_);
+}
+
 // 1. Creates the background node.
 // 2. Adds the layer title label: authentication.
 // 3. Adds the id and password text fields and their event listeners.
@@ -843,11 +871,11 @@ void MainMenuScene::update(float /*delta*/) {
       assert(0);
   }
 }
-// Returns kAuthMenuState. This will be the default update method and
-// immediately swap to auth state. TODO(grantpostma): have this display a
-// loading screen before swapping.
+// Returns kInitializingState. Waits for the delay action sequence to callback
+// SwaptoAuthState() to set state_ = kAuthMenuState.
 MainMenuScene::kSceneState MainMenuScene::UpdateInitialize() {
-  return kAuthMenuState;
+  this->UpdateLayer(state_);
+  return kInitializingState;
 }
 
 // Updates the layer and returns the kAuthMenuState.
@@ -964,4 +992,5 @@ void MainMenuScene::UpdateLayer(MainMenuScene::kSceneState state) {
   auth_background_->setVisible(state == kAuthMenuState);
   login_background_->setVisible(state == kLoginState);
   sign_up_background_->setVisible(state == kSignUpState);
+  loading_background_->setVisible(state == kInitializingState);
 }
