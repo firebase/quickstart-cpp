@@ -87,6 +87,10 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // screen.
   void InitializeUserRecord();
 
+  // Initializes the loading layer which includes a background loading image and
+  // state swap delay action.
+  void InitializeLoadingLayer();
+
   // Initializes the game menu layer which includes the background, buttons
   // and labels related to setting up the game menu.
   void InitializeGameMenuLayer();
@@ -128,6 +132,9 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
 
   // Node to be used as a background for the sign-up menu.
   cocos2d::DrawNode* sign_up_background_;
+
+  // Node to be used as a background for the loading layer.
+  cocos2d::Sprite* loading_background_;
 
   // Labels and textfields for the authentication menu.
   Label* login_error_label_;
