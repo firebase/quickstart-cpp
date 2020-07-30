@@ -27,6 +27,7 @@ using cocos2d::Color4F;
 using cocos2d::DrawNode;
 using cocos2d::Label;
 using cocos2d::Size;
+using cocos2d::Sprite;
 using cocos2d::TextFieldTTF;
 using cocos2d::Vec2;
 using firebase::Future;
@@ -58,6 +59,9 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Creates and runs an endless blinking cursor action for the textfield passed
   // in.
   void CreateBlinkingCursorAction(cocos2d::ui::TextField*);
+
+  // Creates the background sprite image.
+  Sprite* CreateBackground();
 
   // Updates the scene to show the active layer based on state.
   void UpdateLayer(MainMenuScene::kSceneState);
@@ -124,17 +128,12 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   bool init() override;
   CREATE_FUNC(MainMenuScene);
 
-  // Node to be used as a background for the authentication menu.
-  cocos2d::DrawNode* auth_background_;
-
-  // Node to be used as a background for the login menu.
-  cocos2d::DrawNode* login_background_;
-
-  // Node to be used as a background for the sign-up menu.
-  cocos2d::DrawNode* sign_up_background_;
-
-  // Node to be used as a background for the loading layer.
-  cocos2d::Sprite* loading_background_;
+  // Sprites to be used as a background each state.
+  Sprite* auth_background_;
+  Sprite* login_background_;
+  Sprite* sign_up_background_;
+  Sprite* game_menu_background_;
+  Sprite* loading_background_;
 
   // Labels and textfields for the authentication menu.
   Label* login_error_label_;
