@@ -62,11 +62,13 @@ using firebase::database::Database;
 using std::to_string;
 
 static const char* kCreateGameImage = "create_game.png";
+static const char* kBackgroundImage = "background_image.png";
 static const char* kTextFieldBorderImage = "text_field_border.png";
 static const char* kJoinButtonImage = "join_game.png";
 static const char* kLoginButtonImage = "login.png";
 static const char* kLogoutButtonImage = "logout.png";
 static const char* kSignUpButtonImage = "sign_up.png";
+static const char* kLoadingBackgroundImage = "loading_background.png";
 
 // Regex that will validate if the email entered is a valid email pattern.
 const std::regex email_pattern("(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+");
@@ -88,6 +90,10 @@ bool MainMenuScene::init() {
 
   // Initializes the firebase features.
   this->InitializeFirebase();
+
+  // Initializes the loading layer by setting the background that expires on a
+  // delay.
+  this->InitializeLoadingLayer();
 
   // Initializes the authentication layer by creating the background and placing
   // all required cocos2d components.
@@ -170,13 +176,17 @@ void MainMenuScene::InitializeFirebase() {
 // 4. Adds the enter code text field and their event listeners.
 // 5. Adds the logout button.
 void MainMenuScene::InitializeGameMenuLayer() {
+  // Creates the game menu background.
+  game_menu_background_ = this->CreateBackground();
+  this->addChild(game_menu_background_);
+
   // Label to display the users record.
   user_record_label_ =
       Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
   user_record_label_->setAlignment(TextHAlignment::RIGHT);
   user_record_label_->setTextColor(Color4B::WHITE);
   user_record_label_->setPosition(Vec2(500, 600));
-  this->addChild(user_record_label_);
+  game_menu_background_->addChild(user_record_label_);
 
   // Creates the join_text_field.
   auto join_text_field_position = Size(480, 95);
@@ -188,7 +198,7 @@ void MainMenuScene::InitializeGameMenuLayer() {
   join_text_field->setTouchAreaEnabled(true);
   join_text_field->setMaxLength(/*max_characters=*/4);
   join_text_field->setMaxLengthEnabled(true);
-  this->addChild(join_text_field);
+  game_menu_background_->addChild(join_text_field);
 
   // Adds the event listener to handle the actions for the text field.
   join_text_field->addEventListener([this](Ref* sender,
@@ -219,12 +229,12 @@ void MainMenuScene::InitializeGameMenuLayer() {
   const auto join_text_field_border =
       CreateRectangle(join_text_field_size, join_text_field_position,
                       Color4F(0, 0, 0, 0), Color4F::WHITE);
-  this->addChild(join_text_field_border);
+  game_menu_background_->addChild(join_text_field_border);
 
   // Creates the create_button.
   auto create_button = Button::create(kCreateGameImage);
   create_button->setPosition(Vec2(300, 300));
-  this->addChild(create_button);
+  game_menu_background_->addChild(create_button);
 
   // Adds the event listener to swap scenes to the TicTacToe scene.
   create_button->addTouchEventListener(
@@ -245,7 +255,7 @@ void MainMenuScene::InitializeGameMenuLayer() {
   auto logout_button = Button::create(kLogoutButtonImage);
   logout_button->setPosition(Vec2(75, 575));
   logout_button->setScale(.4);
-  this->addChild(logout_button);
+  game_menu_background_->addChild(logout_button);
 
   // Adds the event listener to change to the kAuthMenuState.
   logout_button->addTouchEventListener(
@@ -269,7 +279,7 @@ void MainMenuScene::InitializeGameMenuLayer() {
   join_button->setPosition(Vec2(25, 50));
   join_button->setAnchorPoint(Vec2(0, 0));
   join_button->setScale(1.3f);
-  this->addChild(join_button);
+  game_menu_background_->addChild(join_button);
 
   // Adds the event listener to handle touch actions for the join_button.
   join_button->addTouchEventListener(
@@ -302,27 +312,30 @@ void MainMenuScene::InitializeSignUpLayer() {
   // visiblity of this node should match kSignUpState and only active this
   // layers event listeners.
 
+  sign_up_background_ = this->CreateBackground();
+  this->addChild(sign_up_background_);
+
   // Creates and places the sign_up_background_.
-  const auto sign_up_background_size = Size(500, 450);
-  const auto sign_up_background_origin = Size(300, 300);
-  sign_up_background_ =
-      this->CreateRectangle(sign_up_background_size, sign_up_background_origin,
+  const auto sign_up_panel_size = Size(500, 450);
+  const auto sign_up_panel_origin = Size(300, 300);
+  const auto sign_up_panel =
+      this->CreateRectangle(sign_up_panel_size, sign_up_panel_origin,
                             /*background_color=*/Color4F::BLACK);
-  this->addChild(sign_up_background_, /*layer_index=*/10);
+  sign_up_background_->addChild(sign_up_panel, /*layer_index=*/10);
 
   // Creates the layer title label: sign up.
   auto layer_title =
       Label::createWithTTF("sign up", "fonts/GoogleSans-Regular.ttf", 48);
   layer_title->setAnchorPoint(Vec2(.5, .5));
   layer_title->setPosition(Vec2(300, 475));
-  sign_up_background_->addChild(layer_title);
+  sign_up_panel->addChild(layer_title);
 
   // Label to output sign up errors.
   sign_up_error_label_ =
       Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
   sign_up_error_label_->setTextColor(Color4B::RED);
   sign_up_error_label_->setPosition(Vec2(300, 425));
-  sign_up_background_->addChild(sign_up_error_label_);
+  sign_up_panel->addChild(sign_up_error_label_);
 
   // Creates the sign_up_id_.
   const auto id_font_size = 28;
@@ -333,11 +346,11 @@ void MainMenuScene::InitializeSignUpLayer() {
   sign_up_id_->setPosition(id_position);
   sign_up_id_->setTouchAreaEnabled(true);
   sign_up_id_->setTouchSize(id_size);
-  sign_up_background_->addChild(sign_up_id_);
+  sign_up_panel->addChild(sign_up_id_);
 
   // Creates the border for the sign_up_id_ text field.
   auto id_border = this->CreateRectangle(id_size, id_position);
-  sign_up_background_->addChild(id_border);
+  sign_up_panel->addChild(id_border);
 
   // Adds the event listener to handle the actions for the sign_up_id_.
   sign_up_id_->addEventListener([this](Ref* sender, TextField::EventType type) {
@@ -366,12 +379,12 @@ void MainMenuScene::InitializeSignUpLayer() {
   sign_up_password_->setTouchAreaEnabled(true);
   sign_up_password_->setTouchSize(password_size);
   sign_up_password_->setPasswordEnabled(true);
-  sign_up_background_->addChild(sign_up_password_);
+  sign_up_panel->addChild(sign_up_password_);
 
   // Creates the border for the sign_up_password_ text field.
   auto password_border =
       this->CreateRectangle(password_size, password_position);
-  sign_up_background_->addChild(password_border);
+  sign_up_panel->addChild(password_border);
 
   // Adds the event listener to handle the actions for the sign_up_password_
   // text field.
@@ -404,12 +417,12 @@ void MainMenuScene::InitializeSignUpLayer() {
   sign_up_password_confirm_->setTouchAreaEnabled(true);
   sign_up_password_confirm_->setTouchSize(password_confirm_size);
   sign_up_password_confirm_->setPasswordEnabled(true);
-  sign_up_background_->addChild(sign_up_password_confirm_);
+  sign_up_panel->addChild(sign_up_password_confirm_);
 
   // Creates the border for the sign_up_password_confirm_ text field.
   auto password_confirm_border =
       this->CreateRectangle(password_confirm_size, password_confirm_position);
-  sign_up_background_->addChild(password_confirm_border);
+  sign_up_panel->addChild(password_confirm_border);
 
   // Adds the event listener to handle the actions for the
   // sign_up_password_confirm text field.
@@ -434,7 +447,7 @@ void MainMenuScene::InitializeSignUpLayer() {
   auto sign_up_button = Button::create(kSignUpButtonImage, kLoginButtonImage);
   sign_up_button->setScale(.5);
   sign_up_button->setPosition(Size(300, 130));
-  sign_up_background_->addChild(sign_up_button);
+  sign_up_panel->addChild(sign_up_button);
 
   // Adds the event listener to handle touch actions for the sign_up_button.
   sign_up_button->addTouchEventListener(
@@ -472,7 +485,7 @@ void MainMenuScene::InitializeSignUpLayer() {
   auto back_button = Button::create(kJoinButtonImage, kSignUpButtonImage);
   back_button->setScale(.5);
   back_button->setPosition(Size(130, 500));
-  sign_up_background_->addChild(back_button);
+  sign_up_panel->addChild(back_button);
 
   // Adds the event listener to swap back to kAuthMenuState.
   back_button->addTouchEventListener(
@@ -496,27 +509,31 @@ void MainMenuScene::InitializeLoginLayer() {
   // visiblity of this node should match kLoginState and only active this
   // layers event listeners.
 
+  // Creates the game menu background.
+  login_background_ = this->CreateBackground();
+  this->addChild(login_background_);
+
   // Creates and places the login_background_.
-  const auto login_background_size = Size(500, 450);
-  const auto login_background_origin = Size(300, 300);
-  login_background_ =
-      this->CreateRectangle(login_background_size, login_background_origin,
+  const auto login_panel_size = Size(500, 450);
+  const auto login_panel_origin = Size(300, 300);
+  const auto login_panel =
+      this->CreateRectangle(login_panel_size, login_panel_origin,
                             /*background_color=*/Color4F::BLACK);
-  this->addChild(login_background_, /*layer_index=*/10);
+  login_background_->addChild(login_panel, /*layer_index=*/10);
 
   // Creates the layer title label: login.
   auto layer_title =
       Label::createWithTTF("Login", "fonts/GoogleSans-Regular.ttf", 48);
   layer_title->setAnchorPoint(Vec2(.5, .5));
   layer_title->setPosition(Vec2(300, 475));
-  login_background_->addChild(layer_title);
+  login_panel->addChild(layer_title);
 
   // Label to output login errors.
   login_error_label_ =
       Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
   login_error_label_->setTextColor(Color4B::RED);
   login_error_label_->setPosition(Vec2(300, 425));
-  login_background_->addChild(login_error_label_);
+  login_panel->addChild(login_error_label_);
 
   // Creating the login_id_.
   const auto id_font_size = 28;
@@ -527,11 +544,11 @@ void MainMenuScene::InitializeLoginLayer() {
   login_id_->setPosition(id_position);
   login_id_->setTouchAreaEnabled(true);
   login_id_->setTouchSize(id_size);
-  login_background_->addChild(login_id_);
+  login_panel->addChild(login_id_);
 
   // Creates the border for the login_id_ text field.
   auto id_border = this->CreateRectangle(id_size, id_position);
-  login_background_->addChild(id_border);
+  login_panel->addChild(id_border);
 
   // Adds the event listener to handle the actions for the login_id_.
   login_id_->addEventListener([this](Ref* sender, TextField::EventType type) {
@@ -560,12 +577,12 @@ void MainMenuScene::InitializeLoginLayer() {
   login_password_->setTouchAreaEnabled(true);
   login_password_->setTouchSize(password_size);
   login_password_->setPasswordEnabled(true);
-  login_background_->addChild(login_password_);
+  login_panel->addChild(login_password_);
 
   // Creates the border for the login_password_ text field.
   auto password_border =
       this->CreateRectangle(password_size, password_position);
-  login_background_->addChild(password_border);
+  login_panel->addChild(password_border);
 
   // Adds the event listener to handle the actions for the login_password_ text
   // field.
@@ -590,7 +607,7 @@ void MainMenuScene::InitializeLoginLayer() {
   auto login_button = Button::create(kLoginButtonImage, kSignUpButtonImage);
   login_button->setScale(.5);
   login_button->setPosition(Size(300, 200));
-  login_background_->addChild(login_button);
+  login_panel->addChild(login_button);
 
   // Adds the event listener to handle touch actions for the login_button.
   login_button->addTouchEventListener(
@@ -622,7 +639,7 @@ void MainMenuScene::InitializeLoginLayer() {
   auto back_button = Button::create(kJoinButtonImage, kSignUpButtonImage);
   back_button->setScale(.5);
   back_button->setPosition(Size(130, 500));
-  login_background_->addChild(back_button);
+  login_panel->addChild(back_button);
 
   // Adds the event listener to return back to the kAuthMenuState.
   back_button->addTouchEventListener(
@@ -637,6 +654,29 @@ void MainMenuScene::InitializeLoginLayer() {
       });
 }
 
+// Creates and places the loading background. Creates a action sequence to delay
+// then swap to the authentication state.
+void MainMenuScene::InitializeLoadingLayer() {
+  // Creates the delay action.
+  auto loading_delay = DelayTime::create(/*delay_durration*/ 2.0f);
+
+  // Creates a callback function to swap state to kAuthMenuState.
+  auto SwapToAuthState =
+      CallFunc::create([this]() { state_ = kAuthMenuState; });
+
+  // Runs the sequence that will delay followed by the swap state callback
+  // function.
+  this->runAction(Sequence::create(loading_delay, SwapToAuthState, NULL));
+
+  // Creates the loading background sprite.
+  const auto window_size = Director::getInstance()->getWinSize();
+  const auto background = Sprite::create(kLoadingBackgroundImage);
+  background->setContentSize(window_size);
+  background->setAnchorPoint(Vec2(0, 0));
+  loading_background_ = background;
+  this->addChild(loading_background_);
+}
+
 // 1. Creates the background node.
 // 2. Adds the layer title label: authentication.
 // 3. Adds the id and password text fields and their event listeners.
@@ -646,19 +686,23 @@ void MainMenuScene::InitializeAuthenticationLayer() {
   // visiblity of this node should match kAuthMenuState and only active this
   // layers event listeners.
 
+  // Creates the auth_background.
+  auth_background_ = this->CreateBackground();
+  this->addChild(auth_background_);
+
   // Creates and places the auth_background_.
-  const auto auth_background_size = Size(500, 550);
-  const auto auth_background_origin = Size(300, 300);
-  auth_background_ =
-      this->CreateRectangle(auth_background_size, auth_background_origin,
+  const auto auth_panel_size = Size(500, 550);
+  const auto auth_panel_origin = Size(300, 300);
+  const auto auth_panel =
+      this->CreateRectangle(auth_panel_size, auth_panel_origin,
                             /*background_color=*/Color4F::BLACK);
-  this->addChild(auth_background_, /*layer_index=*/10);
+  auth_background_->addChild(auth_panel, /*layer_index=*/10);
 
   // Creates the layer title label: authentication.
   auto layer_title = Label::createWithTTF("authentication",
                                           "fonts/GoogleSans-Regular.ttf", 48);
   layer_title->setPosition(Vec2(300, 550));
-  auth_background_->addChild(layer_title);
+  auth_panel->addChild(layer_title);
 
   // Creates three buttons for the menu items (login,sign up, and anonymous sign
   // in).
@@ -722,7 +766,7 @@ void MainMenuScene::InitializeAuthenticationLayer() {
   menu->setContentSize(Size(100, 200));
   menu->setScale(.8, .7);
   menu->alignItemsVerticallyWithPadding(30.0f);
-  auth_background_->addChild(menu);
+  auth_panel->addChild(menu);
 }
 
 // Updates the user record variables to reflect what is in the database.
@@ -843,11 +887,11 @@ void MainMenuScene::update(float /*delta*/) {
       assert(0);
   }
 }
-// Returns kAuthMenuState. This will be the default update method and
-// immediately swap to auth state. TODO(grantpostma): have this display a
-// loading screen before swapping.
+// Returns kInitializingState. Waits for the delay action sequence to callback
+// SwaptoAuthState() to set state_ = kAuthMenuState.
 MainMenuScene::kSceneState MainMenuScene::UpdateInitialize() {
-  return kAuthMenuState;
+  this->UpdateLayer(state_);
+  return kInitializingState;
 }
 
 // Updates the layer and returns the kAuthMenuState.
@@ -959,9 +1003,22 @@ void MainMenuScene::CreateBlinkingCursorAction(
   // Creates a forever repeating action based on the blink_cursor_action.
   text_field->runAction(RepeatForever::create(blink_cursor_action));
 }
-// Updates the auth_,login_ and sign_up_ layer based on state.
+
+// Creates a background the same size as the window and places it to cover the
+// entire window.
+Sprite* MainMenuScene::CreateBackground() {
+  const auto window_size = Director::getInstance()->getWinSize();
+  const auto background = Sprite::create(kBackgroundImage);
+  background->setContentSize(window_size);
+  background->setAnchorPoint(Vec2(0, 0));
+  return background;
+}
+
+// Updates the auth_,login_, sign_up_, and game_menu_ layer based on state.
 void MainMenuScene::UpdateLayer(MainMenuScene::kSceneState state) {
   auth_background_->setVisible(state == kAuthMenuState);
   login_background_->setVisible(state == kLoginState);
   sign_up_background_->setVisible(state == kSignUpState);
+  game_menu_background_->setVisible(state == kGameMenuState);
+  loading_background_->setVisible(state == kInitializingState);
 }
