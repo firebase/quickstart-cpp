@@ -33,7 +33,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
   auto director = Director::getInstance();
   auto glview = director->getOpenGLView();
   if (glview == NULL) {
-    glview = GLViewImpl::create("Tic-Tac-Toe");
+    glview = GLViewImpl::create("Firebase Tic-Tac-Toe");
     glview->setFrameSize(kFrameWidth, kFrameHeight);
     director->setOpenGLView(glview);
   }

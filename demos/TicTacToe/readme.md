@@ -32,6 +32,10 @@ Getting Started
 - Follow the steps in
   [Set up your app in Firebase console](https://firebase.google.com/docs/cpp/setup?platform=android#desktop-workflow).
 
+- Enable Anonymous Auth & Email/Password sign-in:
+    a. In the [Firebase console](https://console.firebase.google.com/), open the Auth section.
+    b. On the Sign in method tab, enable the Anonymous Auth & Email/password sign-in method and click Save.
+
 - Place the google-services.json you just acquired in the demos/TicTacToe/google_services/ directory.
 
 - Navigate to the directory that you just cloned, step into demos/TicTacToe/ and run the setup script.

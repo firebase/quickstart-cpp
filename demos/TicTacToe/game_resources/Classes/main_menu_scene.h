@@ -17,6 +17,7 @@
 
 #include <string>
 
+#include "cocos/ui/UIButton.h"
 #include "cocos/ui/UITextField.h"
 #include "cocos2d.h"
 #include "firebase/auth.h"
@@ -30,6 +31,7 @@ using cocos2d::Size;
 using cocos2d::Sprite;
 using cocos2d::TextFieldTTF;
 using cocos2d::Vec2;
+using cocos2d::ui::Button;
 using firebase::Future;
 using firebase::auth::Auth;
 using firebase::auth::User;
@@ -61,7 +63,7 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   void CreateBlinkingCursorAction(cocos2d::ui::TextField*);
 
   // Creates the background sprite image.
-  Sprite* CreateBackground();
+  Sprite* CreateBackground(const string&);
 
   // Updates the scene to show the active layer based on state.
   void UpdateLayer(MainMenuScene::kSceneState);
@@ -83,13 +85,11 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // UpdateUserRecord() and swap state_ to kGameMenuState.
   void onEnter() override;
 
-  // Updates the user record (wins,loses and ties) and displays it to the
-  // screen.
-  void UpdateUserRecord();
-
-  // Initializes the user record (wins,loses and ties) and displays it to the
-  // screen.
-  void InitializeUserRecord();
+  // Set, Get, Clear and Display functions for the user record.
+  void SetUserRecord();
+  void GetUserRecord();
+  void ClearUserRecord();
+  void DisplayUserRecord();
 
   // Initializes the loading layer which includes a background loading image and
   // state swap delay action.
@@ -114,13 +114,6 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Clears the labels and text fields for all authentication layers.
   void ClearAuthFields();
 
-  // Creates a rectangle from the size, origin, border_color, background_color,
-  // and border_thickness.
-  DrawNode* CreateRectangle(Size size, Vec2 origin,
-                            Color4F background_color = Color4F(0, 0, 0, 0),
-                            Color4F border_color = Color4F::WHITE,
-                            int border_thickness = 1);
-
   // Initializes the the firebase app, auth, and database.
   void InitializeFirebase();
   // Initializes the instance of a Node and returns a boolean based on if it was
@@ -135,10 +128,17 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   Sprite* game_menu_background_;
   Sprite* loading_background_;
 
+  // Exit buttons for the game menu screen. Logout button is shown if the user
+  // logged in or signed up. Back button is shown if the user skipped login.
+  Button* back_button_;
+  Button* logout_button_;
+
   // Labels and textfields for the authentication menu.
   Label* login_error_label_;
   Label* sign_up_error_label_;
-  Label* user_record_label_;
+  Label* user_record_wins_;
+  Label* user_record_loses_;
+  Label* user_record_ties_;
 
   // Cocos2d components for the login layer.
   cocos2d::ui::TextField* login_id_;
