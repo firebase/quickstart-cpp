@@ -18,6 +18,7 @@
 #include <string>
 #include <unordered_set>
 
+#include "cocos/ui/UIButton.h"
 #include "cocos2d.h"
 #include "firebase/database.h"
 #include "firebase/future.h"
@@ -25,6 +26,7 @@
 using cocos2d::Label;
 using cocos2d::Layer;
 using cocos2d::Sprite;
+using cocos2d::ui::Button;
 using firebase::Future;
 using firebase::database::Database;
 using std::string;
@@ -60,6 +62,9 @@ class TicTacToeLayer : public Layer {
   // Shows the end game message before returning back to the previous scene.
   void EndGame();
 
+  // Displays the game outcome image then swaps to EndGame().
+  void DisplayGameOutcome();
+
   // Initializes the value listeners for current_player_, last_move_, game_over_
   // and total_players_.
   void InitializeDatabaseListeners();
@@ -70,6 +75,9 @@ class TicTacToeLayer : public Layer {
 
   // Tracks whether the board was unable to build.
   bool initialization_failed_ = false;
+
+  // Tracks if DisplayGameOutcome been called.
+  bool displaying_outcome_ = false;
 
   // Tracks the game outcome.
   int game_outcome_;
@@ -94,10 +102,9 @@ class TicTacToeLayer : public Layer {
   unique_ptr<ExpectValueListener> total_player_listener_;
   unique_ptr<ExpectValueListener> game_over_listener_;
 
-  // Lables and a sprites.
+  // Label, button and a sprite.
   Sprite* board_sprite_;
-  Sprite* leave_button_sprite_;
-  Label* game_over_label_;
+  Button* leave_button_;
   Label* waiting_label_;
 
   // Firebase futures for last_move and current_player_index_.
@@ -114,9 +121,5 @@ class TicTacToeLayer : public Layer {
 
   // Unordered set of remaining tiles available for player moves.
   std::unordered_set<int> remaining_tiles_;
-
-  // Amount of frames the screen has been in the end game state.
-  // Number of seconds x 60.
-  int end_game_frames_ = 120;
 };
 #endif  // TICTACTOE_DEMO_CLASSES_TICTACTOELAYER_SCENE_H_
