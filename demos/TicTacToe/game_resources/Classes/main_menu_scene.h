@@ -63,7 +63,7 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   void CreateBlinkingCursorAction(cocos2d::ui::TextField*);
 
   // Creates the background sprite image.
-  Sprite* CreateBackground(const string);
+  Sprite* CreateBackground(const string&);
 
   // Updates the scene to show the active layer based on state.
   void UpdateLayer(MainMenuScene::kSceneState);

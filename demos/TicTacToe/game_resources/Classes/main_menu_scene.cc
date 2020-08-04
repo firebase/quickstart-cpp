@@ -1064,7 +1064,7 @@ void MainMenuScene::CreateBlinkingCursorAction(
 
 // Creates a background the same size as the window and places it to cover the
 // entire window.
-Sprite* MainMenuScene::CreateBackground(const string background_image) {
+Sprite* MainMenuScene::CreateBackground(const string& background_image) {
   const auto window_size = Director::getInstance()->getWinSize();
   const auto background = Sprite::create(background_image);
   background->setContentSize(window_size);
