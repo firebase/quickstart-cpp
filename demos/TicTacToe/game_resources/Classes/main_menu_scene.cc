@@ -834,245 +834,249 @@ void MainMenuScene::GetUserRecord() {
 }
 
 // Sets the user record variables to reflect the user record local variables.
-void MainMenuScene::GetUserRecord() {
-  void MainMenuScene::SetUserRecord() {
-    ref_ = database_->GetReference("users").Child(user_uid_);
-    auto future_wins = ref_.Child("wins").SetValue(user_wins_);
-    auto future_loses = ref_.Child("loses").SetValue(user_loses_);
-    auto future_ties = ref_.Child("ties").SetValue(user_ties_);
-    WaitForCompletion(future_wins, "setUserWinsData");
-    WaitForCompletion(future_loses, "setUserLosesData");
-    WaitForCompletion(future_ties, "setUserTiesData");
-  }
-  // Clears the user record.
-  void MainMenuScene::ClearUserRecord() {
-    user_wins_ = 0;
-    user_loses_ = 0;
-    user_ties_ = 0;
-  }
+void MainMenuScene::SetUserRecord() {
+  ref_ = database_->GetReference("users").Child(user_uid_);
+  auto future_wins = ref_.Child("wins").SetValue(user_wins_);
+  auto future_loses = ref_.Child("loses").SetValue(user_loses_);
+  auto future_ties = ref_.Child("ties").SetValue(user_ties_);
+  WaitForCompletion(future_wins, "setUserWinsData");
+  WaitForCompletion(future_loses, "setUserLosesData");
+  WaitForCompletion(future_ties, "setUserTiesData");
+}
 
-  // Displays the user record.
-  void MainMenuScene::DisplayUserRecord() {
-    user_record_wins_->setString(to_string(user_wins_));
-    user_record_loses_->setString(to_string(user_loses_));
-    user_record_ties_->setString(to_string(user_ties_));
-  }
+// Clears the user record.
+void MainMenuScene::ClearUserRecord() {
+  user_wins_ = 0;
+  user_loses_ = 0;
+  user_ties_ = 0;
+}
 
-  // Overriding the onEnter method to update the user_record on reenter.
-  void MainMenuScene::onEnter() {
-    // If the scene is entering from the game, UpdateUserRecords() and change
-    // state_ back to kGameMenuState.
-    if (state_ == kRunGameState) {
+// Displays the user record.
+void MainMenuScene::DisplayUserRecord() {
+  user_record_wins_->setString(to_string(user_wins_));
+  user_record_loses_->setString(to_string(user_loses_));
+  user_record_ties_->setString(to_string(user_ties_));
+}
+
+// Overriding the onEnter method to update the user_record on reenter.
+void MainMenuScene::onEnter() {
+  // If the scene is entering from the game, UpdateUserRecords() and change
+  // state_ back to kGameMenuState.
+  if (state_ == kRunGameState) {
+    this->GetUserRecord();
+    this->DisplayUserRecord();
+    state_ = kGameMenuState;
+  }
+  Layer::onEnter();
+}
+
+// Clears all of the labels and text fields on the login and sign up layers.
+void MainMenuScene::ClearAuthFields() {
+  // Clears the login components.
+  login_id_->setString("");
+  login_password_->setString("");
+  login_error_label_->setString("");
+
+  // Clears the sign up components.
+  sign_up_id_->setString("");
+  sign_up_password_->setString("");
+  sign_up_password_confirm_->setString("");
+  sign_up_error_label_->setString("");
+}
+
+// Updates every frame:
+//
+// switch (state_)
+// (0) kInitializingState: swaps to (1).
+// (1) kAuthMenuState: makes the auth_background_ visable.
+// (2) kGameMenuState: makes the game_menu_background_ invisable.
+// (3) kSkipLoginState: waits for anonymous sign in then swaps to (2).
+// (4) kSignUpState: waits for sign up future completion,
+//     updates user variables, and swaps to (2).
+// (5) kLoginState: waits for login future completion,
+//     updates user variables, and swaps to (2).
+// (6) kRunGameState: waits for director to pop the TicTacToeScene.
+void MainMenuScene::update(float /*delta*/) {
+  switch (state_) {
+    case kInitializingState:
+      state_ = UpdateInitialize();
+      break;
+    case kAuthMenuState:
+      state_ = UpdateAuthentication();
+      break;
+    case kGameMenuState:
+      state_ = UpdateGameMenu();
+      break;
+    case kSkipLoginState:
+      state_ = UpdateSkipLogin();
+      break;
+    case kSignUpState:
+      state_ = UpdateSignUp();
+      break;
+    case kLoginState:
+      state_ = UpdateLogin();
+      break;
+    case kRunGameState:
+      state_ = UpdateRunGame();
+      break;
+    default:
+      assert(0);
+  }
+}
+
+// Returns kInitializingState. Waits for the delay action sequence to callback
+// SwaptoAuthState() to set state_ = kAuthMenuState.
+MainMenuScene::kSceneState MainMenuScene::UpdateInitialize() {
+  this->UpdateLayer(state_);
+  return kInitializingState;
+}
+
+// Updates the layer and returns the kAuthMenuState.
+MainMenuScene::kSceneState MainMenuScene::UpdateAuthentication() {
+  this->UpdateLayer(state_);
+  return kAuthMenuState;
+}
+
+// Updates the layer and stays in this state until user_result_ completes.
+// Updates the user variables if the user_result_ is valid. Updates the error
+// message and returns back to kLoginState if the future user_result_ errored.
+MainMenuScene::kSceneState MainMenuScene::UpdateLogin() {
+  this->UpdateLayer(state_);
+  if (user_result_.status() == firebase::kFutureStatusComplete) {
+    if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      // Updates the user to refect the uid and record (wins,losses and ties)
+      // stored for the user in the database.
+      user_ = *user_result_.result();
+      user_uid_ = user_->uid();
+      this->ClearAuthFields();
       this->GetUserRecord();
       this->DisplayUserRecord();
-      state_ = kGameMenuState;
-    }
-    Layer::onEnter();
-  }
 
-  // Clears all of the labels and text fields on the login and sign up layers.
-  void MainMenuScene::ClearAuthFields() {
-    // Clears the login components.
-    login_id_->setString("");
-    login_password_->setString("");
-    login_error_label_->setString("");
+      // Shows the logout button because the user logged in.
+      logout_button_->setVisible(true);
 
-    // Clears the sign up components.
-    sign_up_id_->setString("");
-    sign_up_password_->setString("");
-    sign_up_password_confirm_->setString("");
-    sign_up_error_label_->setString("");
-  }
-
-  // Updates every frame:
-  //
-  // switch (state_)
-  // (0) kInitializingState: swaps to (1).
-  // (1) kAuthMenuState: makes the auth_background_ visable.
-  // (2) kGameMenuState: makes the game_menu_background_ invisable.
-  // (3) kSkipLoginState: waits for anonymous sign in then swaps to (2).
-  // (4) kSignUpState: waits for sign up future completion,
-  //     updates user variables, and swaps to (2).
-  // (5) kLoginState: waits for login future completion,
-  //     updates user variables, and swaps to (2).
-  // (6) kRunGameState: waits for director to pop the TicTacToeScene.
-  void MainMenuScene::update(float /*delta*/) {
-    switch (state_) {
-      case kInitializingState:
-        state_ = UpdateInitialize();
-        break;
-      case kAuthMenuState:
-        state_ = UpdateAuthentication();
-        break;
-      case kGameMenuState:
-        state_ = UpdateGameMenu();
-        break;
-      case kSkipLoginState:
-        state_ = UpdateSkipLogin();
-        break;
-      case kSignUpState:
-        state_ = UpdateSignUp();
-        break;
-      case kLoginState:
-        state_ = UpdateLogin();
-        break;
-      case kRunGameState:
-        state_ = UpdateRunGame();
-        break;
-      default:
-        assert(0);
-    }
-  }
-  // Returns kInitializingState. Waits for the delay action sequence to callback
-  // SwaptoAuthState() to set state_ = kAuthMenuState.
-  MainMenuScene::kSceneState MainMenuScene::UpdateInitialize() {
-    this->UpdateLayer(state_);
-    return kInitializingState;
-  }
-
-  // Updates the layer and returns the kAuthMenuState.
-  MainMenuScene::kSceneState MainMenuScene::UpdateAuthentication() {
-    this->UpdateLayer(state_);
-    return kAuthMenuState;
-  }
-
-  // Updates the layer and stays in this state until user_result_ completes.
-  // Updates the user variables if the user_result_ is valid. Updates the error
-  // message and returns back to kLoginState if the future user_result_ errored.
-  MainMenuScene::kSceneState MainMenuScene::UpdateLogin() {
-    this->UpdateLayer(state_);
-    if (user_result_.status() == firebase::kFutureStatusComplete) {
-      if (user_result_.error() == firebase::auth::kAuthErrorNone) {
-        // Updates the user to refect the uid and record (wins,losses and ties)
-        // stored for the user in the database.
-        user_ = *user_result_.result();
-        user_uid_ = user_->uid();
-        this->ClearAuthFields();
-        this->GetUserRecord();
-        this->DisplayUserRecord();
-
-        // Shows the logout button because the user logged in.
-        logout_button_->setVisible(true);
-
-        return kGameMenuState;
-      } else {
-        // Changes login_error_label_ to display the user_result_ future
-        // errored.
-        login_error_label_->setString("invalid credentials");
-        user_result_.Release();
-        return kLoginState;
-      }
+      return kGameMenuState;
     } else {
+      // Changes login_error_label_ to display the user_result_ future
+      // errored.
+      login_error_label_->setString("invalid credentials");
+      user_result_.Release();
       return kLoginState;
     }
+  } else {
+    return kLoginState;
   }
+}
 
-  // Updates the layer and stays in this state until user_result_ completes.
-  // Initializes the user if the user_result_ is valid. Updates the error
-  // message and returns back to kSignUpState if the future user_result_
-  // errored.
-  MainMenuScene::kSceneState MainMenuScene::UpdateSignUp() {
-    this->UpdateLayer(state_);
-    if (user_result_.status() == firebase::kFutureStatusComplete) {
-      if (user_result_.error() == firebase::auth::kAuthErrorNone) {
-        // Initializes user variables and stores them in the database.
-        user_ = *user_result_.result();
-        user_uid_ = GenerateUid(10);
-        this->ClearUserRecord();
-        this->DisplayUserRecord();
+// Updates the layer and stays in this state until user_result_ completes.
+// Initializes the user if the user_result_ is valid. Updates the error
+// message and returns back to kSignUpState if the future user_result_
+// errored.
+MainMenuScene::kSceneState MainMenuScene::UpdateSignUp() {
+  this->UpdateLayer(state_);
+  if (user_result_.status() == firebase::kFutureStatusComplete) {
+    if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      // Initializes user variables and stores them in the database.
+      user_ = *user_result_.result();
+      user_uid_ = GenerateUid(10);
+      this->ClearUserRecord();
+      this->DisplayUserRecord();
 
-        // Shows the logout button because the user signed up.
-        logout_button_->setVisible(true);
+      // Shows the logout button because the user signed up.
+      logout_button_->setVisible(true);
 
-        return kGameMenuState;
-      } else {
-        // Changes sign_up_error_label_ to display the user_result_ future
-        // errored.
-        sign_up_error_label_->setString("sign up failed");
-        user_result_.Release();
-        return kSignUpState;
-      }
+      return kGameMenuState;
     } else {
+      // Changes sign_up_error_label_ to display the user_result_ future
+      // errored.
+      sign_up_error_label_->setString("sign up failed");
+      user_result_.Release();
       return kSignUpState;
     }
+  } else {
+    return kSignUpState;
   }
-  // Updates the layer and stays in this state until user_result_ completes.
-  // Initializes the user if the user_result_ is valid. Otherwise, return back
-  // to kAuthMenuState.
-  MainMenuScene::kSceneState MainMenuScene::UpdateSkipLogin() {
-    if (user_result_.status() == firebase::kFutureStatusComplete) {
-      if (user_result_.error() == firebase::auth::kAuthErrorNone) {
-        // Initializes user variables and stores them in the database.
-        user_ = *user_result_.result();
-        user_uid_ = GenerateUid(10);
-        this->ClearUserRecord();
-        this->SetUserRecord();
-        this->DisplayUserRecord();
+}
 
-        // Shows the back button because the user skipped login.
-        back_button_->setVisible(true);
+// Updates the layer and stays in this state until user_result_ completes.
+// Initializes the user if the user_result_ is valid. Otherwise, return back
+// to kAuthMenuState.
+MainMenuScene::kSceneState MainMenuScene::UpdateSkipLogin() {
+  if (user_result_.status() == firebase::kFutureStatusComplete) {
+    if (user_result_.error() == firebase::auth::kAuthErrorNone) {
+      // Initializes user variables and stores them in the database.
+      user_ = *user_result_.result();
+      user_uid_ = GenerateUid(10);
+      this->ClearUserRecord();
+      this->SetUserRecord();
+      this->DisplayUserRecord();
 
-        return kGameMenuState;
-      } else {
-        CCLOG("Error skipping login.");
-        return kAuthMenuState;
-      }
+      // Shows the back button because the user skipped login.
+      back_button_->setVisible(true);
 
+      return kGameMenuState;
     } else {
-      return kSkipLoginState;
+      CCLOG("Error skipping login.");
+      return kAuthMenuState;
     }
-  }
-  // Updates the layer and returns kGameMenuState.
-  MainMenuScene::kSceneState MainMenuScene::UpdateGameMenu() {
-    this->UpdateLayer(state_);
-    return kGameMenuState;
-  }
-  // Continues to return that you are in the kRunGameState.
-  MainMenuScene::kSceneState MainMenuScene::UpdateRunGame() {
-    return kRunGameState;
-  }
 
-  // Returns a repeating action that toggles the cursor of the text field passed
-  // in based on the toggle_delay.
-  void MainMenuScene::CreateBlinkingCursorAction(cocos2d::ui::TextField *
-                                                 text_field) {
-    // Creates a callable function that shows the cursor and sets the cursor
-    // character.
-    const auto show_cursor = CallFunc::create([text_field]() {
-      text_field->setCursorEnabled(true);
-      text_field->setCursorChar('|');
-    });
-    // Creates a callable function that hides the cursor character.
-    const auto hide_cursor =
-        CallFunc::create([text_field]() { text_field->setCursorChar(' '); });
-
-    // Creates a delay action.
-    const cocos2d::DelayTime* delay =
-        DelayTime::create(/*delay_durration=*/0.3f);
-
-    // Aligns the sequence of actions to create a blinking cursor.
-    auto blink_cursor_action =
-        Sequence::create(show_cursor, delay, hide_cursor, delay, nullptr);
-
-    // Creates a forever repeating action based on the blink_cursor_action.
-    text_field->runAction(RepeatForever::create(blink_cursor_action));
+  } else {
+    return kSkipLoginState;
   }
+}
 
-  // Creates a background the same size as the window and places it to cover the
-  // entire window.
-  Sprite* MainMenuScene::CreateBackground(const string background_image) {
-    const auto window_size = Director::getInstance()->getWinSize();
-    const auto background = Sprite::create(background_image);
-    background->setContentSize(window_size);
-    background->setAnchorPoint(Vec2(0, 0));
-    return background;
-  }
+// Updates the layer and returns kGameMenuState.
+MainMenuScene::kSceneState MainMenuScene::UpdateGameMenu() {
+  this->UpdateLayer(state_);
+  return kGameMenuState;
+}
 
-  // Updates the auth_,login_, sign_up_, and game_menu_ layer based on state.
-  void MainMenuScene::UpdateLayer(MainMenuScene::kSceneState state) {
-    auth_background_->setVisible(state == kAuthMenuState);
-    login_background_->setVisible(state == kLoginState);
-    sign_up_background_->setVisible(state == kSignUpState);
-    game_menu_background_->setVisible(state == kGameMenuState);
-    loading_background_->setVisible(state == kInitializingState);
-  }
+// Continues to return that you are in the kRunGameState.
+MainMenuScene::kSceneState MainMenuScene::UpdateRunGame() {
+  return kRunGameState;
+}
+
+// Returns a repeating action that toggles the cursor of the text field passed
+// in based on the toggle_delay.
+void MainMenuScene::CreateBlinkingCursorAction(
+    cocos2d::ui::TextField* text_field) {
+  // Creates a callable function that shows the cursor and sets the cursor
+  // character.
+  const auto show_cursor = CallFunc::create([text_field]() {
+    text_field->setCursorEnabled(true);
+    text_field->setCursorChar('|');
+  });
+
+  // Creates a callable function that hides the cursor character.
+  const auto hide_cursor =
+      CallFunc::create([text_field]() { text_field->setCursorChar(' '); });
+
+  // Creates a delay action.
+  const cocos2d::DelayTime* delay = DelayTime::create(/*delay_durration=*/0.3f);
+
+  // Aligns the sequence of actions to create a blinking cursor.
+  auto blink_cursor_action =
+      Sequence::create(show_cursor, delay, hide_cursor, delay, nullptr);
+
+  // Creates a forever repeating action based on the blink_cursor_action.
+  text_field->runAction(RepeatForever::create(blink_cursor_action));
+}
+
+// Creates a background the same size as the window and places it to cover the
+// entire window.
+Sprite* MainMenuScene::CreateBackground(const string background_image) {
+  const auto window_size = Director::getInstance()->getWinSize();
+  const auto background = Sprite::create(background_image);
+  background->setContentSize(window_size);
+  background->setAnchorPoint(Vec2(0, 0));
+  return background;
+}
+
+// Updates the auth_,login_, sign_up_, and game_menu_ layer based on state.
+void MainMenuScene::UpdateLayer(MainMenuScene::kSceneState state) {
+  auth_background_->setVisible(state == kAuthMenuState);
+  login_background_->setVisible(state == kLoginState);
+  sign_up_background_->setVisible(state == kSignUpState);
+  game_menu_background_->setVisible(state == kGameMenuState);
+  loading_background_->setVisible(state == kInitializingState);
+}
