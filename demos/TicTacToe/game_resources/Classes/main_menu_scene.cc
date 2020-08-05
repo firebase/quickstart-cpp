@@ -73,26 +73,22 @@ static const char* kLoginPanelImage = "login_panel.png";
 static const char* kUserRecordPanelImage = "user_record_panel.png";
 
 // Button image filenames.
-static const array<char*, 2> kCreateGameButton = {
-    "create_game_button.png", "create_game_button_pressed.png"};
-static const array<char*, 2> kJoinButton = {"join_game_button.png",
-                                            "join_game_button_pressed.png"};
-static const array<char*, 2> kLoginButton = {"login_button.png",
-                                             "login_button_pressed.png"};
-static const array<char*, 2> kLogoutButton = {"logout_button.png",
-                                              "logout_button_pressed.png"};
-static const array<char*, 2> kBackButton = {"back_button.png",
-                                            "back_button_pressed.png"};
-static const array<char*, 2> kSignUpButton = {"sign_up_button.png",
-                                              "sign_up_button_pressed.png"};
-static const array<char*, 2> kSkipButton = {"skip_button.png",
-                                            "skip_button_pressed.png"};
-static const array<char*, 2> kReturnButton = {"return_button.png",
-                                              "return_button_pressed.png"};
+static const array<char*, 2> kCreateGameButton = {"create_game.png",
+                                                  "create_game_dark.png"};
+static const array<char*, 2> kJoinButton = {"join_game.png",
+                                            "join_game_dark.png"};
+static const array<char*, 2> kLoginButton = {"login.png", "login_dark.png"};
+static const array<char*, 2> kLogoutButton = {"logout.png", "logout_dark.png"};
+static const array<char*, 2> kBackButton = {"leave.png", "leave_dark.png"};
+static const array<char*, 2> kSignUpButton = {"sign_up.png",
+                                              "sign_up_dark.png"};
+static const array<char*, 2> kSkipButton = {"skip.png", "skip_dark.png"};
+static const array<char*, 2> kLeaveAnonButton = {"leave_anon.png",
+                                                 "leave_anon_dark.png"};
 
 // Text box filenames.
-static const char* kTextFieldOneImage = "text_field_1.png";
-static const char* kTextFieldTwoImage = "text_field_2.png";
+static const char* kTextFieldOneImage = "text_field_grey.png";
+static const char* kTextFieldTwoImage = "text_field_white.png";
 
 static const char* kBackgroundImage = "background.png";
 static const char* kLoadingBackgroundImage = "loading_background.png";
@@ -209,39 +205,39 @@ void MainMenuScene::InitializeGameMenuLayer() {
   this->addChild(game_menu_background_);
 
   // Creates and places the panel on the background.
-  const auto game_menu_panel_origin = Vec2(300, 300);
+  const auto game_menu_panel_origin = Vec2(300, 295);
   const auto game_menu_panel = Sprite::create(kGameMenuPanelImage);
   game_menu_panel->setPosition(game_menu_panel_origin);
   game_menu_background_->addChild(game_menu_panel, /*layer_index=*/10);
 
   // Creates the user record panel.
   const auto user_record_panel = Sprite::create(kUserRecordPanelImage);
-  user_record_panel->setPosition(Vec2(400, 575));
+  user_record_panel->setPosition(Vec2(405, 575));
   game_menu_background_->addChild(user_record_panel);
 
   // Label to display the user's wins.
   user_record_wins_ =
-      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
+      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 28);
   user_record_wins_->setTextColor(Color4B::GRAY);
-  user_record_wins_->setPosition(Vec2(90, 35));
+  user_record_wins_->setPosition(Vec2(88, 33));
   user_record_panel->addChild(user_record_wins_);
 
   // Label to display the user's losses.
   user_record_loses_ =
-      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
+      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 28);
   user_record_loses_->setTextColor(Color4B::GRAY);
-  user_record_loses_->setPosition(Vec2(180, 35));
+  user_record_loses_->setPosition(Vec2(180, 33));
   user_record_panel->addChild(user_record_loses_);
 
   // Label to display the user's ties.
   user_record_ties_ =
-      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
+      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 28);
   user_record_ties_->setTextColor(Color4B::GRAY);
-  user_record_ties_->setPosition(Vec2(280, 35));
+  user_record_ties_->setPosition(Vec2(280, 33));
   user_record_panel->addChild(user_record_ties_);
 
   // Creates the join_text_field.
-  auto join_text_field_position = Vec2(400, 80);
+  auto join_text_field_position = Vec2(394, 80);
   auto join_text_field_size = Size(180, 80);
   auto join_text_field =
       TextField::create("code", "fonts/GoogleSans-Regular.ttf", 48);
@@ -280,13 +276,14 @@ void MainMenuScene::InitializeGameMenuLayer() {
 
   // Creates the background text box for the join_text_field_.
   const auto join_text_field_background = Sprite::create(kTextFieldTwoImage);
+  join_text_field_background->setScale(1.47f);
   join_text_field_background->setPosition(join_text_field_position);
   game_menu_panel->addChild(join_text_field_background, /*layer_index=*/0);
 
   // Creates the create_button.
   auto create_button =
       Button::create(kCreateGameButton[kNormal], kCreateGameButton[kPressed]);
-  create_button->setPosition(Vec2(275, 205));
+  create_button->setPosition(Vec2(271, 205));
   game_menu_panel->addChild(create_button);
 
   // Adds the event listener to swap scenes to the TicTacToe scene.
@@ -305,8 +302,9 @@ void MainMenuScene::InitializeGameMenuLayer() {
       });
 
   // Creates a sprite for the back button.
-  back_button_ = Button::create(kBackButton[kNormal], kBackButton[kPressed]);
-  back_button_->setPosition(Vec2(125, 575));
+  back_button_ =
+      Button::create(kLeaveAnonButton[kNormal], kLeaveAnonButton[kPressed]);
+  back_button_->setPosition(Vec2(120, 575));
   game_menu_background_->addChild(back_button_);
   back_button_->setVisible(false);
 
@@ -332,7 +330,7 @@ void MainMenuScene::InitializeGameMenuLayer() {
   // Creates a sprite for the logout button.
   logout_button_ =
       Button::create(kLogoutButton[kNormal], kLogoutButton[kPressed]);
-  logout_button_->setPosition(Vec2(125, 575));
+  logout_button_->setPosition(Vec2(120, 575));
   game_menu_background_->addChild(logout_button_);
   logout_button_->setVisible(false);
 
@@ -359,7 +357,7 @@ void MainMenuScene::InitializeGameMenuLayer() {
   // of the screen.
   auto join_button =
       Button::create(kJoinButton[kNormal], kJoinButton[kPressed]);
-  join_button->setPosition(Vec2(150, 80));
+  join_button->setPosition(Vec2(148, 80));
   game_menu_panel->addChild(join_button);
 
   // Adds the event listener to handle touch actions for the join_button.
@@ -398,7 +396,7 @@ void MainMenuScene::InitializeSignUpLayer() {
   this->addChild(sign_up_background_);
 
   // Creates the sign up panel.
-  const auto sign_up_panel_origin = Vec2(300, 300);
+  const auto sign_up_panel_origin = Vec2(300, 325);
   const auto sign_up_panel = Sprite::create(kSignUpPanelImage);
   sign_up_panel->setPosition(sign_up_panel_origin);
   sign_up_background_->addChild(sign_up_panel, /*layer_index=*/10);
@@ -411,11 +409,11 @@ void MainMenuScene::InitializeSignUpLayer() {
   sign_up_panel->addChild(sign_up_error_label_);
 
   // Creates the sign_up_id_ text field.
-  const auto id_font_size = 28;
+  const auto id_font_size = 32;
   const auto id_position = Vec2(255, 260);
   const auto id_size = Size(450, id_font_size * 1.75);
   sign_up_id_ =
-      TextField::create("email", "fonts/GoogleSans-Regular.ttf", id_font_size);
+      TextField::create("Email", "fonts/GoogleSans-Regular.ttf", id_font_size);
   sign_up_id_->setTextColor(Color4B::GRAY);
   sign_up_id_->setPosition(id_position);
   sign_up_id_->setTouchAreaEnabled(true);
@@ -445,11 +443,11 @@ void MainMenuScene::InitializeSignUpLayer() {
   });
 
   // Creates the sign_up_password_ text field.
-  const auto password_font_size = 28;
-  const auto password_position = Vec2(255, 170);
+  const auto password_font_size = 32;
+  const auto password_position = Vec2(255, 172);
   const auto password_size = Size(450, password_font_size * 1.75);
   sign_up_password_ = TextField::create(
-      "password", "fonts/GoogleSans-Regular.ttf", password_font_size);
+      "Password", "fonts/GoogleSans-Regular.ttf", password_font_size);
   sign_up_password_->setTextColor(Color4B::GRAY);
   sign_up_password_->setPosition(password_position);
   sign_up_password_->setTouchAreaEnabled(true);
@@ -482,12 +480,12 @@ void MainMenuScene::InitializeSignUpLayer() {
       });
 
   // Creates the password_confirm text field.
-  const auto password_confirm_font_size = 28;
+  const auto password_confirm_font_size = 32;
   const auto password_confirm_position = Vec2(255, 85);
   const auto password_confirm_size =
       Size(450, password_confirm_font_size * 1.75);
   sign_up_password_confirm_ =
-      TextField::create("confirm password", "fonts/GoogleSans-Regular.ttf",
+      TextField::create("Confirm password", "fonts/GoogleSans-Regular.ttf",
                         password_confirm_font_size);
   sign_up_password_confirm_->setTextColor(Color4B::GRAY);
   sign_up_password_confirm_->setPosition(password_confirm_position);
@@ -561,7 +559,7 @@ void MainMenuScene::InitializeSignUpLayer() {
 
   // Creates the return button.
   auto return_button =
-      Button::create(kReturnButton[kNormal], kReturnButton[kPressed]);
+      Button::create(kBackButton[kNormal], kBackButton[kPressed]);
   return_button->setScale(.3);
   return_button->setPosition(Size(50, 450));
   sign_up_panel->addChild(return_button);
@@ -592,24 +590,24 @@ void MainMenuScene::InitializeLoginLayer() {
   this->addChild(login_background_);
 
   // Creates the login panel.
-  const auto login_panel_origin = Vec2(300, 300);
+  const auto login_panel_origin = Vec2(300, 325);
   const auto login_panel = Sprite::create(kLoginPanelImage);
   login_panel->setPosition(login_panel_origin);
   login_background_->addChild(login_panel, /*layer_index=*/10);
 
   // Label to output login errors.
   login_error_label_ =
-      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 20);
+      Label::createWithTTF("", "fonts/GoogleSans-Regular.ttf", 24);
   login_error_label_->setTextColor(Color4B(255, 82, 82, 240));
   login_error_label_->setPosition(Vec2(255, 225));
   login_panel->addChild(login_error_label_);
 
   // Creating the login_id_ text field.
-  const auto id_font_size = 28;
-  const auto id_position = Vec2(255, 175);
+  const auto id_font_size = 32;
+  const auto id_position = Vec2(255, 172);
   const auto id_size = Size(450, id_font_size * 1.75);
   login_id_ =
-      TextField::create("email", "fonts/GoogleSans-Regular.ttf", id_font_size);
+      TextField::create("Email", "fonts/GoogleSans-Regular.ttf", id_font_size);
   login_id_->setTextColor(Color4B::GRAY);
   login_id_->setPosition(id_position);
   login_id_->setTouchAreaEnabled(true);
@@ -639,11 +637,11 @@ void MainMenuScene::InitializeLoginLayer() {
   });
 
   // Creates the login_password_ text field.
-  const auto password_font_size = 28;
+  const auto password_font_size = 32;
   const auto password_position = Vec2(255, 75);
   const auto password_size = Size(450, password_font_size * 1.75);
   login_password_ = TextField::create(
-      "password", "fonts/GoogleSans-Regular.ttf", password_font_size);
+      "Password", "fonts/GoogleSans-Regular.ttf", password_font_size);
   login_password_->setTextColor(Color4B::GRAY);
   login_password_->setPosition(password_position);
   login_password_->setTouchAreaEnabled(true);
@@ -709,7 +707,7 @@ void MainMenuScene::InitializeLoginLayer() {
 
   // Creates the return button.
   auto return_button =
-      Button::create(kReturnButton[kNormal], kReturnButton[kPressed]);
+      Button::create(kBackButton[kNormal], kBackButton[kPressed]);
   return_button->setScale(.3);
   return_button->setPosition(Size(50, 375));
   login_panel->addChild(return_button);
@@ -745,6 +743,7 @@ void MainMenuScene::InitializeLoadingLayer() {
 
   // Creates the loading background sprite.
   loading_background_ = this->CreateBackground(kLoadingBackgroundImage);
+  loading_background_->setContentSize(Size(600, 641));
   this->addChild(loading_background_);
 }
 
@@ -759,7 +758,7 @@ void MainMenuScene::InitializeAuthenticationLayer() {
   this->addChild(auth_background_);
 
   // Creates the auth panel.
-  const auto auth_panel_origin = Vec2(300, 300);
+  const auto auth_panel_origin = Vec2(300, 315);
   const auto auth_panel = Sprite::create(kAuthPanelImage);
   auth_panel->setPosition(auth_panel_origin);
   auth_background_->addChild(auth_panel, /*layer_index=*/10);
