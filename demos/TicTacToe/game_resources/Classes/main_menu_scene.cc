@@ -60,6 +60,7 @@ using firebase::auth::Auth;
 using firebase::auth::kAuthErrorNone;
 using firebase::database::Database;
 using std::array;
+using std::string;
 using std::to_string;
 
 // States for button images.
