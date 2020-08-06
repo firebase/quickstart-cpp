@@ -77,10 +77,10 @@ extern const int kTilesY;
 static const int kNumberOfTiles = kTilesX * kTilesY;
 
 // Game board dimensions.
-static const double kBoardWidth = 487;
+static const double kBoardWidth = 482;
 static const double kBoardHeight = 484;
-static const double kBoardLineWidth = 23;
-static const double kBoardLineHeight = 26;
+static const double kBoardLineWidth = 25;
+static const double kBoardLineHeight = 25;
 static const double kTileWidthHitBox = (kBoardWidth / kTilesX);
 static const double kTileHeightHitBox = (kBoardHeight / kTilesY);
 static const double kTileWidth =
@@ -88,16 +88,15 @@ static const double kTileWidth =
 static const double kTileHeight =
     ((kBoardHeight - ((kTilesY - 1) * kBoardLineHeight)) / kTilesY);
 static const Vec2 kBoardOrigin =
-    Vec2(300 - (kBoardWidth / 2), 320 - (kBoardHeight / 2));
+    Vec2(300 - (kBoardWidth / 2), 312 - (kBoardHeight / 2));
 
 // The screen will display the end game text for 2 seconds (120frames/60fps).
 static const int kEndGameFramesMax = 120;
 
 // Constants for the image filenames.
-static const char* kTextFieldImage = "text_field_3.png";
+static const char* kTextFieldImage = "text_field_white.png";
 static const char* kBoardImageFileName = "tic_tac_toe_board.png";
-static const array<char*, 2> kLeaveButton = {"leave_button.png",
-                                             "leave_button_pressed.png"};
+static const array<char*, 2> kLeaveButton = {"leave.png", "leave_dark.png"};
 static const array<const char*, /*number_of_outcomes*/ 4> kGameOutcomeImages = {
     "outcome_won.png", "outcome_lost.png", "outcome_tied.png",
     "outcome_disbanded.png"};
@@ -307,11 +306,11 @@ void TicTacToeLayer::InitializeBoard() {
 
   // Creates the game board.
   board_sprite_ = Sprite::create(kBoardImageFileName);
-  board_sprite_->setPosition(Vec2(300, 300));
+  board_sprite_->setPosition(Vec2(300, 285));
 
   // Creates the leave button.
   leave_button_ = Button::create(kLeaveButton[kNormal], kLeaveButton[kPressed]);
-  leave_button_->setPosition(Vec2(100, 575));
+  leave_button_->setPosition(Vec2(130, 595));
   this->addChild(leave_button_, /*layer_index=*/1);
 
   leave_button_->addTouchEventListener(
@@ -335,7 +334,7 @@ void TicTacToeLayer::InitializeBoard() {
       });
 
   // Creates the label for the game uid.
-  const auto game_uid_position = Vec2(500, 575);
+  const auto game_uid_position = Vec2(470, 595);
   Label* game_uid_label =
       Label::createWithTTF(join_game_uid_, "fonts/GoogleSans-Regular.ttf", 30);
   game_uid_label->setTextColor(Color4B(0, 0, 0, 100));
@@ -352,7 +351,7 @@ void TicTacToeLayer::InitializeBoard() {
   waiting_label_ =
       Label::createWithTTF("Waiting", "fonts/GoogleSans-Regular.ttf", 30);
   waiting_label_->setTextColor(Color4B(255, 82, 82, 240));
-  waiting_label_->setPosition(Vec2(300, 575));
+  waiting_label_->setPosition(Vec2(300, 595));
   this->addChild(waiting_label_, /*layer_index=*/1);
 
   // Set up a 3*3 Tic-Tac-Toe board for tracking results.
