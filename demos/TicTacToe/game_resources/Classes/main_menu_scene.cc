@@ -314,12 +314,10 @@ void MainMenuScene::InitializeGameMenuLayer() {
       [this, join_text_field](Ref* sender, Widget::TouchEventType type) {
         switch (type) {
           case Widget::TouchEventType::ENDED:
-            user_uid_ = "";
-            user_ = nullptr;
+            ClearAuthFields();
             user_result_.Release();
-            user_record_wins_->setString("");
-            user_record_loses_->setString("");
-            user_record_ties_->setString("");
+            user_->Delete();
+            user_uid_ = "";
             back_button_->setVisible(false);
             state_ = kAuthMenuState;
             break;
@@ -340,12 +338,10 @@ void MainMenuScene::InitializeGameMenuLayer() {
       [this, join_text_field](Ref* sender, Widget::TouchEventType type) {
         switch (type) {
           case Widget::TouchEventType::ENDED:
+            ClearAuthFields();
             user_uid_ = "";
             user_ = nullptr;
             user_result_.Release();
-            user_record_wins_->setString("");
-            user_record_loses_->setString("");
-            user_record_ties_->setString("");
             logout_button_->setVisible(false);
             state_ = kAuthMenuState;
             break;
@@ -978,8 +974,9 @@ MainMenuScene::kSceneState MainMenuScene::UpdateSignUp() {
     if (user_result_.error() == firebase::auth::kAuthErrorNone) {
       // Initializes user variables and stores them in the database.
       user_ = *user_result_.result();
-      user_uid_ = GenerateUid(10);
+      user_uid_ = user_->uid();
       this->ClearUserRecord();
+      this->SetUserRecord();
       this->DisplayUserRecord();
 
       // Shows the logout button because the user signed up.
