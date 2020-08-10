@@ -317,6 +317,7 @@ void MainMenuScene::InitializeGameMenuLayer() {
             ClearAuthFields();
             user_result_.Release();
             user_->Delete();
+            RemoveUserUid(user_uid_);
             user_uid_ = "";
             back_button_->setVisible(false);
             state_ = kAuthMenuState;
@@ -878,6 +879,13 @@ void MainMenuScene::ClearAuthFields() {
   sign_up_password_->setString("");
   sign_up_password_confirm_->setString("");
   sign_up_error_label_->setString("");
+}
+
+// Removes the user_uid from the games database.
+void MainMenuScene::RemoveUserUid(const string& user_uid) {
+  WaitForCompletion(
+      database_->GetReference("users").Child(user_uid).RemoveValue(),
+      "removeUserUid");
 }
 
 // Updates every frame:
