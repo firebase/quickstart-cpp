@@ -99,6 +99,9 @@ class MainMenuScene : public cocos2d::Layer, public cocos2d::TextFieldDelegate {
   // Clears the labels and text fields for all authentication layers.
   void ClearAuthFields();
 
+  // Removes the user_uid from the database users collection.
+  void RemoveUserUid(const std::string&);
+
   // Initializes the the firebase app, auth, and database.
   void InitializeFirebase();
   // Initializes the instance of a Node and returns a boolean based on if it was
