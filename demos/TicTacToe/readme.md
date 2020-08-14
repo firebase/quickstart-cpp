@@ -46,6 +46,7 @@ Getting Started
 - To debug with Visual Studio 2019, copy the google-services.json file into the tic_tac_toe_demo/build/ directory. Then open the .sln in that same directory in Visual Studio.
 
 ### How To Play
+---------------
 
 - After you have successfully run the setup_demo.py script, you can then launch the game by running the run_demo.py script. In order to test the multiplayer functionality, open up another terminal and launch a second instant of the game by running the run_demo.py script again.  
   ```
@@ -57,6 +58,57 @@ Getting Started
 - From the main menu screen, you can either create a game or join using a game code (displayed in the top-left corner of the game board). If you are running this demo yourself, have on instance create the game and join with your second game instance.
 
 - After finishing the game, you will notice the record will update on the main menu to reflect the result of your most recent game.
+
+
+
+## Future Improvements
+---------------
+
+### Accessability & Build Process
+
+#### 1. Build on MacOS.
+    By making slight modifications to the setup_demo.py script, making cmake generator an argument, the application should build and run on MacOS.
+
+
+#### 2. Build on linux.
+    By making slight modifications to the setup_demo.py script, making cmake generator an argument, the application should build and run on linux.
+
+
+#### 3. Build on Android
+
+#### 4. Build on iOS
+
+#### 5. Cmake optimizations. 
+    - Use FetchContent to grab the latest Firebase SDK.
+    - Attempt to get around Python 2.7 dependency, this may already work as the scripts use cmake.
+    - Attempt to use FetchContent to grab Cocos2d-x library and grab the files currently being produced by the 'cocos new' command.
+
+
+### Features
+
+#### 1. Add a replay system.
+    This will require changing the game_data documents to keep track of the entire game, oppose to the last_move as it currently does.
+
+
+#### 2. Add animations and sounds on actions/scene changes.
+
+
+#### 3. Text field improvements. (Potentially swap to EditBox as this may be better supported)
+    - If the Tab key is pressed inside a text field, it should attempt to move to then next text field.
+    - When a player pressed inside a text field will existing text, it should place the cursor in the selected location.
+
+
+#### 4. Add Additional Authentication providers.
+
+### Bugs
+
+#### 1. Close application callback.
+    If the player closes the application, this should trigger a callback to update relevant Firebase feature data.
+
+#### Code Health
+
+### 1. Remove all blocking statements (WaitForCompletion()).
+    Removes the WaitForCompletion() function. Instead, rely on the state management to handle future requests.
 
 Support
 -------
