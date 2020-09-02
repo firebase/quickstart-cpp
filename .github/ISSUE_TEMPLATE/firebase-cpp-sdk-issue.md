@@ -7,6 +7,8 @@ assignees: ''
 
 ---
 
+## For Firebase C++ SDK issues, please report to [Firebase C++ open-source](https://github.com/firebase/firebase-cpp-sdk/issues)
+
 ### Please fill in the following fields:
 Firebase C++ SDK version: 
 Firebase plugins in use (Auth, Database, etc.):
@@ -18,6 +20,4 @@ Platform you are targeting (iOS, Android, and/or desktop):
 (Please list the full steps to reproduce the issue. Include device logs, and stack traces if available.)
 
 ### Please answer the following, if applicable:
-Have you been able to reproduce this issue with just the Firebase C++ quickstarts (this GitHub project)?
-
 What's the issue repro rate? (eg 100%, 1/5 etc)
