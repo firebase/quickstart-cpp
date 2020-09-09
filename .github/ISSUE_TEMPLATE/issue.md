@@ -14,11 +14,11 @@ Once you've read this section and determined that your issue is appropriate for 
 
 ### [REQUIRED] Please fill in the following fields:
 
-  * Which Firebase Sample? (Auth, Database, etc.): _____
+  * Which Firebase Sample: _____ (Auth, Database, etc.)
   * Firebase C++ SDK version: _____
-  * Additional SDKs you are using (Facebook, AdMob, etc.): _____
-  * Platform you are using the SDK on (Mac, Windows, or Linux): _____
-  * Platform you are targeting (iOS, Android, and/or desktop): _____
+  * Additional SDKs you are using: _____ (Facebook, AdMob, etc.)
+  * Platform you are using the SDK on: _____ (Mac, Windows, or Linux)
+  * Platform you are targeting: _____ (iOS, Android, and/or desktop)
 
 ### [REQUIRED] Please describe the issue here:
 
