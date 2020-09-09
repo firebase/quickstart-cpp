@@ -8,7 +8,7 @@ validate_template=true
 template_path=.github/ISSUE_TEMPLATE/issue.md
 -->
 
-### [READ] For Firebase C++ SDK issues, please report to [Firebase C++ open-source](https://github.com/firebase/firebase-cpp-sdk/issues)
+### [READ] For Firebase C++ SDK issues, please report to [Firebase C++ open-source](https://github.com/firebase/firebase-cpp-sdk/issues/new/choose)
 
 Once you've read this section and determined that your issue is appropriate for this repository, please delete this section.
 
