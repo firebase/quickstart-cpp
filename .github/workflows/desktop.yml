@@ -58,6 +58,7 @@ jobs:
 
       - name: download public SDK package from web
         if: ${{ github.event.inputs.downloadPublicVersion != '' }}
+        shell: bash
         run: |
           if [[ ! "${{ github.event.inputs.downloadPublicVersion }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo Invalid version number: "${{ github.event.inputs.downloadPublicVersion }}"
