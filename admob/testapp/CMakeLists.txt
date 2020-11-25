@@ -62,10 +62,27 @@ if(ANDROID)
 else()
   # Build a desktop application.
 
-  # Windows runtime mode, either MD or MT depending on whether you are using
-  # /MD or /MT. For more information see:
-  # https://msdn.microsoft.com/en-us/library/2kzt1wy3.aspx
-  set(MSVC_RUNTIME_MODE MD)
+  if (MSVC)
+    if (MSVC_RUNTIME_LIBRARY_STATIC)
+      add_compile_options(
+        $<$<CONFIG:>:/MT>
+        $<$<CONFIG:Debug>:/MTd>
+        $<$<CONFIG:Release>:/MT>
+    )
+      # Ideally we should be setting this variable as per the Debug/Release config
+      # (MT vs MTd) but our prebuilt libraries don't ship with Debug builds.
+      set(MSVC_RUNTIME_MODE MT)
+    else()
+      add_compile_options(
+        $<$<CONFIG:>:/MD>
+        $<$<CONFIG:Debug>:/MDd>
+        $<$<CONFIG:Release>:/MD>
+    )
+      # Ideally we should be setting this variable as per the Debug/Release config
+      # (MDd vs MD)but our prebuilt libraries don't ship with Debug builds.
+      set(MSVC_RUNTIME_MODE MD)
+    endif()
+  endif()
 
   # Platform abstraction layer for the desktop sample.
   set(FIREBASE_SAMPLE_DESKTOP_SRCS
