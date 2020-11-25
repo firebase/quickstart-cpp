@@ -129,6 +129,8 @@ jobs:
 
       - name: Print built libraries
         shell: bash
+        env:
+          APIS: ${{ github.event.inputs.apis}}
         run: |
           OLDIFS=$IFS
           IFS=','
@@ -149,6 +151,8 @@ jobs:
 
       - name: Inspect firebase libraries for cpu arch and msvc runtime.
         shell: bash
+        env:
+          APIS: ${{ github.event.inputs.apis}}
         run: |
           OLDIFS=$IFS
           IFS=','
