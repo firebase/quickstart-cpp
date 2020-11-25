@@ -127,14 +127,37 @@ jobs:
           set +f
           IFS=$OLDIFS
 
-
       - name: Print built libraries
         shell: bash
         run: |
-          find messaging/testapp/build -name "*.lib"
-          find messaging/testapp/build -name "*.dll"
-          find messaging/testapp/build -name "*.dylib"
-          find messaging/testapp/build -name "*.a"
-          find messaging/testapp/build -name "*.so"
-          find messaging/testapp/build -name "*.framework"
-          ls messaging/testapp/build/
+          OLDIFS=$IFS
+          IFS=','
+          set -f
+          apilist="${APIS:-auth,messaging}"
+          for api in $apilist; do
+            set +f
+            find $api/testapp/build -name "*.lib"
+            find $api/testapp/build -name "*.dll"
+            find $api/testapp/build -name "*.dylib"
+            find $api/testapp/build -name "*.a"
+            find $api/testapp/build -name "*.so"
+            find $api/testapp/build -name "*.framework"
+            ls $api/testapp/build/
+          done
+          set +f
+          IFS=$OLDIFS
+
+      - name: Inspect firebase libraries for cpu arch and msvc runtime.
+        shell: bash
+        run: |
+          OLDIFS=$IFS
+          IFS=','
+          set -f
+          apilist="${APIS:-auth,messaging}"
+          for api in $apilist; do
+            set +f
+            python firebase-cpp-sdk-source/scripts/gha/inspect_built_libraries.py $api/testapp/build
+          done
+          set +f
+          IFS=$OLDIF
+        continue-on-error: true
