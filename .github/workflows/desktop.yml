@@ -56,13 +56,6 @@ jobs:
           submodules: true
           path: 'firebase-cpp-sdk-source'
 
-      - name: log run inputs
-        run: |
-          if [[ -n "${{ github.event.inputs.downloadPublicVersion }}" ]]; then
-            echo "::warning ::Downloading public SDK package from https://dl.google.com/firebase/sdk/cpp/firebase_cpp_sdk_${{ github.event.inputs.downloadPublicVersion }}.zip"
-          if [[ -n "${{ github.event.inputs.apis}}" ]]; then
-            echo "::warning ::Building and running quickstarts for ${{ github.event.inputs.apis}}"
-
       - name: download public SDK package from web
         if: ${{ github.event.inputs.downloadPublicVersion != '' }}
         run: |
