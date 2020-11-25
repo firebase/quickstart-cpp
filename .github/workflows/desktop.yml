@@ -93,8 +93,20 @@ jobs:
 
       - name: Build apps
         shell: bash
+        env:
+          APIS: ${{ github.event.inputs.apis}}
         run: |
-          python firebase-cpp-sdk-source/scripts/build_desktop_app_with_firebase.py --sdk_dir firebase-cpp-sdk-source --app_dir messaging/testapp --build_dir build
+          OLDIFS=$IFS
+          IFS=','
+          set -f
+          apilist = ${{ github.event.inputs.apis}}
+          for api in apilist; do
+            set +f
+            echo "$api"
+            python firebase-cpp-sdk-source/scripts/build_desktop_app_with_firebase.py --sdk_dir firebase-cpp-sdk-source --app_dir $api/testapp --build_dir build
+          done
+          set +f
+          IFS=$OLDIFS
 
       - name: Print built libraries
         shell: bash
