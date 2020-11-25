@@ -98,7 +98,7 @@ jobs:
           OLDIFS=$IFS
           IFS=','
           set -f
-          apilist = "auth,messaging"
+          apilist="auth,messaging"
           for api in $apilist; do
             set +f
             echo "$api"
