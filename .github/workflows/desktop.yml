@@ -1,4 +1,4 @@
-name: Desktop build
+name: Desktop builds
 
 on:
   push:
@@ -90,15 +90,16 @@ jobs:
           python-version: ${{ matrix.python_version }}
           architecture: 'x64'
 
-      - name: Build apps
+      - name: Build apps against Firebase C++ source
         shell: bash
+        if: ${{ github.event.inputs.downloadPublicVersion == '' }}
         env:
           APIS: ${{ github.event.inputs.apis}}
         run: |
           OLDIFS=$IFS
           IFS=','
           set -f
-          apilist="auth,messaging"
+          apilist="${APIS:-'auth,messaging'}"
           for api in $apilist; do
             set +f
             echo "$api"
@@ -106,6 +107,25 @@ jobs:
           done
           set +f
           IFS=$OLDIFS
+
+      - name: Build apps against Firebase C++ prebuilt libraries
+        shell: bash
+        if: ${{ github.event.inputs.downloadPublicVersion != '' }}
+        env:
+          APIS: ${{ github.event.inputs.apis}}
+        run: |
+          OLDIFS=$IFS
+          IFS=','
+          set -f
+          apilist="${APIS:-'auth,messaging'}"
+          for api in $apilist; do
+            set +f
+            echo "$api"
+            python firebase-cpp-sdk-source/scripts/build_desktop_app_with_firebase.py --sdk_dir firebase-cpp-sdk --app_dir $api/testapp --build_dir build --msvc_runtime_library ${{ matrix.msvc_runtime }}
+          done
+          set +f
+          IFS=$OLDIFS
+
 
       - name: Print built libraries
         shell: bash
