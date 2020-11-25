@@ -144,7 +144,7 @@ jobs:
             find $api/testapp/build -name "*.a"
             find $api/testapp/build -name "*.so"
             find $api/testapp/build -name "*.framework"
-            find $api/testapp/build -name "desktop_testapp*"
+            find -type f $api/testapp/build -name "desktop_testapp*"
           done
           set +f
           IFS=$OLDIFS
