@@ -1,6 +1,8 @@
 name: Desktop build
 
 on:
+  push:
+
   workflow_dispatch:
     inputs:
       downloadPublicVersion:
