@@ -99,7 +99,7 @@ jobs:
           OLDIFS=$IFS
           IFS=','
           set -f
-          apilist="${APIS:-'auth,messaging'}"
+          apilist="${APIS:-auth,messaging}"
           for api in $apilist; do
             set +f
             echo "$api"
@@ -117,7 +117,7 @@ jobs:
           OLDIFS=$IFS
           IFS=','
           set -f
-          apilist="${APIS:-'auth,messaging'}"
+          apilist="${APIS:-auth,messaging}"
           for api in $apilist; do
             set +f
             echo "$api"
