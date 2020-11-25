@@ -99,10 +99,10 @@ jobs:
       - name: Print built libraries
         shell: bash
         run: |
-          find build -name "*.lib"
-          find build -name "*.dll"
-          find build -name "*.dylib"
-          find build -name "*.a"
-          find build -name "*.so"
-          find build -name "*.framework"
-          ls build/
+          find messaging/testapp/build -name "*.lib"
+          find messaging/testapp/build -name "*.dll"
+          find messaging/testapp/build -name "*.dylib"
+          find messaging/testapp/build -name "*.a"
+          find messaging/testapp/build -name "*.so"
+          find messaging/testapp/build -name "*.framework"
+          ls messaging/testapp/build/
