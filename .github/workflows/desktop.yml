@@ -54,6 +54,7 @@ jobs:
           repository: 'firebase/firebase-cpp-sdk'
           ref : 'feature/python-tool-build-apps-with-firebase'
           submodules: true
+          fetch-depth: 0
           path: 'firebase-cpp-sdk-source'
 
       - name: download public SDK package from web
