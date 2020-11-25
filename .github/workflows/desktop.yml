@@ -102,7 +102,7 @@ jobs:
           for api in $apilist; do
             set +f
             echo "$api"
-            python firebase-cpp-sdk-source/scripts/build_desktop_app_with_firebase.py --sdk_dir firebase-cpp-sdk-source --app_dir $api/testapp --build_dir build
+            python firebase-cpp-sdk-source/scripts/build_desktop_app_with_firebase.py --sdk_dir firebase-cpp-sdk-source --app_dir $api/testapp --build_dir build --msvc_runtime_library ${{ matrix.msvc_runtime }}
           done
           set +f
           IFS=$OLDIFS
