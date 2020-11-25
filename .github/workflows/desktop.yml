@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: 'firebase/firebase-cpp-sdk'
-          ref : 'feature/python-tools-build-apps-with-firebase'
+          ref : 'feature/python-tool-build-apps-with-firebase'
           submodules: true
           path: 'firebase-cpp-sdk-source'
 
