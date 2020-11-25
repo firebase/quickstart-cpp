@@ -1,0 +1,112 @@
+name: Desktop build
+
+on:
+  workflow_dispatch:
+    inputs:
+      downloadPublicVersion:
+        description: 'public version # to test against'
+      apis:
+          description: 'CSV of apis whose quickstart examples we should build'
+          default: 'admob,analytics,auth,database,dynamic_links,firestore,functions,messaging,remote_config,storage'
+          required: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.architecture }}-${{ matrix.msvc_runtime}}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        build_type: ["Release", "Debug"]
+        architecture: ["x64", "x86"]
+        msvc_runtime: ["static", "dynamic"]
+        python_version: [3.7]
+
+        include:
+        - os: windows-latest
+          vcpkg_triplet_suffix: "windows-static"
+        - os: windows-latest
+          msvc_runtime: "dynamic"
+          vcpkg_triplet_suffix: "windows-static-md"
+        - os: ubuntu-latest
+          vcpkg_triplet_suffix: "linux"
+        - os: macos-latest
+          vcpkg_triplet_suffix: "osx"
+
+        exclude:
+        - os: macos-latest
+          architecture: "x86"
+        - os: macos-latest
+          msvc_runtime: "dynamic"
+        - os: ubuntu-latest
+          msvc_runtime: "dynamic"
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions/checkout@v2
+        with:
+          repository: 'firebase/firebase-cpp-sdk'
+          branch: 'feature/python-tools-build-apps-with-firebase'
+          submodules: true
+          path: 'firebase-cpp-sdk-source'
+
+      - name: log run inputs
+        run: |
+          if [[ -n "${{ github.event.inputs.downloadPublicVersion }}" ]]; then
+            echo "::warning ::Downloading public SDK package from https://dl.google.com/firebase/sdk/cpp/firebase_cpp_sdk_${{ github.event.inputs.downloadPublicVersion }}.zip"
+          if [[ -n "${{ github.event.inputs.apis}}" ]]; then
+            echo "::warning ::Building and running quickstarts for ${{ github.event.inputs.apis}}"
+
+      - name: download public SDK package from web
+        if: ${{ github.event.inputs.downloadPublicVersion != '' }}
+        run: |
+          if [[ ! "${{ github.event.inputs.downloadPublicVersion }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo Invalid version number: "${{ github.event.inputs.downloadPublicVersion }}"
+            exit 1
+          fi
+          set +e
+          # Retry up to 10 times because Curl has a tendency to timeout on
+          # Github runners.
+          for retry in {1..10} error; do
+          if [[ $retry == "error" ]]; then exit 5; fi
+            curl -L https://dl.google.com/firebase/sdk/cpp/firebase_cpp_sdk_${{ github.event.inputs.downloadPublicVersion }}.zip --output firebase_cpp_sdk.zip && break
+            sleep 300
+          done
+          set -e
+
+      - name: Unzip Firebase C++ SDK
+        shell: bash
+        if: ${{ github.event.inputs.downloadPublicVersion != '' }}
+        run: |
+          ls
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            7z x firebase_cpp_sdk.zip
+          else
+            unzip -q firebase_cpp_sdk.zip
+          fi
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python_version }}
+          architecture: 'x64'
+
+      - name: Build apps
+        shell: bash
+        run: |
+          python firebase-cpp-sdk-source/scripts/build_desktop_app_with_firebase.py --sdk_dir firebase-cpp-sdk-source --app_dir messaging/testapp --build_dir build
+
+      - name: Print built libraries
+        shell: bash
+        run: |
+          find build -name "*.lib"
+          find build -name "*.dll"
+          find build -name "*.dylib"
+          find build -name "*.a"
+          find build -name "*.so"
+          find build -name "*.framework"
+          ls build/
