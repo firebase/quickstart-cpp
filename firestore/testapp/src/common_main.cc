@@ -65,11 +65,12 @@ class TestEventListener : public Countable,
  public:
   explicit TestEventListener(std::string name) : name_(std::move(name)) {}
 
-  void OnEvent(const T& value,
-               const firebase::firestore::Error error) override {
+  void OnEvent(const T& value, const firebase::firestore::Error error_code,
+               const std::string& error_message) override {
     event_count_++;
-    if (error != firebase::firestore::kOk) {
-      LogMessage("ERROR: EventListener %s got %d.", name_.c_str(), error);
+    if (error_code != firebase::firestore::kErrorOk) {
+      LogMessage("ERROR: EventListener %s got %d (%s).", name_.c_str(),
+                 error_code, error_message.c_str());
     }
   }
 
@@ -79,8 +80,9 @@ class TestEventListener : public Countable,
   firebase::firestore::ListenerRegistration AttachTo(U* ref) {
 #if !defined(STLPORT)
     return ref->AddSnapshotListener(
-        [this](const T& result, firebase::firestore::Error error) {
-          OnEvent(result, error);
+        [this](const T& result, firebase::firestore::Error error_code,
+               const std::string& error_message) {
+          OnEvent(result, error_code, error_message);
         });
 #else
     return ref->AddSnapshotListener(this);
@@ -294,7 +296,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
                 collection.Document("three"),
                 firebase::firestore::MapFieldValue{
                     {"int", firebase::firestore::FieldValue::Integer(321)}});
-            return firebase::firestore::kOk;
+            return firebase::firestore::kErrorOk;
           }),
       "firestore.RunTransaction");
   LogMessage("Tested transaction.");

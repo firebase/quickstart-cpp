@@ -2,6 +2,6 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Firebase Realtime Database test application.
 target 'testapp' do
-  pod 'Firebase/Database', '6.24.0'
-  pod 'Firebase/Auth', '6.24.0'
+  pod 'Firebase/Database', '7.0.0'
+  pod 'Firebase/Auth', '7.0.0'
 end

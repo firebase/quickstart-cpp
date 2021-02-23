@@ -2,7 +2,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '8.0'
 # Firebase Firestore test application.
 target 'testapp' do
-  pod 'Firebase/Analytics', '6.24.0'
-  pod 'Firebase/Firestore', '6.24.0'
-  pod 'Firebase/Auth', '6.24.0'
+  pod 'Firebase/Analytics', '7.0.0'
+  pod 'Firebase/Firestore', '7.0.0'
+  pod 'Firebase/Auth', '7.0.0'
 end
