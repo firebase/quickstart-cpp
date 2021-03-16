@@ -54,7 +54,7 @@ public class TestappNativeActivity extends NativeActivity {
       message.setAction(MessageForwardingService.ACTION_REMOTE_INTENT);
       message.putExtras(intent);
       message.setData(intent.getData());
-      startService(message);
+      MessageForwardingService.enqueueWork(this, message);
     }
     setIntent(intent);
   }
