@@ -65,7 +65,8 @@ class TestEventListener : public Countable,
  public:
   explicit TestEventListener(std::string name) : name_(std::move(name)) {}
 
-  void OnEvent(const T& value, const firebase::firestore::Error error_code,
+  void OnEvent(const T& value,
+               const firebase::firestore::Error error_code,
                const std::string& error_message) override {
     event_count_++;
     if (error_code != firebase::firestore::kErrorOk) {
@@ -283,22 +284,21 @@ extern "C" int common_main(int argc, const char* argv[]) {
   LogMessage("Tested batch write.");
 
   LogMessage("Testing transaction.");
-  Await(
-      firestore->RunTransaction(
-          [collection](firebase::firestore::Transaction& transaction,
-                       std::string&) -> firebase::firestore::Error {
-            transaction.Update(
-                collection.Document("one"),
-                firebase::firestore::MapFieldValue{
-                    {"int", firebase::firestore::FieldValue::Integer(123)}});
-            transaction.Delete(collection.Document("two"));
-            transaction.Set(
-                collection.Document("three"),
-                firebase::firestore::MapFieldValue{
-                    {"int", firebase::firestore::FieldValue::Integer(321)}});
-            return firebase::firestore::kErrorOk;
-          }),
-      "firestore.RunTransaction");
+  Await(firestore->RunTransaction(
+            [collection](firebase::firestore::Transaction& transaction,
+                         std::string&) -> firebase::firestore::Error {
+              transaction.Update(
+                  collection.Document("one"),
+                  firebase::firestore::MapFieldValue{
+                      {"int", firebase::firestore::FieldValue::Integer(123)}});
+              transaction.Delete(collection.Document("two"));
+              transaction.Set(
+                  collection.Document("three"),
+                  firebase::firestore::MapFieldValue{
+                      {"int", firebase::firestore::FieldValue::Integer(321)}});
+              return firebase::firestore::kErrorOk;
+            }),
+        "firestore.RunTransaction");
   LogMessage("Tested transaction.");
 
   LogMessage("Testing query.");
