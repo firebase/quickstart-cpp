@@ -60,14 +60,13 @@ class Countable {
 };
 
 template <typename T>
-class TestEventListener : public Countable,
-                          public firebase::firestore::EventListener<T> {
+class TestEventListener : public Countable {
  public:
   explicit TestEventListener(std::string name) : name_(std::move(name)) {}
 
   void OnEvent(const T& value,
                const firebase::firestore::Error error_code,
-               const std::string& error_message) override {
+               const std::string& error_message) {
     event_count_++;
     if (error_code != firebase::firestore::kErrorOk) {
       LogMessage("ERROR: EventListener %s got %d (%s).", name_.c_str(),
@@ -75,19 +74,13 @@ class TestEventListener : public Countable,
     }
   }
 
-  // Hides the STLPort-related quirk that `AddSnapshotListener` has different
-  // signatures depending on whether `std::function` is available.
   template <typename U>
   firebase::firestore::ListenerRegistration AttachTo(U* ref) {
-#if !defined(STLPORT)
     return ref->AddSnapshotListener(
         [this](const T& result, firebase::firestore::Error error_code,
                const std::string& error_message) {
           OnEvent(result, error_code, error_message);
         });
-#else
-    return ref->AddSnapshotListener(this);
-#endif
   }
 
  private:
