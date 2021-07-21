@@ -60,13 +60,13 @@ class Countable {
 };
 
 template <typename T>
-class TestEventListener : public Countable,
-                          public firebase::firestore::EventListener<T> {
+class TestEventListener : public Countable {
  public:
   explicit TestEventListener(std::string name) : name_(std::move(name)) {}
 
-  void OnEvent(const T& value, const firebase::firestore::Error error_code,
-               const std::string& error_message) override {
+  void OnEvent(const T& value,
+               const firebase::firestore::Error error_code,
+               const std::string& error_message) {
     event_count_++;
     if (error_code != firebase::firestore::kErrorOk) {
       LogMessage("ERROR: EventListener %s got %d (%s).", name_.c_str(),
@@ -74,19 +74,13 @@ class TestEventListener : public Countable,
     }
   }
 
-  // Hides the STLPort-related quirk that `AddSnapshotListener` has different
-  // signatures depending on whether `std::function` is available.
   template <typename U>
   firebase::firestore::ListenerRegistration AttachTo(U* ref) {
-#if !defined(STLPORT)
     return ref->AddSnapshotListener(
         [this](const T& result, firebase::firestore::Error error_code,
                const std::string& error_message) {
           OnEvent(result, error_code, error_message);
         });
-#else
-    return ref->AddSnapshotListener(this);
-#endif
   }
 
  private:
@@ -283,22 +277,21 @@ extern "C" int common_main(int argc, const char* argv[]) {
   LogMessage("Tested batch write.");
 
   LogMessage("Testing transaction.");
-  Await(
-      firestore->RunTransaction(
-          [collection](firebase::firestore::Transaction& transaction,
-                       std::string&) -> firebase::firestore::Error {
-            transaction.Update(
-                collection.Document("one"),
-                firebase::firestore::MapFieldValue{
-                    {"int", firebase::firestore::FieldValue::Integer(123)}});
-            transaction.Delete(collection.Document("two"));
-            transaction.Set(
-                collection.Document("three"),
-                firebase::firestore::MapFieldValue{
-                    {"int", firebase::firestore::FieldValue::Integer(321)}});
-            return firebase::firestore::kErrorOk;
-          }),
-      "firestore.RunTransaction");
+  Await(firestore->RunTransaction(
+            [collection](firebase::firestore::Transaction& transaction,
+                         std::string&) -> firebase::firestore::Error {
+              transaction.Update(
+                  collection.Document("one"),
+                  firebase::firestore::MapFieldValue{
+                      {"int", firebase::firestore::FieldValue::Integer(123)}});
+              transaction.Delete(collection.Document("two"));
+              transaction.Set(
+                  collection.Document("three"),
+                  firebase::firestore::MapFieldValue{
+                      {"int", firebase::firestore::FieldValue::Integer(321)}});
+              return firebase::firestore::kErrorOk;
+            }),
+        "firestore.RunTransaction");
   LogMessage("Tested transaction.");
 
   LogMessage("Testing query.");
