@@ -33,6 +33,14 @@ Building and Running the testapp
           sudo gem install cocoapods --pre
         ```
 
+    -   Update the pod versions in the Podfile to match the C++ SDK version that you are using.
+        For instance: if you're using SDK version 8.2.0, use the following in the Podfile:
+
+        ```
+          pod 'Firebase/Firestore', '8.2.0'
+          pod 'Firebase/Auth', '8.2.0'
+        ```
+
     -   From the testapp directory, install the CocoaPods listed in the Podfile
         by running,
 
@@ -71,15 +79,15 @@ Building and Running the testapp
 
 -   Add the following frameworks from the Firebase C++ SDK to the project:
 
-    -   frameworks/ios/universal/firebase.framework
-    -   frameworks/ios/universal/firebase_auth.framework
-    -   frameworks/ios/universal/firebase_firestore.framework
+    -   xcframeworks/firebase.xcframework/ios-arm64_armv7/firebase.framework
+    -   xcframeworks/firebase_firestore.xcframework/ios-arm64_armv7/firebase_firestore.framework
+    -   xcframeworks/firebase_auth.xcframework/ios-arm64_armv7/firebase_auth.framework
     -   You will need to either,
         1.  Check "Copy items if needed" when adding the frameworks, or
         2.  Add the framework path in "Framework Search Paths"
             -   e.g. If you downloaded the Firebase C++ SDK to
                 `/Users/me/firebase_cpp_sdk`, then you would add the path
-                `/Users/me/firebase_cpp_sdk/frameworks/ios/universal`.
+                `/Users/me/firebase_cpp_sdk/xcframeworks/**`.
             -   To add the path, in XCode, select your project in the project
                 navigator, then select your target in the main window. Select
                 the "Build Settings" tab, and click "All" to see all the build
