@@ -13,7 +13,20 @@ The testapp performs the following:
 -   Gets a pointer to firebase::Auth, and signs in anonymously. This allows the
     testapp to access a Firebase Firestore instance with authentication rules
     enabled.
--   TODO(varconst): describe the Firestore-specific logic
+-   Initializes a Firestore instance and sets its logging level to
+    `kLogLevelDebug` in order to see debug messages in the logs.
+-   Tests that it can create `Timestamp`, `SnapshotMetadata`, and `GeoPoint`
+    objects.
+-   Creates a collection and a document inside that collection.
+-   Writes initial data to the document (`Set`), updates the document content
+    (`Update`), reads the document back (`Get`), and checks that the contents
+    match our expectation.
+-   Deletes the document.
+-   Performs a batch write to two documents.
+-   Performs a Transaction containing three operations (`Update`, `Delete`, and
+    `Set`) on three different documents.
+-   Queries documents in the collection that match a certain condition. Ensures
+    the documents returned via the query match our expectation.
 
 Introduction
 ------------
@@ -219,11 +232,6 @@ Building and Running the testapp
 
 -   The testapp has no user interface, but the output can be viewed via the
     console.
-
-Known issues
-------------
-
-TODO(varconst)
 
 Support
 -------
