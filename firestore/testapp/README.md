@@ -36,8 +36,8 @@ Building and Running the testapp
     -   Update the pod versions in the Podfile to match the C++ SDK version that you are using.
         For the latest version of the C++ SDK, you can find the associated pod versions on the
         [`Add Firebase to your project` page](https://firebase.google.com/docs/cpp/setup?platform=ios#libraries-ios).
-        For instance: if you're using SDK version 8.2.0, use the following in the Podfile:
-        (but note that pod versions may not always match the C++ SDK version)
+        For instance: if you're using SDK version 8.2.0, use the following in the Podfile
+        (but note that pod versions may not always match the C++ SDK version):
 
         ```
           pod 'Firebase/Firestore', '8.2.0'
