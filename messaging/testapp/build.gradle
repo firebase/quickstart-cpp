@@ -25,6 +25,13 @@ android {
   compileSdkVersion 28
   buildToolsVersion '28.0.3'
 
+  android {
+      compileOptions {
+          sourceCompatibility 1.8
+          targetCompatibility 1.8
+      }
+  }
+
   sourceSets {
     main {
       jniLibs.srcDirs = ['libs']
