@@ -12,59 +12,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "firebase/app.h"
+#include "firebase/future.h"
 #include "firebase/gma.h"
 #include "firebase/gma/ad_view.h"
 #include "firebase/gma/interstitial_ad.h"
 #include "firebase/gma/rewarded_ad.h"
 #include "firebase/gma/types.h"
-#include "firebase/app.h"
-#include "firebase/future.h"
 
 // Thin OS abstraction layer.
-#include "main.h"  // NOLINT
+#include "main.h" // NOLINT
 
 // A simple listener that logs changes to an AdView.
 class LoggingAdViewListener : public firebase::gma::AdListener {
- public:
+public:
   LoggingAdViewListener() {}
 
-  void OnAdClicked() override {
-    ::LogMessage("AdView ad clicked.");
-  }
+  void OnAdClicked() override { ::LogMessage("AdView ad clicked."); }
 
-  void OnAdClosed() override {
-    ::LogMessage("AdView ad closed.");
-  }
+  void OnAdClosed() override { ::LogMessage("AdView ad closed."); }
 
-  void OnAdImpression() override {
-    ::LogMessage("AdView ad impression.");
-  }
+  void OnAdImpression() override { ::LogMessage("AdView ad impression."); }
 
-  void OnAdOpened() override {
-    ::LogMessage("AdView ad opened.");
-  }
+  void OnAdOpened() override { ::LogMessage("AdView ad opened."); }
 };
 
 // A simple listener that logs changes to an AdView's bounding box.
 class LoggingAdViewBoundedBoxListener
     : public firebase::gma::AdViewBoundingBoxListener {
- public:
-  void OnBoundingBoxChanged(firebase::gma::AdView* ad_view,
+public:
+  void OnBoundingBoxChanged(firebase::gma::AdView *ad_view,
                             firebase::gma::BoundingBox box) override {
     ::LogMessage("AdView bounding box update x: %d  y: %d  "
-      "width: %d  height: %d", box.x, box.y, box.width, box.height);
+                 "width: %d  height: %d",
+                 box.x, box.y, box.width, box.height);
   }
 };
 
 // A simple listener track FullScreen content changes.
 class LoggingFullScreenContentListener
     : public firebase::gma::FullScreenContentListener {
- public:
-  LoggingFullScreenContentListener() : num_ad_dismissed_(0) { }
+public:
+  LoggingFullScreenContentListener() : num_ad_dismissed_(0) {}
 
-  void OnAdClicked() override {
-    ::LogMessage("FullScreenContent ad clicked.");
-  }
+  void OnAdClicked() override { ::LogMessage("FullScreenContent ad clicked."); }
 
   void OnAdDismissedFullScreenContent() override {
     ::LogMessage("FullScreenContent ad dismissed.");
@@ -72,9 +63,10 @@ class LoggingFullScreenContentListener
   }
 
   void OnAdFailedToShowFullScreenContent(
-      const firebase::gma::AdError& ad_error) override {
+      const firebase::gma::AdError &ad_error) override {
     ::LogMessage("FullScreenContent ad failed to show full screen content,"
-      " AdErrorCode: %d", ad_error.code());
+                 " AdErrorCode: %d",
+                 ad_error.code());
   }
 
   void OnAdImpression() override {
@@ -87,47 +79,47 @@ class LoggingFullScreenContentListener
 
   uint32_t num_ad_dismissed() const { return num_ad_dismissed_; }
 
-  private:
+private:
   uint32_t num_ad_dismissed_;
 };
 
 // A simple listener track UserEarnedReward events.
 class LoggingUserEarnedRewardListener
     : public firebase::gma::UserEarnedRewardListener {
- public:
-  LoggingUserEarnedRewardListener() { }
+public:
+  LoggingUserEarnedRewardListener() {}
 
-  void OnUserEarnedReward(const firebase::gma::AdReward& reward) override {
-    ::LogMessage("User earned reward amount: %d  type: %s",
-      reward.amount(), reward.type().c_str());
+  void OnUserEarnedReward(const firebase::gma::AdReward &reward) override {
+    ::LogMessage("User earned reward amount: %d  type: %s", reward.amount(),
+                 reward.type().c_str());
   }
 };
 
 // A simple listener track ad pay events.
 class LoggingPaidEventListener : public firebase::gma::PaidEventListener {
- public:
-  LoggingPaidEventListener() { }
+public:
+  LoggingPaidEventListener() {}
 
-  void OnPaidEvent(const firebase::gma::AdValue& value) override {
+  void OnPaidEvent(const firebase::gma::AdValue &value) override {
     ::LogMessage("PaidEvent value: %lld currency_code: %s",
-      value.value_micros(), value.currency_code().c_str());
-   }
+                 value.value_micros(), value.currency_code().c_str());
+  }
 };
 
-void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request);
-void LoadAndShowInterstitialAd(const firebase::gma::AdRequest& ad_request);
-void LoadAndShowRewardedAd(const firebase::gma::AdRequest& ad_request);
+void LoadAndShowAdView(const firebase::gma::AdRequest &ad_request);
+void LoadAndShowInterstitialAd(const firebase::gma::AdRequest &ad_request);
+void LoadAndShowRewardedAd(const firebase::gma::AdRequest &ad_request);
 
 // These ad units IDs have been created specifically for testing, and will
 // always return test ads.
 #if defined(__ANDROID__)
-const char* kBannerAdUnit = "ca-app-pub-3940256099942544/6300978111";
-const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/1033173712";
-const char* kRewardedAdUnit = "ca-app-pub-3940256099942544/5224354917";
+const char *kBannerAdUnit = "ca-app-pub-3940256099942544/6300978111";
+const char *kInterstitialAdUnit = "ca-app-pub-3940256099942544/1033173712";
+const char *kRewardedAdUnit = "ca-app-pub-3940256099942544/5224354917";
 #else
-const char* kBannerAdUnit = "ca-app-pub-3940256099942544/2934735716";
-const char* kInterstitialAdUnit = "ca-app-pub-3940256099942544/4411468910";
-const char* kRewardedAdUnit = "ca-app-pub-3940256099942544/1712485313";
+const char *kBannerAdUnit = "ca-app-pub-3940256099942544/2934735716";
+const char *kInterstitialAdUnit = "ca-app-pub-3940256099942544/4411468910";
+const char *kRewardedAdUnit = "ca-app-pub-3940256099942544/1712485313";
 #endif
 
 // Sample keywords to use in making the request.
@@ -138,10 +130,10 @@ const std::vector<std::string> kTestDeviceIDs = {
     "2077ef9a63d2b398840261c8221a0c9b", "098fe087d987c9a878965454a65654d7"};
 
 #if defined(ANDROID)
-static const char* kAdNetworkExtrasClassName =
+static const char *kAdNetworkExtrasClassName =
     "com/google/ads/mediation/admob/AdMobAdapter";
 #else
-static const char* kAdNetworkExtrasClassName = "GADExtras";
+static const char *kAdNetworkExtrasClassName = "GADExtras";
 #endif
 
 // Function to wait for the completion of a future, and log the error
@@ -160,15 +152,15 @@ static void WaitForFutureCompletion(firebase::FutureBase future) {
 }
 
 // Inittialize GMA, load a Banner, Interstitial and Rewarded Ad.
-extern "C" int common_main(int argc, const char* argv[]) {
-  firebase::App* app;
+extern "C" int common_main(int argc, const char *argv[]) {
+  firebase::App *app;
   LogMessage("Initializing Firebase App.");
 
 #if defined(__ANDROID__)
   app = ::firebase::App::Create(GetJniEnv(), GetActivity());
 #else
   app = ::firebase::App::Create();
-#endif  // defined(__ANDROID__)
+#endif // defined(__ANDROID__)
 
   LogMessage("Created the Firebase App %x.",
              static_cast<int>(reinterpret_cast<intptr_t>(app)));
@@ -177,20 +169,22 @@ extern "C" int common_main(int argc, const char* argv[]) {
   firebase::gma::Initialize(*app);
 
   WaitForFutureCompletion(firebase::gma::InitializeLastResult());
-  if(firebase::gma::InitializeLastResult().error() != firebase::gma::kAdErrorCodeNone) {
-    // Initialization Failure. The error was already logged in WaitForFutureCompletion,
-    // so simply exit here.
+  if (firebase::gma::InitializeLastResult().error() !=
+      firebase::gma::kAdErrorCodeNone) {
+    // Initialization Failure. The error was already logged in
+    // WaitForFutureCompletion, so simply exit here.
     return -1;
   }
 
   // Log mediation adapter initialization status.
   for (auto adapter_status :
        firebase::gma::GetInitializationStatus().GetAdapterStatusMap()) {
-    LogMessage("GMA Mediation Adapter '%s' %s (latency %d ms): %s",
-             adapter_status.first.c_str(),
-             (adapter_status.second.is_initialized() ? "loaded" : "NOT loaded"),
-             adapter_status.second.latency(),
-             adapter_status.second.description().c_str());
+    LogMessage(
+        "GMA Mediation Adapter '%s' %s (latency %d ms): %s",
+        adapter_status.first.c_str(),
+        (adapter_status.second.is_initialized() ? "loaded" : "NOT loaded"),
+        adapter_status.second.latency(),
+        adapter_status.second.description().c_str());
   }
 
   // Configure test device ids before loading ads.
@@ -206,11 +200,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
   firebase::gma::RequestConfiguration request_configuration;
   request_configuration.test_device_ids = kTestDeviceIDs;
   firebase::gma::SetRequestConfiguration(request_configuration);
-  
-  // 
+
+  //
   // Load and Display a Banner Ad using AdView.
   //
-  
+
   // Create an AdRequest.
   firebase::gma::AdRequest ad_request;
 
@@ -223,7 +217,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   // "Extra" key value pairs can be added to the request as well. Typically
   // these are used when testing new features.
   ad_request.add_extra(kAdNetworkExtrasClassName, "the_name_of_an_extra",
-    "the_value_for_that_extra");
+                       "the_value_for_that_extra");
 
   LoadAndShowAdView(ad_request);
   LoadAndShowInterstitialAd(ad_request);
@@ -235,16 +229,17 @@ extern "C" int common_main(int argc, const char* argv[]) {
   delete app;
 
   // Wait until the user kills the app.
-  while (!ProcessEvents(1000)) { }
+  while (!ProcessEvents(1000)) {
+  }
 
   return 0;
 }
 
-void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request) {
+void LoadAndShowAdView(const firebase::gma::AdRequest &ad_request) {
   LogMessage("\nLoad and show a banner ad in an AdView:");
   LogMessage("===");
   // Initialize an AdView.
-  firebase::gma::AdView* ad_view = new firebase::gma::AdView();
+  firebase::gma::AdView *ad_view = new firebase::gma::AdView();
   const firebase::gma::AdSize banner_ad_size = firebase::gma::AdSize::kBanner;
   ad_view->Initialize(GetWindowContext(), kBannerAdUnit, banner_ad_size);
 
@@ -253,9 +248,9 @@ void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request) {
 
   // Check for errors.
   if (ad_view->InitializeLastResult().error() !=
-        firebase::gma::kAdErrorCodeNone) {
+      firebase::gma::kAdErrorCodeNone) {
     LogMessage("AdView initalization failed, error code: %d",
-      ad_view->InitializeLastResult().error());
+               ad_view->InitializeLastResult().error());
     delete ad_view;
     ad_view = nullptr;
     return;
@@ -268,7 +263,7 @@ void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request) {
   ad_view->SetPaidEventListener(&paid_event_listener);
   LoggingAdViewBoundedBoxListener bounding_box_listener;
   ad_view->SetBoundingBoxListener(&bounding_box_listener);
-  
+
   // Load an ad.
   ad_view->LoadAd(ad_request);
   WaitForFutureCompletion(ad_view->LoadAdLastResult());
@@ -276,12 +271,13 @@ void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request) {
   // Check for errors.
   if (ad_view->LoadAdLastResult().error() != firebase::gma::kAdErrorCodeNone) {
     // Log information as to why the loadAd request failed.
-    const firebase::gma::AdResult* result_ptr =
-      ad_view->LoadAdLastResult().result();
+    const firebase::gma::AdResult *result_ptr =
+        ad_view->LoadAdLastResult().result();
     if (result_ptr != nullptr) {
       LogMessage("AdView::loadAd Failure - Code: %d Message: %s Domain: %s",
-        result_ptr->ad_error().code(), result_ptr->ad_error().message().c_str(),
-        result_ptr->ad_error().domain().c_str());
+                 result_ptr->ad_error().code(),
+                 result_ptr->ad_error().message().c_str(),
+                 result_ptr->ad_error().domain().c_str());
     }
     WaitForFutureCompletion(ad_view->Destroy());
     delete ad_view;
@@ -292,7 +288,7 @@ void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request) {
   // Log the loaded ad's dimensions.
   const firebase::gma::AdSize ad_size = ad_view->ad_size();
   LogMessage("AdView loaded ad width: %d height: %d", ad_size.width(),
-    ad_size.height());
+             ad_size.height());
 
   // Show the ad.
   LogMessage("Showing the banner ad.");
@@ -352,18 +348,20 @@ void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request) {
   ad_view = nullptr;
 }
 
-void LoadAndShowInterstitialAd(const firebase::gma::AdRequest& ad_request) {
+void LoadAndShowInterstitialAd(const firebase::gma::AdRequest &ad_request) {
   LogMessage("\nLoad and show an interstitial ad:");
   LogMessage("===");
   // Initialize an InterstitialAd.
-  firebase::gma::InterstitialAd* interstitial_ad = new firebase::gma::InterstitialAd();
+  firebase::gma::InterstitialAd *interstitial_ad =
+      new firebase::gma::InterstitialAd();
   interstitial_ad->Initialize(GetWindowContext());
 
   // Block until the interstitial ad completes initialization.
   WaitForFutureCompletion(interstitial_ad->InitializeLastResult());
 
   // Check for errors.
-  if (interstitial_ad->InitializeLastResult().error() != firebase::gma::kAdErrorCodeNone) {
+  if (interstitial_ad->InitializeLastResult().error() !=
+      firebase::gma::kAdErrorCodeNone) {
     delete interstitial_ad;
     interstitial_ad = nullptr;
     return;
@@ -380,14 +378,17 @@ void LoadAndShowInterstitialAd(const firebase::gma::AdRequest& ad_request) {
   WaitForFutureCompletion(interstitial_ad->LoadAdLastResult());
 
   // Check for errors.
-  if (interstitial_ad->LoadAdLastResult().error() != firebase::gma::kAdErrorCodeNone) {
+  if (interstitial_ad->LoadAdLastResult().error() !=
+      firebase::gma::kAdErrorCodeNone) {
     // Log information as to why the loadAd request failed.
-    const firebase::gma::AdResult* result_ptr =
-      interstitial_ad->LoadAdLastResult().result();
+    const firebase::gma::AdResult *result_ptr =
+        interstitial_ad->LoadAdLastResult().result();
     if (result_ptr != nullptr) {
-      LogMessage("InterstitialAd::loadAd Failure - Code: %d Message: %s Domain: %s",
-        result_ptr->ad_error().code(), result_ptr->ad_error().message().c_str(),
-        result_ptr->ad_error().domain().c_str());
+      LogMessage(
+          "InterstitialAd::loadAd Failure - Code: %d Message: %s Domain: %s",
+          result_ptr->ad_error().code(),
+          result_ptr->ad_error().message().c_str(),
+          result_ptr->ad_error().domain().c_str());
     }
     delete interstitial_ad;
     interstitial_ad = nullptr;
@@ -410,18 +411,19 @@ void LoadAndShowInterstitialAd(const firebase::gma::AdRequest& ad_request) {
 }
 
 // WIP
-void LoadAndShowRewardedAd(const firebase::gma::AdRequest& ad_request) {
+void LoadAndShowRewardedAd(const firebase::gma::AdRequest &ad_request) {
   LogMessage("\nLoad and show a rewarded ad:");
   LogMessage("===");
   // Initialize a RewardedAd.
-  firebase::gma::RewardedAd* rewarded_ad = new firebase::gma::RewardedAd();
+  firebase::gma::RewardedAd *rewarded_ad = new firebase::gma::RewardedAd();
   rewarded_ad->Initialize(GetWindowContext());
 
   // Block until the interstitial ad completes initialization.
   WaitForFutureCompletion(rewarded_ad->InitializeLastResult());
 
   // Check for errors.
-  if (rewarded_ad->InitializeLastResult().error() != firebase::gma::kAdErrorCodeNone) {
+  if (rewarded_ad->InitializeLastResult().error() !=
+      firebase::gma::kAdErrorCodeNone) {
     delete rewarded_ad;
     rewarded_ad = nullptr;
     return;
@@ -438,17 +440,19 @@ void LoadAndShowRewardedAd(const firebase::gma::AdRequest& ad_request) {
   WaitForFutureCompletion(rewarded_ad->LoadAdLastResult());
 
   // Check for errors.
-  if (rewarded_ad->LoadAdLastResult().error() != firebase::gma::kAdErrorCodeNone) {
+  if (rewarded_ad->LoadAdLastResult().error() !=
+      firebase::gma::kAdErrorCodeNone) {
     // Log information as to why the loadAd request failed.
-    const firebase::gma::AdResult* result_ptr =
-      rewarded_ad->LoadAdLastResult().result();
+    const firebase::gma::AdResult *result_ptr =
+        rewarded_ad->LoadAdLastResult().result();
     if (result_ptr != nullptr) {
       LogMessage("RewardedAd::loadAd Failure - Code: %d Message: %s Domain: %s",
-        result_ptr->ad_error().code(), result_ptr->ad_error().message().c_str(),
-        result_ptr->ad_error().domain().c_str());
+                 result_ptr->ad_error().code(),
+                 result_ptr->ad_error().message().c_str(),
+                 result_ptr->ad_error().domain().c_str());
     }
     delete rewarded_ad;
-    rewarded_ad  = nullptr;
+    rewarded_ad = nullptr;
     return;
   }
 

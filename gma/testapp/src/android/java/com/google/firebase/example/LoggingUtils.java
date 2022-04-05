@@ -44,12 +44,12 @@ public class LoggingUtils {
 
   public static void addLogText(final String text) {
     new Handler(Looper.getMainLooper()).post(new Runnable() {
-        @Override
-        public void run() {
-          if (sTextView != null) {
-            sTextView.append(text);
-          }
+      @Override
+      public void run() {
+        if (sTextView != null) {
+          sTextView.append(text);
         }
-      });
+      }
+    });
   }
 }

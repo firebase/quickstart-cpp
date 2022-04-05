@@ -21,16 +21,16 @@
 #define chdir _chdir
 #else
 #include <unistd.h>
-#endif  // _WIN32
+#endif // _WIN32
 
 #ifdef _WIN32
 #include <windows.h>
-#endif  // _WIN32
+#endif // _WIN32
 
 #include <algorithm>
 #include <string>
 
-#include "main.h"  // NOLINT
+#include "main.h" // NOLINT
 
 // The TO_STRING macro is useful for command line defined strings as the quotes
 // get stripped.
@@ -42,9 +42,9 @@
 #define FIREBASE_CONFIG_STRING TO_STRING(FIREBASE_CONFIG)
 #else
 #define FIREBASE_CONFIG_STRING ""
-#endif  // FIREBASE_CONFIG
+#endif // FIREBASE_CONFIG
 
-extern "C" int common_main(int argc, const char* argv[]);
+extern "C" int common_main(int argc, const char *argv[]);
 
 static bool quit = false;
 
@@ -58,22 +58,20 @@ static BOOL WINAPI SignalHandler(DWORD event) {
 }
 #else
 static void SignalHandler(int /* ignored */) { quit = true; }
-#endif  // _WIN32
+#endif // _WIN32
 
 bool ProcessEvents(int msec) {
 #ifdef _WIN32
   Sleep(msec);
 #else
   usleep(msec * 1000);
-#endif  // _WIN32
+#endif // _WIN32
   return quit;
 }
 
-std::string PathForResource() {
-  return std::string();
-}
+std::string PathForResource() { return std::string(); }
 
-void LogMessage(const char* format, ...) {
+void LogMessage(const char *format, ...) {
   va_list list;
   va_start(list, format);
   vprintf(format, list);
@@ -86,25 +84,26 @@ WindowContext GetWindowContext() { return nullptr; }
 
 // Change the current working directory to the directory containing the
 // specified file.
-void ChangeToFileDirectory(const char* file_path) {
+void ChangeToFileDirectory(const char *file_path) {
   std::string path(file_path);
   std::replace(path.begin(), path.end(), '\\', '/');
   auto slash = path.rfind('/');
   if (slash != std::string::npos) {
     std::string directory = path.substr(0, slash);
-    if (!directory.empty()) chdir(directory.c_str());
+    if (!directory.empty())
+      chdir(directory.c_str());
   }
 }
 
-int main(int argc, const char* argv[]) {
-  ChangeToFileDirectory(
-      FIREBASE_CONFIG_STRING[0] != '\0' ?
-        FIREBASE_CONFIG_STRING : argv[0]);  // NOLINT
+int main(int argc, const char *argv[]) {
+  ChangeToFileDirectory(FIREBASE_CONFIG_STRING[0] != '\0'
+                            ? FIREBASE_CONFIG_STRING
+                            : argv[0]); // NOLINT
 #ifdef _WIN32
   SetConsoleCtrlHandler((PHANDLER_ROUTINE)SignalHandler, TRUE);
 #else
   signal(SIGINT, SignalHandler);
-#endif  // _WIN32
+#endif // _WIN32
   return common_main(argc, argv);
 }
 

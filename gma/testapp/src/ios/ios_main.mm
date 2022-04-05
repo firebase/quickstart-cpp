@@ -18,9 +18,9 @@
 
 #include "main.h"
 
-extern "C" int common_main(int argc, const char* argv[]);
+extern "C" int common_main(int argc, const char *argv[]);
 
-@interface AppDelegate : UIResponder<UIApplicationDelegate>
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
 
 @property(nonatomic, strong) UIWindow *window;
 
@@ -42,33 +42,35 @@ static UIView *g_parent_view;
 - (void)viewDidLoad {
   [super viewDidLoad];
   g_parent_view = self.view;
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    const char *argv[] = {FIREBASE_TESTAPP_NAME};
-    [g_shutdown_signal lock];
-    g_exit_status = common_main(1, argv);
-    [g_shutdown_complete signal];
-  });
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0),
+                 ^{
+                   const char *argv[] = {FIREBASE_TESTAPP_NAME};
+                   [g_shutdown_signal lock];
+                   g_exit_status = common_main(1, argv);
+                   [g_shutdown_complete signal];
+                 });
 }
 
 @end
 
 bool ProcessEvents(int msec) {
   [g_shutdown_signal
-      waitUntilDate:[NSDate dateWithTimeIntervalSinceNow:static_cast<float>(msec) / 1000.0f]];
+      waitUntilDate:[NSDate
+                        dateWithTimeIntervalSinceNow:static_cast<float>(msec) /
+                                                     1000.0f]];
   return g_shutdown;
 }
 
-WindowContext GetWindowContext() {
-  return g_parent_view;
-}
+WindowContext GetWindowContext() { return g_parent_view; }
 
 // Log a message that can be viewed in the console.
-void LogMessage(const char* format, ...) {
+void LogMessage(const char *format, ...) {
   va_list args;
   NSString *formatString = @(format);
 
   va_start(args, format);
-  NSString *message = [[NSString alloc] initWithFormat:formatString arguments:args];
+  NSString *message = [[NSString alloc] initWithFormat:formatString
+                                             arguments:args];
   va_end(args);
 
   NSLog(@"%@", message);
@@ -79,7 +81,7 @@ void LogMessage(const char* format, ...) {
   });
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   @autoreleasepool {
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
   }
@@ -88,8 +90,8 @@ int main(int argc, char* argv[]) {
 
 @implementation AppDelegate
 
-- (BOOL)application:(UIApplication*)application
-    didFinishLaunchingWithOptions:(NSDictionary*)launchOptions {
+- (BOOL)application:(UIApplication *)application
+    didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
   g_shutdown_complete = [[NSCondition alloc] init];
   g_shutdown_signal = [[NSCondition alloc] init];
   [g_shutdown_complete lock];

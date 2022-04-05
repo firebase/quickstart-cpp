@@ -17,33 +17,33 @@
 
 #include <android/log.h>
 #include <android_native_app_glue.h>
-#include <pthread.h>
 #include <cassert>
+#include <pthread.h>
 
-#include "main.h"  // NOLINT
+#include "main.h" // NOLINT
 
 // This implementation is derived from http://github.com/google/fplutil
 
-extern "C" int common_main(int argc, const char* argv[]);
+extern "C" int common_main(int argc, const char *argv[]);
 
-static struct android_app* g_app_state = nullptr;
+static struct android_app *g_app_state = nullptr;
 static bool g_destroy_requested = false;
 static bool g_started = false;
 static bool g_restarted = false;
 static pthread_mutex_t g_started_mutex;
 
 // Handle state changes from via native app glue.
-static void OnAppCmd(struct android_app* app, int32_t cmd) {
+static void OnAppCmd(struct android_app *app, int32_t cmd) {
   g_destroy_requested |= cmd == APP_CMD_DESTROY;
 }
 
 // Process events pending on the main thread.
 // Returns true when the app receives an event requesting exit.
 bool ProcessEvents(int msec) {
-  struct android_poll_source* source = nullptr;
+  struct android_poll_source *source = nullptr;
   int events;
   int looperId = ALooper_pollAll(msec, nullptr, &events,
-                                 reinterpret_cast<void**>(&source));
+                                 reinterpret_cast<void **>(&source));
   if (looperId >= 0 && source) {
     source->process(g_app_state, source);
   }
@@ -57,7 +57,7 @@ jobject GetActivity() { return g_app_state->activity->clazz; }
 jobject GetWindowContext() { return g_app_state->activity->clazz; }
 
 // Find a class, attempting to load the class if it's not found.
-jclass FindClass(JNIEnv* env, jobject activity_object, const char* class_name) {
+jclass FindClass(JNIEnv *env, jobject activity_object, const char *class_name) {
   jclass class_object = env->FindClass(class_name);
   if (env->ExceptionCheck()) {
     env->ExceptionClear();
@@ -93,14 +93,13 @@ jclass FindClass(JNIEnv* env, jobject activity_object, const char* class_name) {
 
 // Vars that we need available for appending text to the log window:
 class LoggingUtilsData {
- public:
+public:
   LoggingUtilsData()
-      : logging_utils_class_(nullptr),
-        logging_utils_add_log_text_(0),
+      : logging_utils_class_(nullptr), logging_utils_add_log_text_(0),
         logging_utils_init_log_window_(0) {}
 
   ~LoggingUtilsData() {
-    JNIEnv* env = GetJniEnv();
+    JNIEnv *env = GetJniEnv();
     assert(env);
     if (logging_utils_class_) {
       env->DeleteGlobalRef(logging_utils_class_);
@@ -108,7 +107,7 @@ class LoggingUtilsData {
   }
 
   void Init() {
-    JNIEnv* env = GetJniEnv();
+    JNIEnv *env = GetJniEnv();
     assert(env);
 
     jclass logging_utils_class = FindClass(
@@ -130,9 +129,10 @@ class LoggingUtilsData {
                               logging_utils_init_log_window_, GetActivity());
   }
 
-  void AppendText(const char* text) {
-    if (logging_utils_class_ == 0) return;  // haven't been initted yet
-    JNIEnv* env = GetJniEnv();
+  void AppendText(const char *text) {
+    if (logging_utils_class_ == 0)
+      return; // haven't been initted yet
+    JNIEnv *env = GetJniEnv();
     assert(env);
     jstring text_string = env->NewStringUTF(text);
     env->CallStaticVoidMethod(logging_utils_class_, logging_utils_add_log_text_,
@@ -140,17 +140,17 @@ class LoggingUtilsData {
     env->DeleteLocalRef(text_string);
   }
 
- private:
+private:
   jclass logging_utils_class_;
   jmethodID logging_utils_add_log_text_;
   jmethodID logging_utils_init_log_window_;
 };
 
-LoggingUtilsData* g_logging_utils_data;
+LoggingUtilsData *g_logging_utils_data;
 
 // Checks if a JNI exception has happened, and if so, logs it to the console.
 void CheckJNIException() {
-  JNIEnv* env = GetJniEnv();
+  JNIEnv *env = GetJniEnv();
   if (env->ExceptionCheck()) {
     // Get the exception text.
     jthrowable exception = env->ExceptionOccurred();
@@ -161,7 +161,7 @@ void CheckJNIException() {
     jmethodID toString =
         env->GetMethodID(object_class, "toString", "()Ljava/lang/String;");
     jstring s = (jstring)env->CallObjectMethod(exception, toString);
-    const char* exception_text = env->GetStringUTFChars(s, nullptr);
+    const char *exception_text = env->GetStringUTFChars(s, nullptr);
 
     // Log the exception text.
     __android_log_print(ANDROID_LOG_INFO, FIREBASE_TESTAPP_NAME,
@@ -182,7 +182,7 @@ void CheckJNIException() {
 }
 
 // Log a message that can be viewed in "adb logcat".
-void LogMessage(const char* format, ...) {
+void LogMessage(const char *format, ...) {
   static const int kLineBufferSize = 100;
   char buffer[kLineBufferSize + 2];
 
@@ -201,15 +201,15 @@ void LogMessage(const char* format, ...) {
 }
 
 // Get the JNI environment.
-JNIEnv* GetJniEnv() {
-  JavaVM* vm = g_app_state->activity->vm;
-  JNIEnv* env;
+JNIEnv *GetJniEnv() {
+  JavaVM *vm = g_app_state->activity->vm;
+  JNIEnv *env;
   jint result = vm->AttachCurrentThread(&env, nullptr);
   return result == JNI_OK ? env : nullptr;
 }
 
 // Execute common_main(), flush pending events and finish the activity.
-extern "C" void android_main(struct android_app* state) {
+extern "C" void android_main(struct android_app *state) {
   // native_app_glue spawns a new thread, calling android_main() when the
   // activity onStart() or onRestart() methods are called.  This code handles
   // the case where we're re-entering this method on a different thread by
@@ -236,9 +236,9 @@ extern "C" void android_main(struct android_app* state) {
   g_logging_utils_data->Init();
 
   // Execute cross platform entry point.
-  static const char* argv[] = {FIREBASE_TESTAPP_NAME};
+  static const char *argv[] = {FIREBASE_TESTAPP_NAME};
   int return_value = common_main(1, argv);
-  (void)return_value;  // Ignore the return value.
+  (void)return_value; // Ignore the return value.
   ProcessEvents(10);
 
   // Clean up logging display.
@@ -246,7 +246,8 @@ extern "C" void android_main(struct android_app* state) {
   g_logging_utils_data = nullptr;
 
   // Finish the activity.
-  if (!g_restarted) ANativeActivity_finish(state->activity);
+  if (!g_restarted)
+    ANativeActivity_finish(state->activity);
 
   g_app_state->activity->vm->DetachCurrentThread();
   g_started = false;

@@ -126,8 +126,9 @@ Getting Started
 
 ### Desktop
   - Note: the testapp has no user interface, but the output can be viewed via
-    the console. Note that the GMA SDK uses a stubbed implementation on
-    desktop, so functionality is not expected.
+    the console. The GMA SDK uses a stubbed implementation on desktop, so
+    functionality is not expected, and the app will end waiting for the interstitial
+    ad to be dismissed.
   - Register your app with Firebase.
     - Create a new app on the [Firebase console](https://firebase.google.com/console/),
       following the above instructions for Android or iOS.
@@ -176,7 +177,7 @@ Support
 License
 -------
 
-Copyright 2016 Google, Inc.
+Copyright 2022 Google, Inc.
 
 Licensed to the Apache Software Foundation (ASF) under one or more contributor
 license agreements.  See the NOTICE file distributed with this work for
