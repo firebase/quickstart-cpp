@@ -241,6 +241,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
 }
 
 void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request) {
+  LogMessage("\nLoad and show a banner ad in an AdView:");
+  LogMessage("===");
   // Initialize an AdView.
   firebase::gma::AdView* ad_view = new firebase::gma::AdView();
   const firebase::gma::AdSize banner_ad_size = firebase::gma::AdSize::kBanner;
@@ -351,6 +353,8 @@ void LoadAndShowAdView(const firebase::gma::AdRequest& ad_request) {
 }
 
 void LoadAndShowInterstitialAd(const firebase::gma::AdRequest& ad_request) {
+  LogMessage("\nLoad and show an interstitial ad:");
+  LogMessage("===");
   // Initialize an InterstitialAd.
   firebase::gma::InterstitialAd* interstitial_ad = new firebase::gma::InterstitialAd();
   interstitial_ad->Initialize(GetWindowContext());
@@ -407,6 +411,8 @@ void LoadAndShowInterstitialAd(const firebase::gma::AdRequest& ad_request) {
 
 // WIP
 void LoadAndShowRewardedAd(const firebase::gma::AdRequest& ad_request) {
+  LogMessage("\nLoad and show a rewarded ad:");
+  LogMessage("===");
   // Initialize a RewardedAd.
   firebase::gma::RewardedAd* rewarded_ad = new firebase::gma::RewardedAd();
   rewarded_ad->Initialize(GetWindowContext());
