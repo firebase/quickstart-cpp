@@ -63,9 +63,9 @@ extern "C" int common_main(int argc, const char* argv[]) {
   // Set the user ID.
   analytics::SetUserId("uber_user_510");
 
-  LogMessage("Set current screen.");
-  // Set the user's current screen.
-  analytics::SetCurrentScreen("Firebase Analytics C++ testapp", "testapp");
+  LogMessage("Log current screen.");
+  // Log the user's current screen.
+  analytics::LogEvent(analytics::kEventScreenView, "Firebase Analytics C++ testapp", "testapp" );
 
   // Log an event with no parameters.
   LogMessage("Log login event.");
