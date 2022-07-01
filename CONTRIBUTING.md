@@ -109,7 +109,7 @@ Before you submit your pull request consider the following guidelines:
 * Make your changes in a new git branch:
 
      ```shell
-     git checkout -b my-fix-branch master
+     git checkout -b my-fix-branch main
      ```
 
 * Create your patch, **including appropriate test cases**.
@@ -133,14 +133,14 @@ Before you submit your pull request consider the following guidelines:
     git push origin my-fix-branch
     ```
 
-* In GitHub, send a pull request to `firebase/quickstart-cpp:master`.
+* In GitHub, send a pull request to `firebase/quickstart-cpp:main`.
 * If we suggest changes then:
   * Make the required updates.
   * Rebase your branch and force push to your GitHub repository (this will
     update your Pull Request):
 
     ```shell
-    git rebase master -i
+    git rebase main -i
     git push origin my-fix-branch -f
     ```
 
@@ -158,10 +158,10 @@ the changes from the main (upstream) repository:
     git push origin --delete my-fix-branch
     ```
 
-* Check out the master branch:
+* Check out the main branch:
 
     ```shell
-    git checkout master -f
+    git checkout main -f
     ```
 
 * Delete the local branch:
@@ -170,10 +170,10 @@ the changes from the main (upstream) repository:
     git branch -D my-fix-branch
     ```
 
-* Update your master with the latest upstream version:
+* Update your main with the latest upstream version:
 
     ```shell
-    git pull --ff upstream master
+    git pull --ff upstream main
     ```
 
 ## <a name="rules"></a> Coding Rules
@@ -186,7 +186,7 @@ Please sign our [Contributor License Agreement][google-cla] (CLA) before sending
 pull requests. For any code changes to be accepted, the CLA must be signed.
 It's a quick process, we promise!
 
-*This guide was inspired by the [AngularJS contribution guidelines](https://github.com/angular/angular.js/blob/master/CONTRIBUTING.md).*
+*This guide was inspired by the [AngularJS contribution guidelines](https://github.com/angular/angular.js/blob/main/CONTRIBUTING.md).*
 
 [github]: https://github.com/firebase/quickstart-cpp
 [google-cla]: https://cla.developers.google.com
