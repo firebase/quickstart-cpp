@@ -6,7 +6,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.2.1'
+    classpath 'com.android.tools.build:gradle:3.3.3'
     classpath 'com.google.gms:google-services:4.0.1'
   }
 }
@@ -22,8 +22,12 @@ allprojects {
 apply plugin: 'com.android.application'
 
 android {
-  compileSdkVersion 29
-  buildToolsVersion "29.0.0"
+  compileOptions {
+    sourceCompatibility 1.8
+    targetCompatibility 1.8
+  }
+  compileSdkVersion 28
+  buildToolsVersion "28.0.3"
 
   sourceSets {
     main {
@@ -36,8 +40,8 @@ android {
 
   defaultConfig {
     applicationId 'com.google.firebase.cpp.firestore.testapp'
-    minSdkVersion 16
-    targetSdkVersion 29
+    minSdkVersion 19
+    targetSdkVersion 28
     versionCode 1
     versionName '1.0'
     externalNativeBuild.cmake {

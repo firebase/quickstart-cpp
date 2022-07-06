@@ -6,7 +6,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.2.1'
+    classpath 'com.android.tools.build:gradle:3.3.3'
     classpath 'com.google.gms:google-services:4.0.1'
   }
 }
@@ -22,6 +22,10 @@ allprojects {
 apply plugin: 'com.android.application'
 
 android {
+  compileOptions {
+    sourceCompatibility 1.8
+    targetCompatibility 1.8
+  }
   compileSdkVersion 28
   buildToolsVersion '28.0.3'
 
@@ -36,7 +40,7 @@ android {
 
   defaultConfig {
     applicationId 'com.google.firebase.cpp.storage.testapp'
-    minSdkVersion 16
+    minSdkVersion 19
     targetSdkVersion 28
     versionCode 1
     versionName '1.0'
