@@ -23,7 +23,6 @@ jobs:
   build:
     name: android-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.python_version }}
     runs-on: ${{ matrix.os }}
-    needs: prepare_matrix
     strategy:
       fail-fast: false
       matrix:
