@@ -1,14 +1,141 @@
-name: Android builds
+name: Android Builds
 
 on:
+  pull_request:
+    types: [opened, reopened, synchronize]
   workflow_dispatch:
     inputs:
       apis:
-        description: 'CSV of apis whose quickstart examples we should build'
+        description: 'CSV of apis to build and test'
+        default: 'admob,analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage'
+        required: true
+
+env:
+  CCACHE_DIR: ${{ github.workspace }}/ccache_dir
+  GITHUB_TOKEN: ${{ github.token }}
+  xcodeVersion: "13.3.1"  # Only affects Mac runners, and only for prerequisites.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: android-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.python_version }}
+    runs-on: ${{ matrix.os }}
+    needs: prepare_matrix
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-12, ubuntu-latest, windows-latest]
+        architecture: [x64]
+        python_version: [3.7]
     steps:
-      - name: noop
-        run: true
+      - name: setup Xcode version (macos)
+        if: runner.os == 'macOS'
+        run: sudo xcode-select -s /Applications/Xcode_${{ env.xcodeVersion }}.app/Contents/Developer
+
+      - name: Store git credentials for all git commands
+        # Forces all git commands to use authenticated https, to prevent throttling.
+        shell: bash
+        run: |
+          git config --global credential.helper 'store --file /tmp/git-credentials'
+          echo 'https://${{ github.token }}@github.com' > /tmp/git-credentials
+
+      - name: Enable Git Long-paths Support
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
+
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Set env variables for subsequent steps (all)
+        shell: bash
+        run: |
+          echo "MATRIX_UNIQUE_NAME=${{ matrix.os }}-${{ matrix.architecture }}" >> $GITHUB_ENV
+          echo "GHA_INSTALL_CCACHE=1" >> $GITHUB_ENV
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python_version }}
+          architecture: ${{ matrix.architecture }}
+
+      - name: Add msbuild to PATH
+        if: startsWith(matrix.os, 'windows')
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Cache NDK
+        id: cache_ndk
+        uses: actions/cache@v2
+        with:
+          path: /tmp/android-ndk-r21e
+          key: android-ndk-${{ matrix.os }}-r21e
+
+      - name: Check cached NDK
+        shell: bash
+        if: steps.cache_ndk.outputs.cache-hit != 'true'
+        run: |
+          # If the NDK failed to download from the cache, but there is a
+          # /tmp/android-ndk-r21e directory, it's incomplete, so remove it.
+          if [[ -d "/tmp/android-ndk-r21e" ]]; then
+            echo "Removing incomplete download of NDK"
+            rm -rf /tmp/android-ndk-r21e
+          fi
+
+      - name: Update homebrew (avoid bintray errors)
+        uses: nick-invision/retry@v2
+        if: startsWith(matrix.os, 'macos')
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          command: |
+            # Temporarily here until Github runners have updated their version of
+            # homebrew. This prevents errors arising from the shut down of
+            # binutils, used by older version of homebrew for hosting packages.
+            brew update
+
+      - name: Install prerequisites
+        shell: bash
+        run: |
+          scripts/build_scripts/android/install_prereqs.sh
+          echo "NDK_ROOT=/tmp/android-ndk-r21e" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=/tmp/android-ndk-r21e" >> $GITHUB_ENV
+
+      - name: Download C++ SDK
+        shell: bash
+        run: |
+          set +e
+          # Retry up to 10 times because Curl has a tendency to timeout on
+          # Github runners.
+          for retry in {1..10} error; do
+              if [[ $retry == "error" ]]; then exit 5; fi
+              curl -LSs \
+                  "https://firebase.google.com/download/cpp"
+                  --output firebase_cpp_sdk.zip && break
+              sleep 300
+          done
+          set -e
+          mkdir /tmp/downloaded_sdk
+          unzip -q firebase_cpp_sdk.zip -d /tmp/downloaded_sdk/
+          rm -f firebase_cpp_sdk.zip
+
+      - name: Cache ccache files
+        id: cache_ccache
+        uses: actions/cache@v2
+        with:
+          path: ccache_dir
+          key: dev-test-ccache-${{ env.MATRIX_UNIQUE_NAME }}
+
+      - name: Build SDK
+        shell: bash
+        run: |
+          python scripts/gha/restore_secrets.py --passphrase "${{ secrets.TEST_SECRET }}"
+          cd admob/testapp
+          echo "systemProp.firebase_cpp_sdk.dir=/tmp/downloaded_sdk" >> gradle.properties
+          ./gradlew assmebleRelease
+
+      - name: Stats for ccache (mac and linux)
+        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
+        run: ccache -s
