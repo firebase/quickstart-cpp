@@ -127,6 +127,12 @@ jobs:
           path: ccache_dir
           key: dev-test-ccache-${{ env.MATRIX_UNIQUE_NAME }}
 
+      - name: Setup java 8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
       - name: Build SDK
         shell: bash
         run: |
