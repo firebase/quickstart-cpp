@@ -130,7 +130,7 @@ jobs:
       - name: Build SDK
         shell: bash
         run: |
-          python scripts/gha/restore_secrets.py --passphrase "${{ secrets.TEST_SECRET }}"
+          python scripts/restore_secrets.py --passphrase "${{ secrets.TEST_SECRET }}"
           cd admob/testapp
           echo "systemProp.firebase_cpp_sdk.dir=/tmp/downloaded_sdk" >> gradle.properties
           ./gradlew assmebleRelease
