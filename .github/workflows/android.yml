@@ -20,9 +20,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check_and_prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      apis: ${{ steps.set_outputs.outputs.apis }}
+    steps:
+    - id: set_outputs
+      run: |
+        if [[ -n "${{ github.event.schedule }}" ]]; then
+          apis="admob,analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage"
+        else
+          apis="${{ github.event.inputs.apis }}"
+        fi
+        echo apis:  ${apis}
+        echo "::set-output name=apis::${apis}"
+
   build:
     name: android-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.python_version }}
     runs-on: ${{ matrix.os }}
+    needs: [check_and_prepare]
     strategy:
       fail-fast: false
       matrix:
@@ -96,11 +112,17 @@ jobs:
             brew update
 
       - name: Install prerequisites
-        shell: bash
-        run: |
-          scripts/build_scripts/android/install_prereqs.sh
-          echo "NDK_ROOT=/tmp/android-ndk-r21e" >> $GITHUB_ENV
-          echo "ANDROID_NDK_HOME=/tmp/android-ndk-r21e" >> $GITHUB_ENV
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          shell: bash
+          command: |
+            scripts/build_scripts/android/install_prereqs.sh
+            echo "NDK_ROOT=/tmp/android-ndk-r21e" >> $GITHUB_ENV
+            echo "ANDROID_NDK_HOME=/tmp/android-ndk-r21e" >> $GITHUB_ENV
+            pip install -r scripts/build_scripts/python_requirements.txt
+            python scripts/restore_secrets.py --passphrase "${{ secrets.TEST_SECRET }}"
 
       - name: Download C++ SDK
         shell: bash
@@ -127,19 +149,19 @@ jobs:
           path: ccache_dir
           key: dev-test-ccache-${{ env.MATRIX_UNIQUE_NAME }}
 
-      - name: Setup java 8
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '8'
-
-      - name: Build SDK
+      - name: Build testapp
         shell: bash
         run: |
-          python scripts/restore_secrets.py --passphrase "${{ secrets.TEST_SECRET }}"
-          cd admob/testapp
-          echo "systemProp.firebase_cpp_sdk.dir=/tmp/downloaded_sdk" >> gradle.properties
-          ./gradlew assmebleRelease
+          set -x
+          
+          python scripts/build_scripts/build_testapps.py --p Android \
+            --t ${{ needs.check_and_prepare.outputs.apis }}  \
+            --output_directory "${{ github.workspace }}" \
+            --artifact_name "android-${{ matrix.os }}" \
+            --noadd_timestamp \
+            --short_output_paths \
+            --gha_build \
+            --packaged_sdk /tmp/downloaded_sdk/firebase_cpp_sdk
 
       - name: Stats for ccache (mac and linux)
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
