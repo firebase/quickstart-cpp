@@ -9,7 +9,7 @@ on:
     inputs:
       apis:
         description: 'CSV of apis to build and test'
-        default: 'admob,analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage'
+        default: 'analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage'
         required: true
 
 env:
@@ -32,7 +32,7 @@ jobs:
         if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
           apis="${{ github.event.inputs.apis }}"
         else
-          apis="admob,analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage"
+          apis="analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage"
         fi
         echo apis:  ${apis}
         echo "::set-output name=apis::${apis}"

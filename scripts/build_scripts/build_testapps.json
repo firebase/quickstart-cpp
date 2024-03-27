@@ -1,19 +1,6 @@
 {
     "apis": [
       {
-        "name": "admob",
-        "full_name": "FirebaseAdmob",
-        "bundle_id": "com.google.ios.admob.testapp",
-        "ios_target": "testapp",
-        "tvos_target": "",
-        "testapp_path": "admob/testapp",
-        "frameworks": [
-          "firebase_admob.xcframework",
-          "firebase.xcframework"
-        ],
-        "provision": "Google_Development.mobileprovision"
-      },
-      {
         "name": "analytics",
         "full_name": "FirebaseAnalytics",
         "bundle_id": "com.google.ios.analytics.testapp",
