@@ -647,7 +647,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
                             kAuthErrorNone, auth);
         if (phone_future.error() == kAuthErrorNone) {
           User user = *phone_future.result();
-          Future<AuthResult> update_future =
+          Future<User> update_future =
               user.UpdatePhoneNumberCredential(phone_credential);
           WaitForSignInFuture(
               update_future,
