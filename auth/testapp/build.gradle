@@ -27,7 +27,7 @@ android {
     targetCompatibility 1.8
   }
 
-  compileSdkVersion 28
+  compileSdkVersion 34
   buildToolsVersion '28.0.3'
 
   sourceSets {
