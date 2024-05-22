@@ -9,7 +9,7 @@ on:
     inputs:
       apis:
         description: 'CSV of apis to build and test'
-        default: 'admob,analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage'
+        default: 'analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage'
         required: true
 
 env:
