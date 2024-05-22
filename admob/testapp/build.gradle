@@ -23,6 +23,7 @@ apply plugin: 'com.android.application'
 
 android {
   compileSdkVersion 34
+  ndkPath System.getenv('ANDROID_NDK_HOME')
   buildToolsVersion '30.0.2'
 
   sourceSets {
