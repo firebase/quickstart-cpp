@@ -43,6 +43,7 @@ using ::firebase::auth::kAuthErrorInvalidCredential;
 using ::firebase::auth::kAuthErrorInvalidProviderId;
 using ::firebase::auth::kAuthErrorNone;
 using ::firebase::auth::OAuthProvider;
+using ::firebase::auth::PhoneAuthOptions;
 using ::firebase::auth::PhoneAuthProvider;
 using ::firebase::auth::PhoneAuthCredential;
 using ::firebase::auth::PlayGamesAuthProvider;
@@ -601,8 +602,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
         "Phone Number", "Please enter your phone number", "+12345678900");
     PhoneListener listener;
     PhoneAuthProvider& phone_provider = PhoneAuthProvider::GetInstance(auth);
-    phone_provider.VerifyPhoneNumber(phone_number.c_str(), kPhoneAuthTimeoutMs,
-                                     nullptr, &listener);
+    PhoneAuthOptions options;
+    options.phone_number = phone_number;
+    options.timeout_milliseconds = kPhoneAuthTimeoutMs;
+    phone_provider.VerifyPhoneNumber(options, &listener);
 
     // Wait for OnCodeSent() callback.
     int wait_ms = 0;
@@ -634,7 +637,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage(".");
       }
       if (listener.num_calls_on_code_auto_retrieval_time_out() > 0) {
-        const Credential phone_credential = phone_provider.GetCredential(
+        const PhoneAuthCredential phone_credential = phone_provider.GetCredential(
             listener.verification_id().c_str(), verification_code.c_str());
 
         Future<User>phone_future =
