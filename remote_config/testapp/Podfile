@@ -1,6 +1,6 @@
 source 'https://github.com/CocoaPods/Specs.git'
-platform :ios, '8.0'
+platform :ios, '13.0'
 # Firebase Remote Config test application.
 target 'testapp' do
-  pod 'Firebase/RemoteConfig', '7.0.0'
+  pod 'Firebase/RemoteConfig', '10.25.0'
 end
