@@ -129,8 +129,8 @@ extern "C" int common_main(int argc, const char* argv[]) {
   if (login_result) {
     const firebase::auth::User user = login_result->user;
     LogMessage("Signed in as %s user, uid: %s, email: %s.\n",
-               user->is_anonymous() ? "an anonymous" : "a non-anonymous",
-               user->uid().c_str(), user->email().c_str());
+               user.is_anonymous() ? "an anonymous" : "a non-anonymous",
+               user.uid().c_str(), user.email().c_str());
   } else {
     LogMessage("ERROR: could not sign in");
   }
