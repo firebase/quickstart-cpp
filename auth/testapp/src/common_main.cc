@@ -32,6 +32,7 @@ using ::firebase::Variant;
 using ::firebase::auth::AdditionalUserInfo;
 using ::firebase::auth::Auth;
 using ::firebase::auth::AuthError;
+using ::firebase::auth::AuthResult;
 using ::firebase::auth::Credential;
 using ::firebase::auth::EmailAuthProvider;
 using ::firebase::auth::FacebookAuthProvider;
@@ -42,9 +43,10 @@ using ::firebase::auth::kAuthErrorInvalidCredential;
 using ::firebase::auth::kAuthErrorInvalidProviderId;
 using ::firebase::auth::kAuthErrorNone;
 using ::firebase::auth::OAuthProvider;
+using ::firebase::auth::PhoneAuthOptions;
 using ::firebase::auth::PhoneAuthProvider;
+using ::firebase::auth::PhoneAuthCredential;
 using ::firebase::auth::PlayGamesAuthProvider;
-using ::firebase::auth::SignInResult;
 using ::firebase::auth::TwitterAuthProvider;
 using ::firebase::auth::User;
 using ::firebase::auth::UserInfoInterface;
@@ -118,39 +120,38 @@ static bool WaitForFuture(const FutureBase& future, const char* fn,
   return false;
 }
 
-static bool WaitForSignInFuture(Future<User*> sign_in_future, const char* fn,
+static bool WaitForSignInFuture(Future<User> sign_in_future, const char* fn,
                                 AuthError expected_error, Auth* auth) {
   if (WaitForFuture(sign_in_future, fn, expected_error)) return true;
 
-  const User* const* sign_in_user_ptr = sign_in_future.result();
-  const User* sign_in_user =
-      sign_in_user_ptr == nullptr ? nullptr : *sign_in_user_ptr;
-  const User* auth_user = auth->current_user();
+  const User sign_in_user = sign_in_future.result() ? *sign_in_future.result() :
+    User();
+  const User auth_user = auth->current_user();
 
   if (expected_error == ::firebase::auth::kAuthErrorNone &&
       sign_in_user != auth_user) {
-    LogMessage("ERROR: future's user (%x) and current_user (%x) don't match",
-               static_cast<int>(reinterpret_cast<intptr_t>(sign_in_user)),
-               static_cast<int>(reinterpret_cast<intptr_t>(auth_user)));
+    LogMessage("ERROR: future's user (%s) and current_user (%s) don't match",
+               sign_in_user.uid().c_str(),
+               auth_user.uid().c_str());
   }
 
   return false;
 }
 
-static bool WaitForSignInFuture(const Future<SignInResult>& sign_in_future,
+static bool WaitForSignInFuture(const Future<AuthResult>& sign_in_future,
                                 const char* fn, AuthError expected_error,
                                 Auth* auth) {
   if (WaitForFuture(sign_in_future, fn, expected_error)) return true;
 
-  const SignInResult* sign_in_result = sign_in_future.result();
-  const User* sign_in_user = sign_in_result ? sign_in_result->user : nullptr;
-  const User* auth_user = auth->current_user();
+  const AuthResult* auth_result = sign_in_future.result();
+  const User sign_in_user = auth_result ? auth_result->user : User();
+  const User auth_user = auth->current_user();
 
   if (expected_error == ::firebase::auth::kAuthErrorNone &&
       sign_in_user != auth_user) {
-    LogMessage("ERROR: future's user (%x) and current_user (%x) don't match",
-               static_cast<int>(reinterpret_cast<intptr_t>(sign_in_user)),
-               static_cast<int>(reinterpret_cast<intptr_t>(auth_user)));
+    LogMessage("ERROR: future's user (%s) and current_user (%s) don't match",
+               sign_in_user.uid().c_str(),
+               auth_user.uid().c_str());
   }
 
   return false;
@@ -159,7 +160,7 @@ static bool WaitForSignInFuture(const Future<SignInResult>& sign_in_future,
 // Wait for the current user to sign out.  Typically you should use the
 // state listener to determine whether the user has signed out.
 static bool WaitForSignOut(firebase::auth::Auth* auth) {
-  while (auth->current_user() != nullptr) {
+  while (!auth->current_user().is_valid()) {
     if (ProcessEvents(100)) return true;
   }
   // Wait - hopefully - long enough for listeners to be signalled.
@@ -251,17 +252,17 @@ static void LogVariantMap(const std::map<Variant, Variant>& variant_map,
 }
 
 // Display the sign-in result.
-static void LogSignInResult(const SignInResult& result) {
-  if (!result.user) {
+static void LogAuthResult(const AuthResult result) {
+  if (!result.user.is_valid()) {
     LogMessage("ERROR: User not signed in");
     return;
   }
-  LogMessage("* User ID %s", result.user->uid().c_str());
-  const AdditionalUserInfo& info = result.info;
+  LogMessage("* User ID %s", result.user.uid().c_str());
+  const AdditionalUserInfo& info = result.additional_user_info;
   LogMessage("* Provider ID %s", info.provider_id.c_str());
   LogMessage("* User Name %s", info.user_name.c_str());
   LogVariantMap(info.profile, 0);
-  const UserMetadata& metadata = result.meta;
+  UserMetadata metadata = result.user.metadata();
   LogMessage("* Sign in timestamp %d",
              static_cast<int>(metadata.last_sign_in_timestamp));
   LogMessage("* Creation timestamp %d",
@@ -274,8 +275,8 @@ class AuthStateChangeCounter : public firebase::auth::AuthStateListener {
 
   virtual void OnAuthStateChanged(Auth* auth) {  // NOLINT
     num_state_changes_++;
-    LogMessage("OnAuthStateChanged User %p (state changes %d)",
-               auth->current_user(), num_state_changes_);
+    LogMessage("OnAuthStateChanged User %s (state changes %d)",
+               auth->current_user().uid().c_str(), num_state_changes_);
   }
 
   void CompleteTest(const char* test_name, int expected_state_changes) {
@@ -302,8 +303,8 @@ class IdTokenChangeCounter : public firebase::auth::IdTokenListener {
 
   virtual void OnIdTokenChanged(Auth* auth) {  // NOLINT
     num_token_changes_++;
-    LogMessage("OnIdTokenChanged User %p (token changes %d)",
-               auth->current_user(), num_token_changes_);
+    LogMessage("OnIdTokenChanged User %s (token changes %d)",
+               auth->current_user().uid().c_str(), num_token_changes_);
   }
 
   void CompleteTest(const char* test_name, int token_changes) {
@@ -331,7 +332,6 @@ class UserLogin {
       : auth_(auth),
         email_(email),
         password_(password),
-        user_(nullptr),
         log_errors_(true) {}
 
   explicit UserLogin(Auth* auth) : auth_(auth) {
@@ -340,48 +340,48 @@ class UserLogin {
   }
 
   ~UserLogin() {
-    if (user_ != nullptr) {
+    if (user_.is_valid()) {
       log_errors_ = false;
       Delete();
     }
   }
 
   void Register() {
-    Future<User*> register_test_account =
+    Future<AuthResult> register_test_account =
         auth_->CreateUserWithEmailAndPassword(email(), password());
     WaitForSignInFuture(register_test_account,
                         "CreateUserWithEmailAndPassword() to create temp user",
                         kAuthErrorNone, auth_);
-    user_ = register_test_account.result() ? *register_test_account.result()
-                                           : nullptr;
+    user_ = register_test_account.result() ? register_test_account.result()->user
+      : User();
   }
 
   void Login() {
     Credential email_cred =
         EmailAuthProvider::GetCredential(email(), password());
-    Future<User*> sign_in_cred = auth_->SignInWithCredential(email_cred);
+    Future<User> sign_in_cred = auth_->SignInWithCredential(email_cred);
     WaitForSignInFuture(sign_in_cred,
                         "Auth::SignInWithCredential() for UserLogin",
                         kAuthErrorNone, auth_);
   }
 
   void Delete() {
-    if (user_ != nullptr) {
-      Future<void> delete_future = user_->Delete();
+    if (user_.is_valid()) {
+      Future<void> delete_future = user_.Delete();
       if (delete_future.status() == ::firebase::kFutureStatusInvalid) {
         Login();
-        delete_future = user_->Delete();
+        delete_future = user_.Delete();
       }
 
       WaitForFuture(delete_future, "User::Delete()", kAuthErrorNone,
                     log_errors_);
     }
-    user_ = nullptr;
+    user_ = User();
   }
 
   const char* email() const { return email_.c_str(); }
   const char* password() const { return password_.c_str(); }
-  User* user() const { return user_; }
+  User user() const { return user_; }
   void set_email(const char* email) { email_ = email; }
   void set_password(const char* password) { password_ = password; }
 
@@ -389,7 +389,7 @@ class UserLogin {
   Auth* auth_;
   std::string email_;
   std::string password_;
-  User* user_;
+  User user_;
   bool log_errors_;
 };
 
@@ -401,7 +401,7 @@ class PhoneListener : public PhoneAuthProvider::Listener {
         num_calls_on_code_sent_(0),
         num_calls_on_code_auto_retrieval_time_out_(0) {}
 
-  void OnVerificationCompleted(Credential /*credential*/) override {
+  void OnVerificationCompleted(PhoneAuthCredential /*credential*/) override {
     LogMessage("PhoneListener: successful automatic verification.");
     num_calls_on_verification_complete_++;
   }
@@ -493,13 +493,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
   // It's possible for current_user() to be non-null if the previous run
   // left us in a signed-in state.
-  if (auth->current_user() == nullptr) {
+  if (!auth->current_user().is_valid()) {
     LogMessage("No user signed in at creation time.");
   } else {
     LogMessage(
         "Current user uid(%s) name(%s) already signed in, so signing them out.",
-        auth->current_user()->uid().c_str(),
-        auth->current_user()->display_name().c_str());
+        auth->current_user().uid().c_str(),
+        auth->current_user().display_name().c_str());
     auth->SignOut();
   }
 
@@ -523,7 +523,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     if (kTestCustomEmail) {
       // Test Auth::SignInWithEmailAndPassword().
       // Sign in with email and password that have already been registered.
-      Future<User*> sign_in_future =
+      Future<AuthResult> sign_in_future =
           auth->SignInWithEmailAndPassword(kCustomEmail, kCustomPassword);
       WaitForSignInFuture(sign_in_future,
                           "Auth::SignInWithEmailAndPassword() existing "
@@ -532,11 +532,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
       // Test SignOut() after signed in with email and password.
       if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
         auth->SignOut();
-        if (auth->current_user() != nullptr) {
+        if (auth->current_user().is_valid()) {
           LogMessage(
-              "ERROR: current_user() returning %x instead of nullptr after "
+              "ERROR: current_user() returning %s instead of nullptr after "
               "SignOut()",
-              auth->current_user());
+              auth->current_user().uid().c_str());
         }
       }
     }
@@ -560,7 +560,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     token_counter.CompleteTest("SignOut() when already signed-out", 0);
 
     // Test notification on SignIn().
-    Future<User*> sign_in_future = auth->SignInAnonymously();
+    Future<AuthResult> sign_in_future = auth->SignInAnonymously();
     WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously()",
                         kAuthErrorNone, auth);
     // Notified when the user is about to change and after the user has
@@ -569,21 +569,21 @@ extern "C" int common_main(int argc, const char* argv[]) {
     token_counter.CompleteTest("SignInAnonymously()", 1, 5);
 
     // Refresh the token.
-    if (auth->current_user() != nullptr) {
-      Future<std::string> token_future = auth->current_user()->GetToken(true);
+    if (auth->current_user().is_valid()) {
+      Future<std::string> token_future = auth->current_user().GetToken(true);
       WaitForFuture(token_future, "GetToken()", kAuthErrorNone);
       counter.CompleteTest("GetToken()", 0);
       token_counter.CompleteTest("GetToken()", 1);
     }
 
     // Test notification on SignOut(), when signed-in.
-    LogMessage("Current user %p", auth->current_user());  // DEBUG
+    LogMessage("Current user %s", auth->current_user().uid().c_str());  // DEBUG
     auth->SignOut();
     // Wait for the sign out to complete.
     WaitForSignOut(auth);
     counter.CompleteTest("SignOut()", 1);
     token_counter.CompleteTest("SignOut()", 1);
-    LogMessage("Current user %p", auth->current_user());  // DEBUG
+    LogMessage("Current user %s", auth->current_user().uid().c_str());  // DEBUG
 
     auth->RemoveAuthStateListener(&counter);
     auth->RemoveIdTokenListener(&token_counter);
@@ -602,8 +602,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
         "Phone Number", "Please enter your phone number", "+12345678900");
     PhoneListener listener;
     PhoneAuthProvider& phone_provider = PhoneAuthProvider::GetInstance(auth);
-    phone_provider.VerifyPhoneNumber(phone_number.c_str(), kPhoneAuthTimeoutMs,
-                                     nullptr, &listener);
+    PhoneAuthOptions options;
+    options.phone_number = phone_number;
+    options.timeout_milliseconds = kPhoneAuthTimeoutMs;
+    phone_provider.VerifyPhoneNumber(options, &listener);
 
     // Wait for OnCodeSent() callback.
     int wait_ms = 0;
@@ -635,21 +637,21 @@ extern "C" int common_main(int argc, const char* argv[]) {
         LogMessage(".");
       }
       if (listener.num_calls_on_code_auto_retrieval_time_out() > 0) {
-        const Credential phone_credential = phone_provider.GetCredential(
+        const PhoneAuthCredential phone_credential = phone_provider.GetCredential(
             listener.verification_id().c_str(), verification_code.c_str());
 
-        Future<User*> phone_future =
+        Future<User>phone_future =
             auth->SignInWithCredential(phone_credential);
         WaitForSignInFuture(phone_future,
                             "Auth::SignInWithCredential() phone credential",
                             kAuthErrorNone, auth);
         if (phone_future.error() == kAuthErrorNone) {
-          User* user = *phone_future.result();
-          Future<User*> update_future =
-              user->UpdatePhoneNumberCredential(phone_credential);
+          User user = *phone_future.result();
+          Future<User> update_future =
+              user.UpdatePhoneNumberCredential(phone_credential);
           WaitForSignInFuture(
               update_future,
-              "user->UpdatePhoneNumberCredential(phone_credential)",
+              "user.UpdatePhoneNumberCredential(phone_credential)",
               kAuthErrorNone, auth);
         }
 
@@ -664,12 +666,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
   {
     UserLogin user_login(auth);  // Generate a random name/password
     user_login.Register();
-    if (!user_login.user()) {
+    if (!user_login.user().is_valid()) {
       LogMessage("ERROR: Could not register new user.");
     } else {
       // Test Auth::SignInAnonymously().
       {
-        Future<User*> sign_in_future = auth->SignInAnonymously();
+        Future<AuthResult> sign_in_future = auth->SignInAnonymously();
         WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously()",
                             kAuthErrorNone, auth);
         ExpectTrue("SignInAnonymouslyLastResult matches returned Future",
@@ -678,11 +680,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
         // Test SignOut() after signed in anonymously.
         if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
           auth->SignOut();
-          if (auth->current_user() != nullptr) {
+          if (auth->current_user().is_valid()) {
             LogMessage(
-                "ERROR: current_user() returning %x instead of nullptr after "
+                "ERROR: current_user() returning valid user %s instead of invalid user after "
                 "SignOut()",
-                auth->current_user());
+                auth->current_user().uid().c_str());
           }
         }
       }
@@ -711,7 +713,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       // Test Auth::SignInWithEmailAndPassword().
       // Sign in with email and password that have already been registered.
       {
-        Future<User*> sign_in_future = auth->SignInWithEmailAndPassword(
+        Future<AuthResult> sign_in_future = auth->SignInWithEmailAndPassword(
             user_login.email(), user_login.password());
         WaitForSignInFuture(
             sign_in_future,
@@ -724,39 +726,38 @@ extern "C" int common_main(int argc, const char* argv[]) {
         // Test SignOut() after signed in with email and password.
         if (sign_in_future.status() == ::firebase::kFutureStatusComplete) {
           auth->SignOut();
-          if (auth->current_user() != nullptr) {
+          if (auth->current_user().is_valid()) {
             LogMessage(
-                "ERROR: current_user() returning %x instead of nullptr after "
-                "SignOut()",
-                auth->current_user());
+                "ERROR: current_user() returning valid user %s instead of invalid user after "
+                "SignOut()", auth->current_user().uid().c_str());
           }
         }
       }
 
       // Test User::UpdateUserProfile
       {
-        Future<User*> sign_in_future = auth->SignInWithEmailAndPassword(
+        Future<AuthResult> sign_in_future = auth->SignInWithEmailAndPassword(
             user_login.email(), user_login.password());
         WaitForSignInFuture(
             sign_in_future,
             "Auth::SignInWithEmailAndPassword() existing email and password",
             kAuthErrorNone, auth);
         if (sign_in_future.error() == kAuthErrorNone) {
-          User* user = *sign_in_future.result();
+          User user = sign_in_future.result()->user;
           const char* kDisplayName = "Hello World";
           const char* kPhotoUrl = "http://test.com/image.jpg";
           User::UserProfile user_profile;
           user_profile.display_name = kDisplayName;
           user_profile.photo_url = kPhotoUrl;
           Future<void> update_profile_future =
-              user->UpdateUserProfile(user_profile);
+              user.UpdateUserProfile(user_profile);
           WaitForFuture(update_profile_future, "User::UpdateUserProfile",
                         kAuthErrorNone);
           if (update_profile_future.error() == kAuthErrorNone) {
             ExpectStringsEqual("User::display_name", kDisplayName,
-                               user->display_name().c_str());
+                               user.display_name().c_str());
             ExpectStringsEqual("User::photo_url", kPhotoUrl,
-                               user->photo_url().c_str());
+                               user.photo_url().c_str());
           }
         }
       }
@@ -764,33 +765,33 @@ extern "C" int common_main(int argc, const char* argv[]) {
       // Sign in anonymously, link an email credential, reauthenticate with the
       // credential, unlink the credential and finally sign out.
       {
-        Future<User*> sign_in_anonymously_future = auth->SignInAnonymously();
+        Future<AuthResult> sign_in_anonymously_future = auth->SignInAnonymously();
         WaitForSignInFuture(sign_in_anonymously_future,
                             "Auth::SignInAnonymously", kAuthErrorNone, auth);
         if (sign_in_anonymously_future.error() == kAuthErrorNone) {
-          User* user = *sign_in_anonymously_future.result();
+          User user = sign_in_anonymously_future.result()->user;
           std::string email = CreateNewEmail();
           Credential credential =
               EmailAuthProvider::GetCredential(email.c_str(), kTestPassword);
           // Link with an email / password credential.
-          Future<SignInResult> link_future =
-              user->LinkAndRetrieveDataWithCredential(credential);
+          Future<AuthResult> link_future =
+              user.LinkWithCredential(credential);
           WaitForSignInFuture(link_future,
                               "User::LinkAndRetrieveDataWithCredential",
                               kAuthErrorNone, auth);
           if (link_future.error() == kAuthErrorNone) {
-            LogSignInResult(*link_future.result());
-            Future<SignInResult> reauth_future =
-                user->ReauthenticateAndRetrieveData(credential);
+            LogAuthResult(*link_future.result());
+            Future<AuthResult> reauth_future =
+                user.ReauthenticateAndRetrieveData(credential);
             WaitForSignInFuture(reauth_future,
                                 "User::ReauthenticateAndRetrieveData",
                                 kAuthErrorNone, auth);
             if (reauth_future.error() == kAuthErrorNone) {
-              LogSignInResult(*reauth_future.result());
+              LogAuthResult(*reauth_future.result());
             }
             // Unlink email / password from credential.
-            Future<User*> unlink_future =
-                user->Unlink(credential.provider().c_str());
+            Future<AuthResult> unlink_future =
+                user.Unlink(credential.provider().c_str());
             WaitForSignInFuture(unlink_future, "User::Unlink", kAuthErrorNone,
                                 auth);
           }
@@ -800,7 +801,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
       // Sign in user with bad email. Should fail.
       {
-        Future<User*> sign_in_future_bad_email =
+        Future<AuthResult> sign_in_future_bad_email =
             auth->SignInWithEmailAndPassword(kTestEmailBad, kTestPassword);
         WaitForSignInFuture(sign_in_future_bad_email,
                             "Auth::SignInWithEmailAndPassword() bad email",
@@ -809,7 +810,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
       // Sign in user with correct email but bad password. Should fail.
       {
-        Future<User*> sign_in_future_bad_password =
+        Future<AuthResult> sign_in_future_bad_password =
             auth->SignInWithEmailAndPassword(user_login.email(),
                                              kTestPasswordBad);
         WaitForSignInFuture(sign_in_future_bad_password,
@@ -819,7 +820,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
       // Try to create with existing email. Should fail.
       {
-        Future<User*> create_future_bad = auth->CreateUserWithEmailAndPassword(
+        Future<AuthResult> create_future_bad = auth->CreateUserWithEmailAndPassword(
             user_login.email(), user_login.password());
         WaitForSignInFuture(
             create_future_bad,
@@ -836,13 +837,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential email_cred_ok = EmailAuthProvider::GetCredential(
             user_login.email(), user_login.password());
-        Future<User*> sign_in_cred_ok =
+        Future<User>sign_in_cred_ok =
             auth->SignInWithCredential(email_cred_ok);
         WaitForSignInFuture(sign_in_cred_ok,
                             "Auth::SignInWithCredential() existing email",
                             kAuthErrorNone, auth);
-        ExpectTrue("SignInWithCredentialLastResult matches returned Future",
-                   sign_in_cred_ok == auth->SignInWithCredentialLastResult());
       }
 
       // Test Auth::SignInAndRetrieveDataWithCredential using email & password.
@@ -850,7 +849,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential email_cred = EmailAuthProvider::GetCredential(
             user_login.email(), user_login.password());
-        Future<SignInResult> sign_in_future =
+        Future<AuthResult> sign_in_future =
             auth->SignInAndRetrieveDataWithCredential(email_cred);
         WaitForSignInFuture(sign_in_future,
                             "Auth::SignInAndRetrieveDataWithCredential "
@@ -862,10 +861,10 @@ extern "C" int common_main(int argc, const char* argv[]) {
             sign_in_future ==
                 auth->SignInAndRetrieveDataWithCredentialLastResult());
         if (sign_in_future.error() == kAuthErrorNone) {
-          const SignInResult* sign_in_result = sign_in_future.result();
-          if (sign_in_result != nullptr && sign_in_result->user) {
+          const AuthResult* sign_in_result = sign_in_future.result();
+          if (sign_in_result != nullptr && sign_in_result->user.is_valid()) {
             LogMessage("SignInAndRetrieveDataWithCredential");
-            LogSignInResult(*sign_in_result);
+            LogAuthResult(*sign_in_result);
           } else {
             LogMessage(
                 "ERROR: SignInAndRetrieveDataWithCredential returned no "
@@ -878,7 +877,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential facebook_cred_bad =
             FacebookAuthProvider::GetCredential(kTestAccessTokenBad);
-        Future<User*> facebook_bad =
+        Future<User>facebook_bad =
             auth->SignInWithCredential(facebook_cred_bad);
         WaitForSignInFuture(
             facebook_bad,
@@ -890,7 +889,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential git_hub_cred_bad =
             GitHubAuthProvider::GetCredential(kTestAccessTokenBad);
-        Future<User*> git_hub_bad =
+        Future<User>git_hub_bad =
             auth->SignInWithCredential(git_hub_cred_bad);
         WaitForSignInFuture(
             git_hub_bad, "Auth::SignInWithCredential() bad GitHub credentials",
@@ -901,7 +900,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential google_cred_bad = GoogleAuthProvider::GetCredential(
             kTestIdTokenBad, kTestAccessTokenBad);
-        Future<User*> google_bad = auth->SignInWithCredential(google_cred_bad);
+        Future<User>google_bad = auth->SignInWithCredential(google_cred_bad);
         WaitForSignInFuture(
             google_bad, "Auth::SignInWithCredential() bad Google credentials",
             kAuthErrorInvalidCredential, auth);
@@ -911,7 +910,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential google_cred_bad =
             GoogleAuthProvider::GetCredential(kTestIdTokenBad, nullptr);
-        Future<User*> google_bad = auth->SignInWithCredential(google_cred_bad);
+        Future<User>google_bad = auth->SignInWithCredential(google_cred_bad);
         WaitForSignInFuture(
             google_bad, "Auth::SignInWithCredential() bad Google credentials",
             kAuthErrorInvalidCredential, auth);
@@ -922,7 +921,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential play_games_cred_bad =
             PlayGamesAuthProvider::GetCredential(kTestServerAuthCodeBad);
-        Future<User*> play_games_bad =
+        Future<User>play_games_bad =
             auth->SignInWithCredential(play_games_cred_bad);
         WaitForSignInFuture(
             play_games_bad,
@@ -959,7 +958,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
             if (gc_credential_ptr == nullptr) {
               LogMessage("Failed to retrieve Game Center credential.");
             } else {
-              Future<User*> game_center_user =
+              Future<User>game_center_user =
                   auth->SignInWithCredential(*gc_credential_ptr);
               WaitForFuture(game_center_user,
                             "Auth::SignInWithCredential() test Game Center "
@@ -974,7 +973,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
             kTestIdTokenBad, kTestAccessTokenBad);
-        Future<User*> twitter_bad =
+        Future<User>twitter_bad =
             auth->SignInWithCredential(twitter_cred_bad);
         WaitForSignInFuture(
             twitter_bad, "Auth::SignInWithCredential() bad Twitter credentials",
@@ -999,7 +998,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
       {
         Credential oauth_cred_bad = OAuthProvider::GetCredential(
             kTestIdProviderIdBad, kTestIdTokenBad, kTestAccessTokenBad);
-        Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
+        Future<User>oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
         WaitForSignInFuture(
             oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
             kAuthErrorFailure, auth);
@@ -1010,7 +1009,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
         Credential oauth_cred_bad =
             OAuthProvider::GetCredential(kTestIdProviderIdBad, kTestIdTokenBad,
                                          kTestNonceBad, kTestAccessTokenBad);
-        Future<User*> oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
+        Future<User>oauth_bad = auth->SignInWithCredential(oauth_cred_bad);
         WaitForSignInFuture(
             oauth_bad, "Auth::SignInWithCredential() bad OAuth credentials",
             kAuthErrorFailure, auth);
@@ -1042,48 +1041,48 @@ extern "C" int common_main(int argc, const char* argv[]) {
   // --- User tests ------------------------------------------------------------
   // Test anonymous user info strings.
   {
-    Future<User*> anon_sign_in_for_user = auth->SignInAnonymously();
+    Future<AuthResult> anon_sign_in_for_user = auth->SignInAnonymously();
     WaitForSignInFuture(anon_sign_in_for_user,
                         "Auth::SignInAnonymously() for User", kAuthErrorNone,
                         auth);
     if (anon_sign_in_for_user.status() == ::firebase::kFutureStatusComplete) {
-      User* anonymous_user = anon_sign_in_for_user.result()
-                                 ? *anon_sign_in_for_user.result()
-                                 : nullptr;
-      if (anonymous_user != nullptr) {
-        LogMessage("Anonymous uid is %s", anonymous_user->uid().c_str());
+      User anonymous_user = anon_sign_in_for_user.result()
+                                 ? anon_sign_in_for_user.result()->user
+	: User();
+      if (anonymous_user.is_valid()) {
+        LogMessage("Anonymous uid is %s", anonymous_user.uid().c_str());
         ExpectStringsEqual("Anonymous user email", "",
-                           anonymous_user->email().c_str());
+                           anonymous_user.email().c_str());
         ExpectStringsEqual("Anonymous user display_name", "",
-                           anonymous_user->display_name().c_str());
+                           anonymous_user.display_name().c_str());
         ExpectStringsEqual("Anonymous user photo_url", "",
-                           anonymous_user->photo_url().c_str());
+                           anonymous_user.photo_url().c_str());
         ExpectStringsEqual("Anonymous user provider_id", kFirebaseProviderId,
-                           anonymous_user->provider_id().c_str());
+                           anonymous_user.provider_id().c_str());
         ExpectTrue("Anonymous user is_anonymous()",
-                   anonymous_user->is_anonymous());
+                   anonymous_user.is_anonymous());
         ExpectFalse("Anonymous user is_email_verified()",
-                    anonymous_user->is_email_verified());
+                    anonymous_user.is_email_verified());
         ExpectTrue("Anonymous user metadata().last_sign_in_timestamp != 0",
-                   anonymous_user->metadata().last_sign_in_timestamp != 0);
+                   anonymous_user.metadata().last_sign_in_timestamp != 0);
         ExpectTrue("Anonymous user metadata().creation_timestamp != 0",
-                   anonymous_user->metadata().creation_timestamp != 0);
+                   anonymous_user.metadata().creation_timestamp != 0);
 
         // Test User::LinkWithCredential(), linking with email & password.
         const std::string newer_email = CreateNewEmail();
         Credential user_cred = EmailAuthProvider::GetCredential(
             newer_email.c_str(), kTestPassword);
         {
-          Future<User*> link_future =
-              anonymous_user->LinkWithCredential(user_cred);
+          Future<AuthResult> link_future =
+              anonymous_user.LinkWithCredential(user_cred);
           WaitForSignInFuture(link_future, "User::LinkWithCredential()",
                               kAuthErrorNone, auth);
         }
 
         // Test User::LinkWithCredential(), linking with same email & password.
         {
-          Future<User*> link_future =
-              anonymous_user->LinkWithCredential(user_cred);
+          Future<AuthResult> link_future =
+              anonymous_user.LinkWithCredential(user_cred);
           WaitForSignInFuture(link_future, "User::LinkWithCredential() again",
                               ::firebase::auth::kAuthErrorProviderAlreadyLinked,
                               auth);
@@ -1092,14 +1091,14 @@ extern "C" int common_main(int argc, const char* argv[]) {
         // Test User::LinkWithCredential(), linking with bad credential.
         // Call should fail and Auth's current user should be maintained.
         {
-          const User* pre_link_user = auth->current_user();
+          const User pre_link_user = auth->current_user();
           ExpectTrue("Test precondition requires active user",
-                     pre_link_user != nullptr);
+                     pre_link_user.is_valid());
 
           Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
               kTestIdTokenBad, kTestAccessTokenBad);
-          Future<User*> link_bad_future =
-              anonymous_user->LinkWithCredential(twitter_cred_bad);
+          Future<AuthResult> link_bad_future =
+              anonymous_user.LinkWithCredential(twitter_cred_bad);
           WaitForFuture(link_bad_future,
                         "User::LinkWithCredential() with bad credential",
                         kAuthErrorInvalidCredential);
@@ -1110,12 +1109,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
         // Test Auth::SignInWithCredential(), signing in with bad credential.
         // Call should fail, and Auth's current user should be maintained.
         {
-          const User* pre_signin_user = auth->current_user();
+          const User pre_signin_user = auth->current_user();
           ExpectTrue("Test precondition requires active user",
-                     pre_signin_user != nullptr);
+                     pre_signin_user.is_valid());
           Credential twitter_cred_bad = TwitterAuthProvider::GetCredential(
               kTestIdTokenBad, kTestAccessTokenBad);
-          Future<User*> signin_bad_future =
+          Future<User>signin_bad_future =
               auth->SignInWithCredential(twitter_cred_bad);
           WaitForFuture(signin_bad_future,
                         "Auth::SignInWithCredential() with bad credential",
@@ -1127,41 +1126,41 @@ extern "C" int common_main(int argc, const char* argv[]) {
         UserLogin user_login(auth);
         user_login.Register();
 
-        if (!user_login.user()) {
+        if (!user_login.user().is_valid()) {
           LogMessage("Error - Could not create new user.");
         } else {
           // Test email user info strings.
-          Future<User*> email_sign_in_for_user =
+          Future<AuthResult> email_sign_in_for_user =
               auth->SignInWithEmailAndPassword(user_login.email(),
                                                user_login.password());
           WaitForSignInFuture(email_sign_in_for_user,
                               "Auth::SignInWithEmailAndPassword() for User",
                               kAuthErrorNone, auth);
-          User* email_user = email_sign_in_for_user.result()
-                                 ? *email_sign_in_for_user.result()
-                                 : nullptr;
-          if (email_user != nullptr) {
-            LogMessage("Email uid is %s", email_user->uid().c_str());
+          User email_user = email_sign_in_for_user.result()
+                                 ? email_sign_in_for_user.result()->user
+	    : User();
+          if (email_user.is_valid()) {
+            LogMessage("Email uid is %s", email_user.uid().c_str());
             ExpectStringsEqual("Email user email", user_login.email(),
-                               email_user->email().c_str());
+                               email_user.email().c_str());
             ExpectStringsEqual("Email user display_name", "",
-                               email_user->display_name().c_str());
+                               email_user.display_name().c_str());
             ExpectStringsEqual("Email user photo_url", "",
-                               email_user->photo_url().c_str());
+                               email_user.photo_url().c_str());
             ExpectStringsEqual("Email user provider_id", kFirebaseProviderId,
-                               email_user->provider_id().c_str());
+                               email_user.provider_id().c_str());
             ExpectFalse("Email user is_anonymous()",
-                        email_user->is_anonymous());
+                        email_user.is_anonymous());
             ExpectFalse("Email user is_email_verified()",
-                        email_user->is_email_verified());
+                        email_user.is_email_verified());
             ExpectTrue("Email user metadata().last_sign_in_timestamp != 0",
-                       email_user->metadata().last_sign_in_timestamp != 0);
+                       email_user.metadata().last_sign_in_timestamp != 0);
             ExpectTrue("Email user metadata().creation_timestamp  != 0",
-                       email_user->metadata().creation_timestamp != 0);
+                       email_user.metadata().creation_timestamp != 0);
 
             // Test User::GetToken().
             // with force_refresh = false.
-            Future<std::string> token_no_refresh = email_user->GetToken(false);
+            Future<std::string> token_no_refresh = email_user.GetToken(false);
             WaitForFuture(token_no_refresh, "User::GetToken(false)",
                           kAuthErrorNone);
             LogMessage("User::GetToken(false) = %s",
@@ -1171,7 +1170,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
             // with force_refresh = true.
             Future<std::string> token_force_refresh =
-                email_user->GetToken(true);
+                email_user.GetToken(true);
             WaitForFuture(token_force_refresh, "User::GetToken(true)",
                           kAuthErrorNone);
             LogMessage("User::GetToken(true) = %s",
@@ -1180,59 +1179,59 @@ extern "C" int common_main(int argc, const char* argv[]) {
                            : "");
 
             // Test Reload().
-            Future<void> reload_future = email_user->Reload();
+            Future<void> reload_future = email_user.Reload();
             WaitForFuture(reload_future, "User::Reload()", kAuthErrorNone);
 
             // Test User::Unlink().
-            Future<User*> unlink_future = email_user->Unlink("firebase");
+            Future<AuthResult> unlink_future = email_user.Unlink("firebase");
             WaitForSignInFuture(unlink_future, "User::Unlink()",
                                 ::firebase::auth::kAuthErrorNoSuchProvider,
                                 auth);
 
             // Sign in again if user is now invalid.
-            if (auth->current_user() == nullptr) {
-              Future<User*> email_sign_in_again =
+            if (!auth->current_user().is_valid()) {
+              Future<AuthResult> email_sign_in_again =
                   auth->SignInWithEmailAndPassword(user_login.email(),
                                                    user_login.password());
               WaitForSignInFuture(email_sign_in_again,
                                   "Auth::SignInWithEmailAndPassword() again",
                                   kAuthErrorNone, auth);
               email_user = email_sign_in_again.result()
-                               ? *email_sign_in_again.result()
-                               : nullptr;
+		? email_sign_in_again.result()->user
+		: User();
             }
           }
-          if (email_user != nullptr) {
+          if (email_user.is_valid()) {
             // Test User::provider_data().
-            const std::vector<UserInfoInterface*>& provider_data =
-                email_user->provider_data();
+            const std::vector<UserInfoInterface> provider_data =
+                email_user.provider_data();
             LogMessage("User::provider_data() returned %d interface%s",
                        provider_data.size(),
                        provider_data.size() == 1 ? "" : "s");
             for (size_t i = 0; i < provider_data.size(); ++i) {
-              const UserInfoInterface* user_info = provider_data[i];
+              const UserInfoInterface user_info = provider_data[i];
               LogMessage(
                   "    UID() = %s\n"
                   "    Email() = %s\n"
                   "    DisplayName() = %s\n"
                   "    PhotoUrl() = %s\n"
                   "    ProviderId() = %s",
-                  user_info->uid().c_str(), user_info->email().c_str(),
-                  user_info->display_name().c_str(),
-                  user_info->photo_url().c_str(),
-                  user_info->provider_id().c_str());
+                  user_info.uid().c_str(), user_info.email().c_str(),
+                  user_info.display_name().c_str(),
+                  user_info.photo_url().c_str(),
+                  user_info.provider_id().c_str());
             }
 
             // Test User::UpdateEmail().
             const std::string newest_email = CreateNewEmail();
             Future<void> update_email_future =
-                email_user->UpdateEmail(newest_email.c_str());
+                email_user.UpdateEmail(newest_email.c_str());
             WaitForFuture(update_email_future, "User::UpdateEmail()",
                           kAuthErrorNone);
 
             // Test User::UpdatePassword().
             Future<void> update_password_future =
-                email_user->UpdatePassword(kTestPasswordUpdated);
+                email_user.UpdatePassword(kTestPasswordUpdated);
             WaitForFuture(update_password_future, "User::UpdatePassword()",
                           kAuthErrorNone);
 
@@ -1240,13 +1239,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
             Credential email_cred_reauth = EmailAuthProvider::GetCredential(
                 newest_email.c_str(), kTestPasswordUpdated);
             Future<void> reauthenticate_future =
-                email_user->Reauthenticate(email_cred_reauth);
+                email_user.Reauthenticate(email_cred_reauth);
             WaitForFuture(reauthenticate_future, "User::Reauthenticate()",
                           kAuthErrorNone);
 
             // Test User::SendEmailVerification().
             Future<void> send_email_verification_future =
-                email_user->SendEmailVerification();
+                email_user.SendEmailVerification();
             WaitForFuture(send_email_verification_future,
                           "User::SendEmailVerification()", kAuthErrorNone);
           }
@@ -1256,29 +1255,29 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
     // Test User::Delete().
     const std::string new_email_for_delete = CreateNewEmail();
-    Future<User*> create_future_for_delete =
+    Future<AuthResult> create_future_for_delete =
         auth->CreateUserWithEmailAndPassword(new_email_for_delete.c_str(),
                                              kTestPassword);
     WaitForSignInFuture(
         create_future_for_delete,
         "Auth::CreateUserWithEmailAndPassword() new email for delete",
         kAuthErrorNone, auth);
-    User* email_user_for_delete = create_future_for_delete.result()
-                                      ? *create_future_for_delete.result()
-                                      : nullptr;
-    if (email_user_for_delete != nullptr) {
-      Future<void> delete_future = email_user_for_delete->Delete();
+    User email_user_for_delete = create_future_for_delete.result()
+                                      ? create_future_for_delete.result()->user
+      : User();
+    if (email_user_for_delete.is_valid()) {
+      Future<void> delete_future = email_user_for_delete.Delete();
       WaitForFuture(delete_future, "User::Delete()", kAuthErrorNone);
     }
   }
   {
     // We end with a login so that we can test if a second run will detect
     // that we're already logged-in.
-    Future<User*> sign_in_future = auth->SignInAnonymously();
+    Future<AuthResult> sign_in_future = auth->SignInAnonymously();
     WaitForSignInFuture(sign_in_future, "Auth::SignInAnonymously() at end",
                         kAuthErrorNone, auth);
 
-    LogMessage("Anonymous uid(%s)", auth->current_user()->uid().c_str());
+    LogMessage("Anonymous uid(%s)", auth->current_user().uid().c_str());
   }
 
 #ifdef INTERNAL_EXPERIMENTAL
@@ -1305,13 +1304,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
         firebase::auth::FederatedOAuthProvider provider;
         provider.SetProviderData(provider_data);
         LogMessage("invoking linkwithprovider");
-        Future<SignInResult> sign_in_future =
-            user_login.user()->LinkWithProvider(&provider);
+        Future<AuthResult> sign_in_future =
+            user_login.user().LinkWithProvider(&provider);
         WaitForSignInFuture(sign_in_future, "LinkWithProvider", kAuthErrorNone,
                             auth);
         if (sign_in_future.error() == kAuthErrorNone) {
-          const SignInResult* result_ptr = sign_in_future.result();
-          LogMessage("user email %s", result_ptr->user->email().c_str());
+          const AuthResult* result_ptr = sign_in_future.result();
+          LogMessage("user email %s", result_ptr->user.email().c_str());
           LogMessage("Additonal user info provider_id: %s",
                      result_ptr->info.provider_id.c_str());
           LogMessage("LinkWithProviderDone");
@@ -1330,12 +1329,12 @@ extern "C" int common_main(int argc, const char* argv[]) {
       firebase::auth::FederatedOAuthProvider provider;
       provider.SetProviderData(provider_data);
       LogMessage("SignInWithProvider SETUP COMPLETE");
-      Future<SignInResult> sign_in_future = auth->SignInWithProvider(&provider);
+      Future<AuthResult> sign_in_future = auth->SignInWithProvider(&provider);
       WaitForSignInFuture(sign_in_future, "SignInWithProvider", kAuthErrorNone,
                           auth);
       if (sign_in_future.error() == kAuthErrorNone &&
           sign_in_future.result() != nullptr) {
-        LogSignInResult(*sign_in_future.result());
+        LogAuthResult(*sign_in_future.result());
       }
     }
 
@@ -1351,13 +1350,13 @@ extern "C" int common_main(int argc, const char* argv[]) {
 
         firebase::auth::FederatedOAuthProvider provider;
         provider.SetProviderData(provider_data);
-        Future<SignInResult> sign_in_future =
-            auth->current_user()->ReauthenticateWithProvider(&provider);
+        Future<AuthResult> sign_in_future =
+            auth->current_user().ReauthenticateWithProvider(&provider);
         WaitForSignInFuture(sign_in_future, "ReauthenticateWithProvider",
                             kAuthErrorNone, auth);
         if (sign_in_future.error() == kAuthErrorNone &&
             sign_in_future.result() != nullptr) {
-          LogSignInResult(*sign_in_future.result());
+          LogAuthResult(*sign_in_future.result());
         }
       }
     }
@@ -1365,7 +1364,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
     // Clean up provider-linked user so we can run the test app again
     // and not get "user with that email already exists" errors.
     if (auth->current_user()) {
-      WaitForFuture(auth->current_user()->Delete(), "Delete User",
+      WaitForFuture(auth->current_user().Delete(), "Delete User",
                     kAuthErrorNone,
                     /*log_error=*/true);
     }

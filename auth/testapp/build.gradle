@@ -6,7 +6,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.3.3'
+    classpath 'com.android.tools.build:gradle:4.2.1'
     classpath 'com.google.gms:google-services:4.0.1'
   }
 }
@@ -27,8 +27,9 @@ android {
     targetCompatibility 1.8
   }
 
-  compileSdkVersion 28
-  buildToolsVersion '28.0.3'
+  compileSdkVersion 34
+  ndkPath System.getenv('ANDROID_NDK_HOME')
+  buildToolsVersion '30.0.2'
 
   sourceSets {
     main {
@@ -41,8 +42,8 @@ android {
 
   defaultConfig {
     applicationId 'com.google.android.auth.testapp'
-    minSdkVersion 19
-    targetSdkVersion 28
+    minSdkVersion 23
+    targetSdkVersion 34
     versionCode 1
     versionName '1.0'
     externalNativeBuild.cmake {
@@ -58,6 +59,13 @@ android {
       proguardFile getDefaultProguardFile('proguard-android.txt')
       proguardFile file('proguard.pro')
     }
+  }
+  packagingOptions {
+    pickFirst 'META-INF/**/coroutines.pro'
+  }
+  lintOptions {
+    abortOnError false
+    checkReleaseBuilds false
   }
 }
 

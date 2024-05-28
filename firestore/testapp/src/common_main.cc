@@ -126,11 +126,11 @@ extern "C" int common_main(int argc, const char* argv[]) {
   auto login_future = auth->SignInAnonymously();
   Await(login_future, "Auth sign-in");
   auto* login_result = login_future.result();
-  if (login_result && *login_result) {
-    const firebase::auth::User* user = *login_result;
+  if (login_result) {
+    const firebase::auth::User user = login_result->user;
     LogMessage("Signed in as %s user, uid: %s, email: %s.\n",
-               user->is_anonymous() ? "an anonymous" : "a non-anonymous",
-               user->uid().c_str(), user->email().c_str());
+               user.is_anonymous() ? "an anonymous" : "a non-anonymous",
+               user.uid().c_str(), user.email().c_str());
   } else {
     LogMessage("ERROR: could not sign in");
   }

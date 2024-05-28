@@ -199,7 +199,7 @@ extern "C" int common_main(int argc, const char* argv[]) {
   // work as long as your project's Authentication permissions allow anonymous
   // signin.
   {
-    firebase::Future<firebase::auth::User*> sign_in_future =
+    firebase::Future<firebase::auth::AuthResult> sign_in_future =
         auth->SignInAnonymously();
     WaitForCompletion(sign_in_future, "SignInAnonymously");
     if (sign_in_future.error() == firebase::auth::kAuthErrorNone) {
