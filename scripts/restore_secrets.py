@@ -158,7 +158,7 @@ def _patch_reverse_id(service_plist_path):
         placeholder="REPLACE_WITH_REVERSED_CLIENT_ID",
         value=service_plist["REVERSED_CLIENT_ID"])
   except KeyError as e:
-    print("Warning: Couldn't patch %s in %s" % (e.args[0], service_plist_path))
+    print("Warning: Missing plist key %s in %s, skipping" % (e.args[0], service_plist_path))
 
 
 def _patch_bundle_id(service_plist_path):
@@ -172,7 +172,7 @@ def _patch_bundle_id(service_plist_path):
         placeholder="$(PRODUCT_BUNDLE_IDENTIFIER)",
         value=service_plist["BUNDLE_ID"])
   except KeyError as e:
-    print("Warning: Couldn't patch %s in %s" % (e.args[0], service_plist_path))
+    print("Warning: Missing plist key %s in %s, skipping" % (e.args[0], service_plist_path))
 
 
 def _patch_file(path, placeholder, value):
