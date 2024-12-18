@@ -152,10 +152,13 @@ def _patch_reverse_id(service_plist_path):
   print("Attempting to patch reverse id in Info.plist")
   with open(service_plist_path, "rb") as f:
     service_plist = plistlib.load(f)
-  _patch_file(
-      path=os.path.join(os.path.dirname(service_plist_path), "testapp", "Info.plist"),
-      placeholder="REPLACE_WITH_REVERSED_CLIENT_ID",
-      value=service_plist["REVERSED_CLIENT_ID"])
+  try:
+    _patch_file(
+        path=os.path.join(os.path.dirname(service_plist_path), "testapp", "Info.plist"),
+        placeholder="REPLACE_WITH_REVERSED_CLIENT_ID",
+        value=service_plist["REVERSED_CLIENT_ID"])
+  except KeyError as e:
+    print("Warning: Couldn't patch %s in %s" % (e.args[0], service_plist_path))
 
 
 def _patch_bundle_id(service_plist_path):
@@ -163,10 +166,13 @@ def _patch_bundle_id(service_plist_path):
   print("Attempting to patch bundle id in Info.plist")
   with open(service_plist_path, "rb") as f:
     service_plist = plistlib.load(f)
-  _patch_file(
-      path=os.path.join(os.path.dirname(service_plist_path), "testapp", "Info.plist"),
-      placeholder="$(PRODUCT_BUNDLE_IDENTIFIER)",
-      value=service_plist["BUNDLE_ID"])
+  try:
+    _patch_file(
+        path=os.path.join(os.path.dirname(service_plist_path), "testapp", "Info.plist"),
+        placeholder="$(PRODUCT_BUNDLE_IDENTIFIER)",
+        value=service_plist["BUNDLE_ID"])
+  except KeyError as e:
+    print("Warning: Couldn't patch %s in %s" % (e.args[0], service_plist_path))
 
 
 def _patch_file(path, placeholder, value):
