@@ -74,10 +74,15 @@ jobs:
           echo "GHA_INSTALL_CCACHE=1" >> $GITHUB_ENV
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python_version }}
           architecture: ${{ matrix.architecture }}
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 17
+          distribution: temurin
 
       - name: Add msbuild to PATH
         if: startsWith(matrix.os, 'windows')
