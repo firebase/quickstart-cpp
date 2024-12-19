@@ -81,7 +81,7 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          java-version: 17
+          java-version: 11
           distribution: temurin
 
       - name: Add msbuild to PATH
