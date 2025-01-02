@@ -84,7 +84,6 @@ import tempfile
 from absl import app
 from absl import flags
 from absl import logging
-from distutils import dir_util
 
 import utils
 import config_reader
@@ -322,8 +321,7 @@ def _build(
   project_dir = os.path.join(project_dir, output_testapp_dir)
 
   logging.info("Copying testapp project to %s", project_dir)
-  os.makedirs(project_dir)
-  dir_util.copy_tree(testapp_dir, project_dir)
+  shutil.copytree(testapp_dir, project_dir)
 
   logging.info("Changing directory to %s", project_dir)
   os.chdir(project_dir)

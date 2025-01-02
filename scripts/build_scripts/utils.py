@@ -19,7 +19,6 @@ Helper functions that are shared amongst prereqs and build scripts across variou
 platforms.
 """
 
-import distutils.spawn
 import platform
 import shutil
 import subprocess
@@ -62,7 +61,7 @@ def run_command(cmd, capture_output=False, cwd=None, check=False, as_root=False,
 
 def is_command_installed(tool):
   """Check if a command is installed on the system."""
-  return distutils.spawn.find_executable(tool)
+  return shutil.which(tool)
 
 
 def delete_directory(dir_path):
