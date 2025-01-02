@@ -131,6 +131,14 @@ jobs:
             pip install -r scripts/build_scripts/python_requirements.txt
             python scripts/restore_secrets.py --passphrase "${{ secrets.TEST_SECRET }}"
 
+      - name: Denver's DEBUG
+        shell: bash
+        run: |
+          set +e
+          set -xv
+          env | grep ANDROID
+          which adb
+
       - name: Download C++ SDK
         shell: bash
         run: |
