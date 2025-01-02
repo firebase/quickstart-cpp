@@ -131,15 +131,6 @@ jobs:
             pip install -r scripts/build_scripts/python_requirements.txt
             python scripts/restore_secrets.py --passphrase "${{ secrets.TEST_SECRET }}"
 
-      - name: "Rename d8 to dx (fixes java.lang.NumberFormatException: Not a number: 33x)"
-        shell: bash
-        run: |
-          for D8_FILE in `find "$ANDROID_HOME/build-tools" -type f -name 'd8*'`; do
-            DX_FILE="$(echo "$D8_FILE" | sed 's/d8/dx/')"
-            echo "cp $D8_FILE $DX_FILE"
-            cp "$D8_FILE" "$DX_FILE"
-          done
-
       - name: Download C++ SDK
         shell: bash
         run: |
