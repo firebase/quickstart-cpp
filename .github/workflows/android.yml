@@ -138,6 +138,7 @@ jobs:
           set -xv
           env | grep ANDROID
           which adb
+          ls "$ANDROID_HOME/build-tools"
 
       - name: Download C++ SDK
         shell: bash
