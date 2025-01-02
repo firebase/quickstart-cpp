@@ -138,7 +138,7 @@ jobs:
           set -xv
           env | grep ANDROID
           echo "Searching for d8 files in $ANDROID_HOME/build-tools"
-          for D8_FILE in `find "$ANDROID_HOME"/build-tools/* -name d8'*'`; do    
+          for D8_FILE in `find "$ANDROID_HOME"/build-tools" -name 'd8*'`; do    
             echo "$D8_FILE"    
           done   
 
