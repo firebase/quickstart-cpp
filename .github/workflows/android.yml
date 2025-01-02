@@ -138,11 +138,8 @@ jobs:
           set -xv
           env | grep ANDROID
           echo "Searching for d8 files in $ANDROID_HOME/build-tools"
-          for BUILD_TOOLS_DIR in "$ANDROID_HOME/build-tools/*" ; do                                                                                                                           
-            echo "Looking for d8 in $BUILD_TOOLS_DIR"    
-            for D8_FILE in `find "$BUILD_TOOLS_DIR" -name d8'*'`; do    
-              echo "$D8_FILE"    
-            done    
+          for D8_FILE in `find "$ANDROID_HOME"/build-tools/* -name d8'*'`; do    
+            echo "$D8_FILE"    
           done   
 
       - name: Download C++ SDK
