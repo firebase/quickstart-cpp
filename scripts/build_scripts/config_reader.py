@@ -37,19 +37,6 @@ Example of such a configuration file:
         "firebase.framework"
       ],
       "provision": "Google_Development.mobileprovision"
-    },
-    {
-      "name": "admob",
-      "full_name": "FirebaseAdmob",
-      "bundle_id": "com.google.ios.admob.testapp",
-      "ios_target": "testapp",
-      "tvos_target": "",
-      "testapp_path": "admob/testapp",
-      "frameworks": [
-        "firebase_admob.framework",
-        "firebase.framework"
-      ],
-      "provision": "Google_Development.mobileprovision"
     }
   ],
   "dev_team": "ABCDEFGHIJK"
