@@ -177,7 +177,7 @@ jobs:
           fi
 
       - name: Upload Android integration tests artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: testapps-android-${{ matrix.os }}
@@ -185,19 +185,20 @@ jobs:
           retention-days: ${{ env.artifactRetentionDays }}
 
       - name: Upload Android build results artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: log-artifact
+          name: log-artifact-${{ matrix.os }}
           path: build-results-android-${{ matrix.os }}*
           retention-days: ${{ env.artifactRetentionDays }}
 
       - name: Download log artifacts
         if: ${{ needs.check_and_prepare.outputs.pr_number && failure() && !cancelled() }}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: test_results
-          name: log-artifact
+          pattern: log-artifact-*
+          merge-multiple: true
 
       - name: Summarize build results
         if: ${{ !cancelled() }}
