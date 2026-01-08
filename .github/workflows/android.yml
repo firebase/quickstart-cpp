@@ -63,7 +63,7 @@ jobs:
         if: runner.os == 'Windows'
         run: git config --system core.longpaths true
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -74,14 +74,14 @@ jobs:
           echo "GHA_INSTALL_CCACHE=1" >> $GITHUB_ENV
 
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python_version }}
           architecture: ${{ matrix.architecture }}
 
       - name: Add msbuild to PATH
         if: startsWith(matrix.os, 'windows')
-        uses: microsoft/setup-msbuild@v1.0.2
+        uses: microsoft/setup-msbuild@v2
 
       - name: Cache NDK
         id: cache_ndk
@@ -102,7 +102,7 @@ jobs:
           fi
 
       - name: Update homebrew (avoid bintray errors)
-        uses: nick-invision/retry@v2
+        uses: nick-invision/retry@v3
         if: startsWith(matrix.os, 'macos')
         with:
           timeout_minutes: 10
@@ -114,7 +114,7 @@ jobs:
             brew update
 
       - name: Install prerequisites
-        uses: nick-invision/retry@v2
+        uses: nick-invision/retry@v3
         with:
           timeout_minutes: 10
           max_attempts: 3
