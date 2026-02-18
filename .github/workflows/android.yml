@@ -30,12 +30,14 @@ jobs:
     - id: set_outputs
       run: |
         if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-          apis="${{ github.event.inputs.apis }}"
+          apis="${GITHUB_EVENT_INPUTS_APIS}"
         else
           apis="analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage"
         fi
         echo apis:  ${apis}
         echo "::set-output name=apis::${apis}"
+      env:
+        GITHUB_EVENT_INPUTS_APIS: ${{ github.event.inputs.apis }}
 
   build:
     name: android-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.python_version }}
@@ -156,13 +158,15 @@ jobs:
         run: |
           set -x
           python scripts/build_scripts/build_testapps.py --p Android \
-            --t ${{ needs.check_and_prepare.outputs.apis }}  \
+            --t ${NEEDS_CHECK_AND_PREPARE_OUTPUTS_APIS}  \
             --output_directory "${{ github.workspace }}" \
             --artifact_name "android-${{ matrix.os }}" \
             --noadd_timestamp \
             --short_output_paths \
             --gha_build \
             --packaged_sdk /tmp/downloaded_sdk/firebase_cpp_sdk
+        env:
+          NEEDS_CHECK_AND_PREPARE_OUTPUTS_APIS: ${{ needs.check_and_prepare.outputs.apis }}
 
       - name: Stats for ccache (mac and linux)
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
@@ -204,6 +208,8 @@ jobs:
         shell: bash
         run: |
           cat build-results-android-${{ matrix.os }}.log
-          if [[ "${{ job.status }}" != "success" ]]; then
+          if [[ "${JOB_STATUS}" != "success" ]]; then
             exit 1
           fi
+        env:
+          JOB_STATUS: ${{ job.status }}
