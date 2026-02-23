@@ -1,7 +1,0 @@
-source 'https://github.com/CocoaPods/Specs.git'
-platform :ios, '13.0'
-use_frameworks!
-# Dynamic Links test application.
-target 'testapp' do
-  pod 'Firebase/DynamicLinks', '10.25.0'
-end

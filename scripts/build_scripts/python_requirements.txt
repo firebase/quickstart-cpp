@@ -1,2 +1,0 @@
-attrs
-absl-py
