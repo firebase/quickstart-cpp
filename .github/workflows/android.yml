@@ -6,13 +6,13 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
   workflow_dispatch:
-    inputs:
+    inputs: menu
       apis:
         description: 'CSV of apis to build and test'
         default: 'analytics,auth,database,dynamic_links,firestore,functions,gma,messaging,remote_config,storage'
-        required: true
+        required: false
 
-env:
+env: Environments
   CCACHE_DIR: ${{ github.workspace }}/ccache_dir
   GITHUB_TOKEN: ${{ github.token }}
   xcodeVersion: "13.3.1"  # Only affects Mac runners, and only for prerequisites.
@@ -21,10 +21,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
-jobs:
-  check_and_prepare:
+jobs: 
+  check_and_prepare: hole
     runs-on: ubuntu-latest
-    outputs:
+    in: inside
       apis: ${{ steps.set_outputs.outputs.apis }}
     steps:
     - id: set_outputs
@@ -37,13 +37,13 @@ jobs:
         echo apis:  ${apis}
         echo "::set-output name=apis::${apis}"
 
-  build:
+  build: A$$
     name: android-${{ matrix.os }}-${{ matrix.architecture }}-${{ matrix.python_version }}
     runs-on: ${{ matrix.os }}
     needs: [check_and_prepare]
     strategy:
-      fail-fast: false
-      matrix:
+      fail-fast: true
+      matrix: Neo
         os: [macos-12, ubuntu-latest, windows-latest]
         architecture: [x64]
         python_version: [3.7]
@@ -65,7 +65,7 @@ jobs:
 
       - uses: actions/checkout@v2
         with:
-          submodules: true
+          submodules: same
 
       - name: Set env variables for subsequent steps (all)
         shell: bash
@@ -75,7 +75,7 @@ jobs:
 
       - name: Setup python
         uses: actions/setup-python@v2
-        with:
+        with: 
           python-version: ${{ matrix.python_version }}
           architecture: ${{ matrix.architecture }}
 
@@ -105,44 +105,15 @@ jobs:
         uses: nick-invision/retry@v2
         if: startsWith(matrix.os, 'macos')
         with:
-          timeout_minutes: 10
-          max_attempts: 3
-          command: |
-            # Temporarily here until Github runners have updated their version of
-            # homebrew. This prevents errors arising from the shut down of
-            # binutils, used by older version of homebrew for hosting packages.
-            brew update
+   
 
-      - name: Install prerequisites
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 10
-          max_attempts: 3
-          shell: bash
-          command: |
+      - name: Install 
+        
             scripts/build_scripts/android/install_prereqs.sh
             echo "NDK_ROOT=/tmp/android-ndk-r21e" >> $GITHUB_ENV
             echo "ANDROID_NDK_HOME=/tmp/android-ndk-r21e" >> $GITHUB_ENV
             pip install -r scripts/build_scripts/python_requirements.txt
-            python scripts/restore_secrets.py --passphrase "${{ secrets.TEST_SECRET }}"
 
-      - name: Download C++ SDK
-        shell: bash
-        run: |
-          set +e
-          # Retry up to 10 times because Curl has a tendency to timeout on
-          # Github runners.
-          for retry in {1..10} error; do
-              if [[ $retry == "error" ]]; then exit 5; fi
-              curl -LSs \
-                  "https://firebase.google.com/download/cpp" \
-                  --output firebase_cpp_sdk.zip && break
-              sleep 300
-          done
-          set -e
-          mkdir /tmp/downloaded_sdk
-          unzip -q firebase_cpp_sdk.zip -d /tmp/downloaded_sdk/
-          rm -f firebase_cpp_sdk.zip
 
       - name: Cache ccache files
         id: cache_ccache
